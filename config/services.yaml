@@ -4,8 +4,9 @@ parameters:
     app.turnstile.secret_key: '%env(default::TURNSTILE_SECRET_KEY)%'
     app.mail.from_email: '%env(MAIL_FROM_EMAIL)%'
     app.mail.from_name: 'ZENOO'
-    # Bowl Score quiz → Klaviyo. Off unless QUIZ_SEND_TO_KLAVIYO=true, because the
-    # "Dog Quiz – EN" flow is LIVE: every finished quiz would email a real address.
+    # Bowl Score quiz → Klaviyo. QUIZ_SEND_TO_KLAVIYO is true in .env, so finished quizzes go to the
+    # LIVE "Dog Quiz – EN" flow and email a real address. The fallback below only applies if the
+    # variable is missing entirely.
     app.quiz.klaviyo_company_id: '%env(default::KLAVIYO_COMPANY_ID)%'
     app.quiz.klaviyo_list_id: '%env(default::KLAVIYO_LIST_ID)%'
     app.quiz.send_to_klaviyo: '%env(bool:default:app.quiz.send_default:QUIZ_SEND_TO_KLAVIYO)%'

@@ -18,7 +18,7 @@ in capitals, Inter body copy, 24px corners and no shadows.
 | **My account** | Orders, name, profile photo (re-encoded as a 400×400 JPEG), password change (logs out other devices and sends a notice email), and account deletion. |
 | **Shop** | Products from the database. **Buy now** opens Stripe Checkout, and the order is recorded by the signed Stripe webhook or the return page, whichever arrives first. It is never recorded twice. Refunds made in Stripe mark the order refunded. |
 | **Test product** | “ZENOO Test Product”, €1.00, created by the first migration. Nothing is shipped. |
-| **Bowl Score quiz** | The quiz from the ZENOO handoff at `/quiz/`. Sending answers to Klaviyo is **off** unless `QUIZ_SEND_TO_KLAVIYO=true` (see below). |
+| **Bowl Score quiz** | The quiz from the ZENOO handoff at `/quiz/`. Answers are sent to Klaviyo (`QUIZ_SEND_TO_KLAVIYO=true`, see below). |
 | **Admin** (`/admin`) | Overview, products, purchases (read-only) and pet parents (create, edit, set passwords, grant Admin). |
 
 Security basics: CSRF tokens on every form, hashed passwords (Symfony `auto`), login
@@ -73,10 +73,11 @@ touch the network.
 hashes). Only the page shell, `templates/quiz/index.html.twig`, is new: the logo links to
 the site and the settings come from the environment.
 
-The **“Dog Quiz – EN” Klaviyo flow is live.** With `QUIZ_SEND_TO_KLAVIYO=true`, every
-finished quiz subscribes that email and sends it a real email. Leave it `false` while
-testing. When it's off, the quiz still says “we've emailed the plan”, because that text
-comes from the unchanged handoff code.
+`QUIZ_SEND_TO_KLAVIYO` is **`true`**, and the **“Dog Quiz – EN” Klaviyo flow is live**: every
+finished quiz subscribes that email (single opt-in, list `Xubzza`) and sends it a real
+email. To test without sending, put `QUIZ_SEND_TO_KLAVIYO=false` in `.env.local` (or in
+Coolify for a staging copy), or use your own address. When it's off, the quiz still says
+“we've emailed the plan”, because that text comes from the unchanged handoff code.
 
 If you update the quiz from the handoff, copy the files over and update the hashes in
 `tests/Functional/PagesTest.php`.

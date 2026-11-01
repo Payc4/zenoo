@@ -21,11 +21,13 @@ class PagesTest extends AppTestCase
         }
     }
 
-    public function testQuizPageKeepsKlaviyoOffByDefault(): void
+    public function testQuizPageSendsToKlaviyo(): void
     {
         $crawler = $this->client->request('GET', '/quiz/');
         $script = $crawler->filter('script')->first()->text();
-        $this->assertStringContainsString('"sendToKlaviyo":false', $script);
+        $this->assertStringContainsString('"sendToKlaviyo":true', $script);
+        $this->assertStringContainsString('"klaviyoCompanyId":"SVCcfJ"', $script);
+        $this->assertStringContainsString('"klaviyoListId":"Xubzza"', $script);
         $this->assertSelectorExists('script[src="/quiz/app.js"]');
         $this->assertCount(0, FakeStripe::$requests);
     }

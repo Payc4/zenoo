@@ -25,7 +25,7 @@ needs no manual steps.
 | `STRIPE_SECRET_KEY` | `sk_test_...` for the test product. Switch to `sk_live_...` only for real sales. |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` from step 3. Checkout stays off until both Stripe values are set. |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | From Cloudflare Turnstile. Empty switches the sign-up captcha off. |
-| `QUIZ_SEND_TO_KLAVIYO` | `false` while testing. `true` sends finished quizzes to the **live** Klaviyo flow. |
+| `QUIZ_SEND_TO_KLAVIYO` | Defaults to `true`: finished quizzes go to the **live** Klaviyo flow and email the pet parent. Set `false` for a staging copy. |
 | `KLAVIYO_COMPANY_ID`, `KLAVIYO_LIST_ID` | Default to the EN account (`SVCcfJ`, list `Xubzza`). |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First deploy only: creates the admin account. Remove them afterwards. |
 | `SESSION_DSN` | Optional, e.g. `redis://...`. The default keeps sessions in files inside the container, so a redeploy logs everyone out. |
