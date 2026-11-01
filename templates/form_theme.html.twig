@@ -1,0 +1,36 @@
+{# Minimal form theme matching the ZENOO styles in assets/styles/app.css. #}
+{% use 'form_div_layout.html.twig' %}
+
+{% block form_row %}
+    {%- set row_attr = row_attr|merge({class: ('field' ~ (errors|length ? ' has-error') ~ ' ' ~ row_attr.class|default(''))|trim}) -%}
+    <div{% with {attr: row_attr} %}{{ block('attributes') }}{% endwith %}>
+        {{- form_label(form) -}}
+        {{- form_widget(form, {attr: errors|length ? {'aria-invalid': 'true'} : {}}) -}}
+        {{- form_help(form) -}}
+        {{- form_errors(form) -}}
+    </div>
+{% endblock %}
+
+{% block checkbox_row %}
+    <div class="field{{ errors|length ? ' has-error' }}">
+        <label class="check">{{ form_widget(form) }} <span>{% if label_html %}{{ label|raw }}{% else %}{{ label|default(name|humanize) }}{% endif %}</span></label>
+        {{- form_errors(form) -}}
+    </div>
+{% endblock %}
+
+{% block repeated_row %}
+    {{ form_row(form.first) }}
+    {{ form_row(form.second) }}
+{% endblock %}
+
+{% block form_errors %}
+    {%- if errors|length > 0 -%}
+        <div class="{{ form.parent ? 'field-error' : 'form-errors' }}" role="alert">
+            <ul>{%- for error in errors -%}<li>{{ error.message }}</li>{%- endfor -%}</ul>
+        </div>
+    {%- endif -%}
+{% endblock %}
+
+{% block form_help %}
+    {%- if help is not empty -%}<p id="{{ id }}_help" class="help">{{ help }}</p>{%- endif -%}
+{% endblock %}

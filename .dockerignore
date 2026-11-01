@@ -1,0 +1,51 @@
+# Keeps the build context small and, more importantly, keeps host state out of
+# the image. Without this file `COPY . .` shipped the local vendor/ tree, a warm
+# var/cache and the .git history into every build.
+
+.git
+.gitattributes
+.gitignore
+.github
+
+# Rebuilt inside the image: composer install, importmap:install, asset-map:compile.
+vendor/
+assets/vendor/
+public/assets/
+public/bundles/
+node_modules/
+
+# Runtime state. The prod cache is warmed during the build and logs go to
+# stderr, so nothing here should be carried in from the host.
+var/
+
+# Environment files.
+#
+# Only `.env` belongs in the image — it is the committed set of defaults, and
+# Coolify's container env vars take precedence over it at runtime.
+#
+# `.env.dev` and `.env.test` hold development and test values (SQLite, sync
+# email). Symfony loads `.env.$APP_ENV`, so they must never reach the image.
+.env.local
+.env.*.local
+.env.dev
+.env.prod
+.env.test
+
+# Dev-only tooling, tests and docs.
+tests/
+phpunit.xml
+phpunit.xml.dist
+.phpunit.result.cache
+.editorconfig
+.idea/
+.claude/
+.windsurf*
+docker-compose.yaml
+compose.override.yaml
+*.md
+
+# Uploaded content. public/uploads is a Docker volume in production; anything
+# here is local test data.
+public/uploads/profiles/*
+!public/uploads/profiles/.gitkeep
+**/.DS_Store

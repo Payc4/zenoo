@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Privacy policy · ZENOO{% endblock %}
+
+{% block body %}
+<section class="section">
+    <div class="wrap prose">
+        <p class="kicker">Legal</p>
+        <h1>Privacy policy</h1>
+        <p class="lead">How this site uses your data, in plain words.</p>
+
+        <h2>What we keep</h2>
+        <ul>
+            <li><strong>Your account:</strong> your name, email, password (stored only as a secure hash, never readable) and profile photo if you add one.</li>
+            <li><strong>Your orders:</strong> what you bought, when, and the amount paid. Card details go straight to Stripe and never reach us.</li>
+            <li><strong>Bowl Score quiz:</strong> your answers stay in your browser. If you give your email at the end, your dog’s details and plan are sent to our email provider, Klaviyo, so we can send you the plan and the feeding guide.</li>
+        </ul>
+
+        <h2>Who helps us</h2>
+        <ul>
+            <li><strong>Stripe</strong> processes payments.</li>
+            <li><strong>Amazon Web Services (SES)</strong> sends account emails such as receipts and login links.</li>
+            <li><strong>Klaviyo</strong> sends the quiz plan and our emails, if you sign up through the quiz.</li>
+            <li><strong>Cloudflare Turnstile</strong> checks that sign-ups come from people, not bots.</li>
+        </ul>
+
+        <h2>Cookies</h2>
+        <p>We only use the cookies the site needs to work: one that keeps you logged in during a visit, and one that remembers you for two weeks if you tick “Keep me logged in”. We don’t use advertising or tracking cookies on this site.</p>
+
+        <h2>Your choices</h2>
+        <p>You can change your details or delete your account at any time from <a href="{{ path('app_account') }}">My account</a>. Deleting it removes your details and order history here. Stripe keeps payment records for as long as the law requires.</p>
+
+        <h2>Contact</h2>
+        <p>Questions about your data? Write to <a href="mailto:support@myzenoo.com">support@myzenoo.com</a>.</p>
+
+        <p class="small muted">Last updated 1 November 2026.</p>
+    </div>
+</section>
+{% endblock %}

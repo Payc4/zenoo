@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Log in · ZENOO{% endblock %}
+
+{% block body %}
+<section class="auth-page">
+    <div class="wrap">
+        <div class="auth-card">
+            <h1>Welcome back</h1>
+            <p class="lead">Log in to see your orders and details.</p>
+
+            <div class="tabs" role="tablist" aria-label="How to log in">
+                <button class="tab" type="button" role="tab" id="tab-password" aria-controls="panel-password" aria-selected="{{ tab == 'password' ? 'true' : 'false' }}">Password</button>
+                <button class="tab" type="button" role="tab" id="tab-link" aria-controls="panel-link" aria-selected="{{ tab == 'link' ? 'true' : 'false' }}">Email me a link</button>
+            </div>
+
+            <div role="tabpanel" id="panel-password" aria-labelledby="tab-password" {{ tab != 'password' ? 'hidden' }}>
+                {% if error %}
+                    <div class="form-errors" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                {% endif %}
+                <form method="post" action="{{ path('app_login') }}">
+                    <div class="field">
+                        <label for="username">Email</label>
+                        <input type="email" id="username" name="_username" value="{{ last_username }}" autocomplete="email" required autofocus>
+                    </div>
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="_password" autocomplete="current-password" required>
+                    </div>
+                    <div class="form-foot">
+                        <label class="check"><input type="checkbox" name="_remember_me"> <span>Keep me logged in</span></label>
+                        <a href="{{ path('app_forgot_password') }}">Forgot password?</a>
+                    </div>
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                    <button class="btn btn-block" type="submit">Log in</button>
+                </form>
+            </div>
+
+            <div role="tabpanel" id="panel-link" aria-labelledby="tab-link" {{ tab != 'link' ? 'hidden' }}>
+                <p>No password needed. We’ll email you a link that logs you straight in. It works once, for 10 minutes.</p>
+                <form method="post" action="{{ path('app_send_login_link') }}">
+                    <div class="field">
+                        <label for="link-email">Email</label>
+                        <input type="email" id="link-email" name="email" value="{{ last_username }}" autocomplete="email" required>
+                    </div>
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('login-link') }}">
+                    <button class="btn btn-block" type="submit">Email me a login link</button>
+                </form>
+            </div>
+
+            <p class="auth-alt">New to ZENOO? <a href="{{ path('app_register') }}">Create an account</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}

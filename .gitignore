@@ -1,0 +1,44 @@
+###> macOS system files ###
+.DS_Store
+.Spotlight-V100
+.Trashes
+###< macOS system files ###
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+.phpunit.result.cache
+###< phpunit/phpunit ###
+
+###> symfony/phpunit-bridge ###
+.phpunit.result.cache
+/phpunit.xml
+###< symfony/phpunit-bridge ###
+
+###> symfony/asset-mapper ###
+/public/assets/
+/assets/vendor/
+###< symfony/asset-mapper ###
+
+**/.claude/settings.local.json
+# claude, jetbrains
+.idea
+
+# Uploads are user data (a Docker volume in production): keep the folder, not the files.
+/public/uploads/profiles/*
+!/public/uploads/profiles/.gitkeep
+
+# Local SQLite databases and the local .env override
+/var/
+/.env.local
+/node_modules
+.windsurf*

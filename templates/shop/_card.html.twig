@@ -1,0 +1,7 @@
+<article class="card product-card">
+    {% if product.image %}<img class="card-photo" src="/images/{{ product.image|url_encode }}" alt="" width="1000" height="625" loading="lazy">{% endif %}
+    <h3><a href="{{ path('app_product', {slug: product.slug}) }}" style="text-decoration:none">{{ product.name }}</a></h3>
+    {% if product.tagline %}<p class="muted">{{ product.tagline }}</p>{% endif %}
+    <p class="price">€{{ product.price|number_format(2, '.', ',') }}</p>
+    <div class="btn-row"><a class="btn btn-small" href="{{ path('app_product', {slug: product.slug}) }}">View</a></div>
+</article>

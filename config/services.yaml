@@ -1,0 +1,35 @@
+parameters:
+    app.url: '%env(APP_URL)%'
+    app.turnstile.site_key: '%env(default::TURNSTILE_SITE_KEY)%'
+    app.turnstile.secret_key: '%env(default::TURNSTILE_SECRET_KEY)%'
+    app.mail.from_email: '%env(MAIL_FROM_EMAIL)%'
+    app.mail.from_name: 'ZENOO'
+    # Bowl Score quiz → Klaviyo. Off unless QUIZ_SEND_TO_KLAVIYO=true, because the
+    # "Dog Quiz – EN" flow is LIVE: every finished quiz would email a real address.
+    app.quiz.klaviyo_company_id: '%env(default::KLAVIYO_COMPANY_ID)%'
+    app.quiz.klaviyo_list_id: '%env(default::KLAVIYO_LIST_ID)%'
+    app.quiz.send_to_klaviyo: '%env(bool:default:app.quiz.send_default:QUIZ_SEND_TO_KLAVIYO)%'
+    app.quiz.send_default: false
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        bind:
+            string $appUrl: '%app.url%'
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Kernel.php'
+
+    App\Service\EmailService:
+        arguments:
+            $fromEmail: '%app.mail.from_email%'
+            $fromName: '%app.mail.from_name%'
+
+    App\Form\Extension\TurnstileExtension:
+        arguments:
+            $siteKey: '%app.turnstile.site_key%'
+            $secretKey: '%app.turnstile.secret_key%'
+            $environment: '%kernel.environment%'

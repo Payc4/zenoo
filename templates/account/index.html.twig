@@ -1,0 +1,131 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}My account · ZENOO{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+
+{% block body %}
+<section class="account-head">
+    <div class="wrap">
+        {{ include('account/_avatar.html.twig', {user: user}) }}
+        <div>
+            <h1>Hi, {{ user.displayName }}</h1>
+            <p>{{ user.email }} · member since {{ user.createdAt|date('F Y') }}</p>
+        </div>
+    </div>
+</section>
+
+<div class="wrap account-grid">
+    <nav class="account-nav" aria-label="Account">
+        <a href="#orders">My orders</a>
+        <a href="#details">My details</a>
+        <a href="#password">Password</a>
+        <a href="#delete">Delete account</a>
+    </nav>
+
+    <div class="account-panels">
+        {# ---------- Orders ---------- #}
+        {% set purchases = user.purchases %}
+        <section class="card" id="orders">
+            <h2>My orders</h2>
+            {% if purchases|length %}
+                <ul class="orders">
+                    {% for purchase in purchases %}
+                        <li class="order">
+                            {% if purchase.product.image %}<img src="/images/{{ purchase.product.image|url_encode }}" alt="">{% else %}<span></span>{% endif %}
+                            <div>
+                                <a class="order-title" href="{{ path('app_account_order', {id: purchase.id}) }}">{{ purchase.product.name }}</a>
+                                <div class="order-meta">
+                                    Order #{{ purchase.id }} · {{ purchase.createdAt|date('j M Y') }}
+                                    {% if not purchase.completed %} · <span class="tag tag-sun">Refunded</span>{% endif %}
+                                    {% if purchase.testMode %} · <span class="tag tag-test">Test</span>{% endif %}
+                                </div>
+                            </div>
+                            <div class="order-amount">€{{ purchase.amount|number_format(2, '.', ',') }}</div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty">
+                    <p>No orders yet.</p>
+                    <a class="btn btn-small" href="{{ path('app_shop') }}">Visit the shop</a>
+                </div>
+            {% endif %}
+        </section>
+
+        {# ---------- Details ---------- #}
+        <section class="card" id="details">
+            <h2>My details</h2>
+            <p class="panel-intro">Your name and photo. Your email is your login: <strong>{{ user.email }}</strong>.</p>
+
+            <div class="photo-row">
+                {{ include('account/_avatar.html.twig', {user: user}) }}
+                <form method="post" action="{{ path('app_account_photo') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('account-photo') }}">
+                    <label class="visually-hidden" for="photo">Profile photo</label>
+                    <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" data-enable="photo-save">
+                    <button class="btn btn-small btn-forest" id="photo-save" type="submit">Upload photo</button>
+                    {% if user.profileImage %}<button class="link-btn small" type="submit" name="remove" value="1">Remove photo</button>{% endif %}
+                </form>
+            </div>
+
+            <form method="post" action="{{ path('app_account_details') }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('account-details') }}">
+                <div class="field-row">
+                    <div class="field">
+                        <label for="firstName">First name</label>
+                        <input type="text" id="firstName" name="firstName" value="{{ user.firstName }}" autocomplete="given-name" maxlength="100" required>
+                    </div>
+                    <div class="field">
+                        <label for="lastName">Last name</label>
+                        <input type="text" id="lastName" name="lastName" value="{{ user.lastName }}" autocomplete="family-name" maxlength="100">
+                    </div>
+                </div>
+                <button class="btn btn-small" type="submit">Save name</button>
+            </form>
+        </section>
+
+        {# ---------- Password ---------- #}
+        <section class="card" id="password">
+            <h2>Password</h2>
+            <p class="panel-intro">Changing it logs you out on your other devices.</p>
+            <form method="post" action="{{ path('app_account_password') }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('account-password') }}">
+                <div class="field">
+                    <label for="currentPassword">Current password</label>
+                    <input type="password" id="currentPassword" name="currentPassword" autocomplete="current-password" required>
+                    <p class="help">Logged in with an email link and don’t know it? <a href="{{ path('app_logout') }}">Log out</a> and use “Forgot password?”.</p>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="newPassword">New password</label>
+                        <input type="password" id="newPassword" name="newPassword" autocomplete="new-password" minlength="8" required>
+                    </div>
+                    <div class="field">
+                        <label for="confirmPassword">Repeat new password</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" minlength="8" required>
+                    </div>
+                </div>
+                <button class="btn btn-small" type="submit">Change password</button>
+            </form>
+        </section>
+
+        {# ---------- Delete ---------- #}
+        <section class="card danger-zone" id="delete">
+            <h2>Delete account</h2>
+            {% if user.admin %}
+                <p class="panel-intro">Admin accounts can’t be deleted here. Ask another admin to remove the Admin role first.</p>
+            {% else %}
+                <p class="panel-intro">This deletes your account, your details and your order history here. It can’t be undone. Payment records stay with Stripe, as the law requires.</p>
+                <form method="post" action="{{ path('app_account_delete') }}" data-confirm="Delete your ZENOO account for good?">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('account-delete') }}">
+                    <div class="field" style="max-width:360px">
+                        <label for="delete-password">Your password, to confirm</label>
+                        <input type="password" id="delete-password" name="password" autocomplete="current-password" required>
+                    </div>
+                    <button class="btn btn-small btn-danger" type="submit">Delete my account</button>
+                </form>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

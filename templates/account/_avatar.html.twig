@@ -1,0 +1,6 @@
+{# Profile photo, or the pet parent's initials on a sun-coloured circle. #}
+{% if user.profileImage %}
+    <img class="avatar{{ size|default('') == 'sm' ? ' avatar-sm' }}" src="/uploads/profiles/{{ user.profileImage|url_encode }}" alt="">
+{% else %}
+    <span class="avatar{{ size|default('') == 'sm' ? ' avatar-sm' }}" aria-hidden="true">{{ user.initials }}</span>
+{% endif %}

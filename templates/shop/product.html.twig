@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ product.name }} · ZENOO{% endblock %}
+{% block description %}{{ product.tagline ?: product.name }}{% endblock %}
+
+{% block body %}
+<section class="section">
+    <div class="wrap">
+        <p class="small"><a href="{{ path('app_shop') }}">← Shop</a></p>
+        <div class="product-layout">
+            {% if product.image %}
+                <img class="product-photo" src="/images/{{ product.image|url_encode }}" alt="" width="1000" height="750">
+            {% endif %}
+            <div class="card">
+                {% if testMode %}<span class="tag tag-test">Test mode</span>{% endif %}
+                <h1 style="font-size:clamp(30px,4vw,44px);margin-top:12px">{{ product.name }}</h1>
+                {% if product.tagline %}<p class="lead">{{ product.tagline }}</p>{% endif %}
+                <p class="price">€{{ product.price|number_format(2, '.', ',') }}</p>
+
+                {% if cancelled %}
+                    <div class="flash flash-info">No payment was taken. You can try again whenever you’re ready.</div>
+                {% endif %}
+
+                {% if owned %}
+                    <div class="flash flash-success">You’ve bought this already. You’ll find it under <a href="{{ path('app_account') }}#orders">My orders</a>.</div>
+                {% endif %}
+
+                {% if not checkoutReady %}
+                    <p class="flash flash-info">Payments are switched off at the moment.</p>
+                {% elseif app.user %}
+                    <form method="post" action="{{ path('app_checkout', {slug: product.slug}) }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('checkout-' ~ product.slug) }}">
+                        <button class="btn btn-block" type="submit">{{ owned ? 'Buy again' : 'Buy now' }}</button>
+                    </form>
+                    <p class="small muted" style="margin-top:12px">You’ll pay on Stripe’s secure page, then come straight back here.</p>
+                {% else %}
+                    <div class="btn-row">
+                        <a class="btn btn-block" href="{{ path('app_login', {next: path('app_product', {slug: product.slug})}) }}">Log in to buy</a>
+                    </div>
+                    <p class="small muted" style="margin-top:12px">New to ZENOO? <a href="{{ path('app_register') }}">Create an account</a> first. It takes a minute.</p>
+                {% endif %}
+
+                {% if testMode %}
+                    <div class="test-card">
+                        <strong>Testing?</strong> Pay with card <code>4242 4242 4242 4242</code>, any future expiry date and any CVC.
+                    </div>
+                {% endif %}
+
+                {% if product.description %}
+                    <div style="margin-top:24px">{{ product.description|nl2br }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

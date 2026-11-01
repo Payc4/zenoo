@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Create an account · ZENOO{% endblock %}
+
+{% block body %}
+<section class="auth-page">
+    <div class="wrap">
+        <div class="auth-card">
+            <h1>Create your account</h1>
+            <p class="lead">One login for your orders and details.</p>
+
+            {{ form_start(registrationForm, {attr: {novalidate: 'novalidate'}}) }}
+                {{ form_errors(registrationForm) }}
+                <div class="field-row">
+                    {{ form_row(registrationForm.firstName) }}
+                    {{ form_row(registrationForm.lastName) }}
+                </div>
+                {{ form_row(registrationForm.email) }}
+                {{ form_row(registrationForm.plainPassword) }}
+                {{ form_row(registrationForm.agreeTerms, {label: 'I agree to the <a href="' ~ path('app_privacy_policy') ~ '" target="_blank">privacy policy</a>', label_html: true}) }}
+                {% if registrationForm.vars.turnstile_site_key %}
+                    <div class="cf-turnstile" data-sitekey="{{ registrationForm.vars.turnstile_site_key }}" data-theme="light"></div>
+                    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                {% endif %}
+                <button class="btn btn-block" type="submit">Create account</button>
+            {{ form_end(registrationForm) }}
+
+            <p class="auth-alt">Already have an account? <a href="{{ path('app_login') }}">Log in</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}

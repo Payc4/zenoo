@@ -1,0 +1,33 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block page_title %}Overview{% endblock %}
+
+{% block main %}
+<div class="zn-stats">
+    <div class="zn-stat"><span>{{ users }}</span>Pet parents</div>
+    <div class="zn-stat"><span>{{ products }}</span>Products in the shop</div>
+    <div class="zn-stat"><span>{{ purchases }}</span>Paid orders (incl. test)</div>
+    <div class="zn-stat"><span>€{{ liveRevenue|number_format(2, '.', ',') }}</span>Real revenue ({{ liveOrders }} live orders)</div>
+</div>
+
+<h2 class="zn-h2">Latest orders</h2>
+{% if latest|length %}
+<table class="table datagrid">
+    <thead><tr><th>#</th><th>Pet parent</th><th>Product</th><th>Amount</th><th>Status</th><th>Paid at</th></tr></thead>
+    <tbody>
+    {% for p in latest %}
+        <tr>
+            <td><a href="{{ ea_url().setController('App\\Controller\\Admin\\PurchaseCrudController').setAction('detail').setEntityId(p.id) }}">{{ p.id }}</a></td>
+            <td>{{ p.user.email }}</td>
+            <td>{{ p.product.name }}</td>
+            <td>€{{ p.amount|number_format(2, '.', ',') }}{% if p.testMode %} <span class="badge badge-warning">test</span>{% endif %}</td>
+            <td>{{ p.status }}</td>
+            <td>{{ p.createdAt|date('Y-m-d H:i') }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No orders yet. Buy the test product on the site to see one here.</p>
+{% endif %}
+{% endblock %}

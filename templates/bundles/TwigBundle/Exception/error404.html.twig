@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+{% block title %}Page not found · ZENOO{% endblock %}
+{% block body %}
+<section class="error-page">
+    <div class="wrap">
+        <div class="code">404</div>
+        <h1>We couldn’t find that page</h1>
+        <p class="lead" style="margin:0 auto 24px">It may have moved, or the link has a typo.</p>
+        <div class="btn-row" style="justify-content:center">
+            <a class="btn" href="{{ path('app_homepage') }}">Home page</a>
+            <a class="btn btn-outline" href="{{ path('app_shop') }}">Shop</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

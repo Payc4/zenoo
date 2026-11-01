@@ -1,0 +1,37 @@
+# see https://symfony.com/doc/current/reference/configuration/framework.html
+framework:
+    secret: '%env(APP_SECRET)%'
+
+    # Note that the session will be started ONLY if you read or write from it.
+    #
+    # Storage is a DSN rather than the default, because the default is null —
+    # which hands control to PHP's own session.save_path, and the php:8.2-fpm
+    # image activates no php.ini at all, so that resolves to the system temp
+    # directory. In a container that means every session lives in /tmp and every
+    # deploy silently signs out every logged-in pet parent.
+    #
+    # Driving it from one env var keeps dev on local files (no Redis needed to
+    # run the app) while production uses Redis, and lets prod switch storage
+    # without a rebuild. `resolve:` is what expands %kernel.project_dir% inside
+    # the file:// value; Symfony hands the DSN to SessionHandlerFactory, which
+    # understands file://, redis://, valkey:// and the PDO schemes.
+    session:
+        enabled: true
+        handler_id: '%env(resolve:SESSION_DSN)%'
+
+    # Configure trusted proxies and headers for HTTPS
+    trusted_proxies: '%env(TRUSTED_PROXIES)%'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-port']
+
+    #esi: true
+    #fragments: true
+
+when@test:
+    framework:
+        test: true
+        session:
+            storage_factory_id: session.storage.factory.mock_file
+            handler_id: null
+        http_client:
+            # Tests never reach real services: Stripe calls are answered by FakeStripe.
+            mock_response_factory: App\Tests\Support\FakeStripe

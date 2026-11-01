@@ -1,0 +1,33 @@
+{#
+  The Bowl Score quiz from the ZENOO handoff (prototype/quiz). The scripts and styles in
+  public/quiz/ are byte-identical copies of the handoff files; only this page shell is new:
+  the logo links back to the site, the market config comes from the environment, and
+  QUIZ_SEND_TO_KLAVIYO decides whether answers go to the live Klaviyo flow.
+#}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Is your dog eating properly? · ZENOO Bowl Score</title>
+  <meta name="theme-color" content="#445942">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="stylesheet" href="/quiz/styles.css">
+  {% if not app.debug %}<style>.zq-demo { display: none; }</style>{% endif %}
+</head>
+<body>
+  <header class="zq-header"><a href="{{ path('app_homepage') }}"><img src="/quiz/assets/logo-white.png" alt="ZENOO home"></a></header>
+  <div class="zq-progress" aria-hidden="true"><div id="zq-progress" style="width:0"></div></div>
+  <main id="zq-app" aria-live="polite"></main>
+  <footer class="zq-footer"><img src="/quiz/assets/logo-forest.png" alt="ZENOO">Real Food. Healthy Pet.</footer>
+
+  <script>
+    // Market config. LT: swap to zenoo.lt values and content.lt.js.
+    window.ZQ_CONFIG = {{ quizConfig|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  </script>
+  <script src="/quiz/scoring.js"></script>
+  <script src="/quiz/content.en.js"></script>
+  <script src="/quiz/app.js"></script>
+</body>
+</html>

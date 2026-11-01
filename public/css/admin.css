@@ -1,0 +1,14 @@
+/* ZENOO colours for the EasyAdmin panel. */
+:root, [data-bs-theme="light"] {
+  --color-primary: #445942;
+  --link-color: #445942;
+  --link-hover-color: #597557;
+  --sidebar-menu-active-item-color: #445942;
+  --button-primary-bg: #445942;
+  --button-primary-border-color: #445942;
+  --button-primary-hover-bg: #2f3f2e;
+}
+.zn-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin: 8px 0 28px; }
+.zn-stat { background: #f8f7f2; border-radius: 16px; padding: 18px 20px; color: #445942; font-weight: 600; }
+.zn-stat span { display: block; font-size: 30px; font-weight: 800; line-height: 1.1; margin-bottom: 4px; }
+.zn-h2 { font-size: 18px; font-weight: 800; margin: 0 0 12px; text-transform: uppercase; color: #445942; }

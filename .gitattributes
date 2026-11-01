@@ -1,0 +1,28 @@
+# This repo is developed on Windows with core.autocrlf=true, which checks files
+# out with CRLF line endings. A CRLF on a shebang line makes the Linux kernel
+# look for an interpreter literally named "/bin/sh\r", and the container exits
+# at startup with a bewildering "no such file or directory" naming a file that
+# plainly exists. Pin everything that runs inside the image to LF.
+#
+# After adding this file, run `git add --renormalize .` once to rewrite any
+# already-committed CRLF blobs.
+
+*.sh text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+docker/** text eol=lf
+bin/console text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Binary assets — never touch these.
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.epub binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

@@ -1,0 +1,18 @@
+{% extends 'emails/_layout.html.twig' %}
+{% block title %}Your ZENOO order{% endblock %}
+{% block content %}
+<h1 style="font-family:'Inter Tight',Inter,Helvetica,Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">Thank you, {{ user.displayName }}!</h1>
+<p style="margin:0 0 18px;">Your order is confirmed. Here’s your receipt.</p>
+{% if purchase.testMode %}
+<p style="margin:0 0 18px;padding:10px 14px;background:#fff0d6;border-radius:12px;font-size:14px;color:#9a5c00;"><strong>Test order:</strong> paid in Stripe test mode, so no real money was taken.</p>
+{% endif %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8f7f2;border-radius:16px;font-size:15px;">
+  <tr><td style="padding:14px 18px 6px;color:#7c8a7b;">Order</td><td align="right" style="padding:14px 18px 6px;font-weight:700;">#{{ purchase.id }}</td></tr>
+  <tr><td style="padding:6px 18px;color:#7c8a7b;">Product</td><td align="right" style="padding:6px 18px;font-weight:700;">{{ product.name }}</td></tr>
+  <tr><td style="padding:6px 18px;color:#7c8a7b;">Date</td><td align="right" style="padding:6px 18px;font-weight:700;">{{ purchase.createdAt|date('j F Y') }}</td></tr>
+  {% if purchase.discountAmount %}<tr><td style="padding:6px 18px;color:#7c8a7b;">Discount</td><td align="right" style="padding:6px 18px;font-weight:700;">−€{{ purchase.discountAmount|number_format(2, '.', ',') }}</td></tr>{% endif %}
+  <tr><td style="padding:6px 18px 14px;color:#7c8a7b;">Total paid</td><td align="right" style="padding:6px 18px 14px;font-weight:800;font-size:18px;">€{{ purchase.amount|number_format(2, '.', ',') }}</td></tr>
+</table>
+{{ include('emails/_button.html.twig', {url: appUrl ~ '/account/orders/' ~ purchase.id, label: 'View my order'}) }}
+<p style="margin:0;font-size:14px;color:#7c8a7b;">Questions about your order? Write to support@myzenoo.com.</p>
+{% endblock %}

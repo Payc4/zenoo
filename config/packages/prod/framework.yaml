@@ -1,0 +1,6 @@
+framework:
+    # Trust all proxies in production (adjust based on your setup)
+    trusted_proxies: '127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16'
+    
+    # Force HTTPS scheme detection from X-Forwarded-Proto header
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-host']
