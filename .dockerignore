@@ -40,8 +40,7 @@ phpunit.xml.dist
 .idea/
 .claude/
 .windsurf*
-docker-compose.yaml
-compose.override.yaml
+docker-compose.local.yaml
 *.md
 
 # Uploaded content. public/uploads is a Docker volume in production; anything

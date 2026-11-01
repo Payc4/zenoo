@@ -1,5 +1,9 @@
-# Local development with Docker: `docker compose up`, then open http://localhost:8080.
-# Production runs the single-container Dockerfile on Coolify instead (see DEPLOY.md).
+# LOCAL DEVELOPMENT ONLY. Not for Coolify: production uses the Dockerfile build pack (see DEPLOY.md).
+# The name is deliberately not docker-compose.yaml, so hosting tools don't pick it up by mistake.
+#
+#   docker compose -f docker-compose.local.yaml up
+#
+# Site: http://localhost:8080   Emails (Mailpit): http://localhost:8025
 services:
   app:
     build:
@@ -16,6 +20,7 @@ services:
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      MAILER_DSN: smtp://mailer:1025
     healthcheck:
       test: ["CMD", "php", "-v"]
       interval: 10s
@@ -47,6 +52,15 @@ services:
     depends_on:
       app:
         condition: service_healthy
+
+  # Catches every email the app sends.
+  mailer:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
 volumes:
   database_data:

@@ -130,7 +130,7 @@ RUN mkdir -p \
     && chmod 700 var/sessions
 
 # nginx. The shipped config targets `app:9000` so the two-container dev
-# docker-compose.yaml can mount it as-is; in this image nginx and PHP-FPM share
+# docker-compose.local.yaml can mount it as-is; in this image nginx and PHP-FPM share
 # a network namespace, so the upstream is rewritten to the loopback address.
 RUN rm -f /etc/nginx/sites-enabled/default \
     && rm -rf /etc/nginx/conf.d/* \
@@ -147,7 +147,7 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/check-messenger.
 EXPOSE 80
 
 # Declared here rather than in a compose file: Coolify deploys this repository
-# with the Dockerfile build pack, so docker-compose.prod.yaml is never read and a
+# with the Dockerfile build pack, so no compose file is ever read and a
 # health check defined there would silently not exist. /health touches the
 # database, so this also catches a container that booted but lost its DB.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \

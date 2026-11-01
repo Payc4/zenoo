@@ -39,8 +39,9 @@ symfony serve                                 # or: php -S 127.0.0.1:8000 -t pub
 ```
 
 Locally, email goes nowhere (`MAILER_DSN=null://null`). To read the emails, run
-`docker compose up mailer` and set `MAILER_DSN=smtp://127.0.0.1:1025` in `.env.local`,
-then open http://localhost:8025.
+`docker compose -f docker-compose.local.yaml up mailer` and set `MAILER_DSN=smtp://127.0.0.1:1025` in
+`.env.local`, then open http://localhost:8025. (That compose file is for your computer only.
+On Coolify, always use the **Dockerfile** build pack.)
 
 To try the checkout locally, put Stripe **test** keys in `.env.local` and forward webhooks
 with the Stripe CLI:

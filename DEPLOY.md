@@ -8,7 +8,7 @@ needs no manual steps.
 ## 1. Create the resources
 
 1. **Database:** in Coolify, add a **MySQL 8** resource. Note its internal URL, user and password.
-2. **Application:** add this GitHub repository with the **Dockerfile** build pack. The port is **80**.
+2. **Application:** add this GitHub repository with the **Dockerfile** build pack (not Docker Compose). The port is **80**.
 3. **Persistent storage:** mount a volume at `/var/www/html/public/uploads` so profile
    photos survive deploys.
 
