@@ -88,12 +88,19 @@ echo "Session storage: ${SESSION_DSN}"
 # Without this the migration below just fails and the container exits, and while
 # `restart: unless-stopped` does eventually win, it does so through a crash loop
 # that looks exactly like a broken deploy in the logs.
-echo "Waiting for the database..."
+# Where we are connecting, with the user and password hidden, so the logs can show it safely.
+db_target=$(printf '%s' "$DATABASE_URL" | sed -E 's#^([a-z0-9+]+)://[^@/]*@#\1://***:***@#')
+echo "Waiting for the database at ${db_target}"
 tries=0
-until php bin/console dbal:run-sql "SELECT 1" >/dev/null 2>&1; do
+until db_error=$(php bin/console dbal:run-sql "SELECT 1" --no-ansi 2>&1); do
     tries=$((tries + 1))
     if [ "$tries" -ge 30 ]; then
         echo "FATAL: database still unreachable after 60s. Check DATABASE_URL." >&2
+        echo "       Connecting to: ${db_target}" >&2
+        # The driver's own message says what is wrong: unknown host, access denied,
+        # unknown database, connection refused...
+        reason=$(printf '%s' "$db_error" | tr '\n' ' ' | grep -oE 'SQLSTATE\[[^"]*' | head -n 1 | sed -E 's/[[:space:]]+/ /g; s/[\ ]+$//')
+        echo "       Reason: ${reason:-$(printf '%s' "$db_error" | tail -n 3 | tr '\n' ' ')}" >&2
         exit 1
     fi
     sleep 2
