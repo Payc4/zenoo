@@ -43,6 +43,7 @@ security:
     access_control:
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/account, roles: ROLE_USER }
+        - { path: ^/chat, roles: ROLE_USER }
         - { path: ^/shop/checkout, roles: ROLE_USER }
         - { path: ^/, roles: PUBLIC_ACCESS }
 

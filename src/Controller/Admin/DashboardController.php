@@ -2,7 +2,10 @@
 
 namespace App\Controller\Admin;
 
+use App\Chat\ChatQuota;
+use App\Chat\ClaudeClient;
 use App\Entity\Product;
+use App\Repository\ChatMessageRepository;
 use App\Entity\Purchase;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,8 +21,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class DashboardController extends AbstractDashboardController
 {
-    public function __construct(private readonly EntityManagerInterface $em)
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly ChatMessageRepository $chatMessages,
+        private readonly ChatQuota $chatQuota,
+        private readonly ClaudeClient $claude,
+    ) {
     }
 
     public function index(): Response
@@ -35,6 +42,13 @@ class DashboardController extends AbstractDashboardController
             'liveOrders' => (int) $paid['n'],
             'liveRevenue' => (float) $paid['total'],
             'latest' => $this->em->getRepository(Purchase::class)->findBy([], ['createdAt' => 'DESC'], 8),
+            'chat' => [
+                'configured' => $this->claude->isConfigured(),
+                'model' => $this->claude->model(),
+                'limit' => $this->chatQuota->dailyLimit(),
+                'today' => (int) $this->em->createQuery('SELECT COALESCE(SUM(u.messages), 0) FROM App\Entity\ChatUsage u WHERE u.day = :d')->setParameter('d', $this->chatQuota->today())->getSingleScalarResult(),
+                'month' => $this->chatMessages->usageSince(new \DateTimeImmutable('first day of this month 00:00')),
+            ],
         ]);
     }
 
@@ -59,6 +73,8 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToCrud('Purchases', 'fas fa-receipt', Purchase::class);
         yield MenuItem::section('Accounts');
         yield MenuItem::linkToCrud('Pet parents', 'fas fa-users', User::class);
+        yield MenuItem::section('Chat');
+        yield MenuItem::linkToUrl('Open the chat', 'fas fa-comments', '/chat');
         yield MenuItem::section();
         yield MenuItem::linkToUrl('View the site', 'fas fa-arrow-up-right-from-square', '/');
         yield MenuItem::linkToLogout('Log out', 'fas fa-sign-out-alt');

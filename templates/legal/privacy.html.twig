@@ -13,6 +13,7 @@
         <ul>
             <li><strong>Your account:</strong> your name, email, password (stored only as a secure hash, never readable) and profile photo if you add one.</li>
             <li><strong>Your orders:</strong> what you bought, when, and the amount paid. Card details go straight to Stripe and never reach us.</li>
+            <li><strong>Chat:</strong> your chat messages and the replies are saved in your account so you can come back to them. To write each reply, your messages and your first name are sent to Anthropic, the company behind the Claude AI model. You can delete any chat at any time.</li>
             <li><strong>Bowl Score quiz:</strong> your answers stay in your browser. If you give your email at the end, your dog’s details and plan are sent to our email provider, Klaviyo, so we can send you the plan and the feeding guide.</li>
         </ul>
 
@@ -20,6 +21,7 @@
         <ul>
             <li><strong>Stripe</strong> processes payments.</li>
             <li><strong>Amazon Web Services (SES)</strong> sends account emails such as receipts and login links.</li>
+            <li><strong>Anthropic</strong> provides the AI model (Claude) that writes the chat replies.</li>
             <li><strong>Klaviyo</strong> sends the quiz plan and our emails, if you sign up through the quiz.</li>
             <li><strong>Cloudflare Turnstile</strong> checks that sign-ups come from people, not bots.</li>
         </ul>
@@ -33,7 +35,7 @@
         <h2>Contact</h2>
         <p>Questions about your data? Write to <a href="mailto:support@myzenoo.com">support@myzenoo.com</a>.</p>
 
-        <p class="small muted">Last updated 1 November 2026.</p>
+        <p class="small muted">Last updated 2 November 2026.</p>
     </div>
 </section>
 {% endblock %}

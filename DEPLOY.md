@@ -24,6 +24,9 @@ needs no manual steps.
 | `MAIL_FROM_EMAIL` | A sender verified in SES, e.g. `noreply@myzenoo.com`. |
 | `STRIPE_SECRET_KEY` | `sk_test_...` for the test product. Switch to `sk_live_...` only for real sales. |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` from step 3. Checkout stays off until both Stripe values are set. |
+| `ANTHROPIC_API_KEY` | From the Claude Console (**API keys**). Switches on the Chat tab. Empty means the chat is off. |
+| `ANTHROPIC_MODEL` | Optional. Defaults to `claude-haiku-5-5`. |
+| `CHAT_DAILY_LIMIT` | Optional. Messages per pet parent per day, default `60`. |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | From Cloudflare Turnstile. Empty switches the sign-up captcha off. |
 | `QUIZ_SEND_TO_KLAVIYO` | Defaults to `true`: finished quizzes go to the **live** Klaviyo flow and email the pet parent. Set `false` for a staging copy. |
 | `KLAVIYO_COMPANY_ID`, `KLAVIYO_LIST_ID` | Default to the EN account (`SVCcfJ`, list `Xubzza`). |

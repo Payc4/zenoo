@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Purchase;
 use App\Entity\User;
 use App\Form\RegistrationFormType;
+use App\Repository\ChatConversationRepository;
 use App\Service\AvatarUploader;
 use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -129,7 +130,7 @@ class AccountController extends AbstractController
     }
 
     #[Route('/delete', name: 'app_account_delete', methods: ['POST'])]
-    public function delete(Request $request, UserPasswordHasherInterface $hasher, Security $security, AvatarUploader $avatars): Response
+    public function delete(Request $request, UserPasswordHasherInterface $hasher, Security $security, AvatarUploader $avatars, ChatConversationRepository $chats): Response
     {
         if (!$this->isCsrfTokenValid('account-delete', (string) $request->request->get('_csrf_token'))) {
             return $this->back('error', 'Your session expired. Please try again.', 'delete');
@@ -144,6 +145,7 @@ class AccountController extends AbstractController
         }
 
         $avatars->remove($user->getProfileImage());
+        $chats->deleteAllForUser($user);
         $security->logout(false);
         foreach ($user->getPurchases() as $purchase) {
             $this->em->remove($purchase);

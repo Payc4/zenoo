@@ -19,6 +19,7 @@ in capitals, Inter body copy, 24px corners and no shadows.
 | **Shop** | Products from the database. **Buy now** opens Stripe Checkout, and the order is recorded by the signed Stripe webhook or the return page, whichever arrives first. It is never recorded twice. Refunds made in Stripe mark the order refunded. |
 | **Test product** | “ZENOO Test Product”, €1.00, created by the first migration. Nothing is shipped. |
 | **Bowl Score quiz** | The quiz from the ZENOO handoff at `/quiz/`. Answers are sent to Klaviyo (`QUIZ_SEND_TO_KLAVIYO=true`, see below). |
+| **Chat** (`/chat`) | A Claude-powered chatbot in its own tab. Logged-in pet parents only, **60 messages per person per day** (admins unlimited). Replies stream in as they're written, and chats are saved and can be deleted. See below. |
 | **Admin** (`/admin`) | Overview, products, purchases (read-only) and pet parents (create, edit, set passwords, grant Admin). |
 
 Security basics: CSRF tokens on every form, hashed passwords (Symfony `auto`), login
@@ -61,11 +62,11 @@ Pay with card `4242 4242 4242 4242`, any future date and any CVC.
 php bin/phpunit
 ```
 
-40 tests cover sign-up, login, the lockout, login links, password reset, account changes,
+51 tests cover sign-up, login, the lockout, login links, password reset, account changes,
 photo uploads, deletion, access control, checkout parameters, the return page, webhooks
-(valid, forged, old, retried), refunds, private orders, and that the quiz files still
-match the handoff. Stripe is replaced by `tests/Support/FakeStripe.php`, so tests never
-touch the network.
+(valid, forged, old, retried), refunds, private orders, the chat (streaming, history, daily limit, refunds,
+privacy, escaping), and that the quiz files still match the handoff. Stripe and Claude are replaced by `tests/Support/FakeStripe.php` and
+`FakeClaude.php`, so tests never touch the network.
 
 ## The Bowl Score quiz
 
@@ -83,13 +84,30 @@ Coolify for a staging copy), or use your own address. When it's off, the quiz st
 If you update the quiz from the handoff, copy the files over and update the hashes in
 `tests/Functional/PagesTest.php`.
 
+## The chatbot
+
+- **The prompt** is in `config/chatbot/system_prompt.md`. Edit that file and deploy to change how
+  the assistant behaves. It can use `{{name}}` (the pet parent's first name) and `{{today}}`
+  (today's date). A short formatting note is added automatically, because the chat window only
+  shows bold, italic and lists.
+- **Switching it on:** set `ANTHROPIC_API_KEY` (from the Claude Console). Without it, the Chat
+  tab says the chat isn't switched on yet.
+- **Model:** `claude-haiku-5-5` by default. Set `ANTHROPIC_MODEL` to change it.
+- **Daily limit:** `CHAT_DAILY_LIMIT` (default `60`) messages per pet parent per calendar day in
+  `CHAT_TIMEZONE` (default `Europe/Vilnius`). Counts are stored separately from the chats, so
+  deleting a chat doesn't give messages back. A reply that fails doesn't count. Admins have no
+  limit, so they can test the prompt.
+- Claude sees the last 20 messages of a chat. The admin overview shows messages today and tokens
+  this month.
+
 ## Project layout
 
 ```
 src/
+  Chat/              ClaudeClient (streaming, no SDK), ChatAgent (prompt + history), ChatQuota (daily limit)
   Controller/        Home, Security (login, login links), Registration, PasswordReset,
-                     Account, Shop, Webhook, Admin/ (EasyAdmin)
-  Entity/            User, Product, Purchase
+                     Account, Shop, Chat, Webhook, Admin/ (EasyAdmin)
+  Entity/            User, Product, Purchase, ChatConversation, ChatMessage, ChatUsage
   Payment/           StripeClient (no SDK), StripeCheckout (session + fulfilment)
   Security/          LoginFormAuthenticator, LoginAttemptLimiter, LoginSuccessHandler
   Service/           EmailService, AvatarUploader

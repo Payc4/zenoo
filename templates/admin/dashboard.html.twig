@@ -10,6 +10,19 @@
     <div class="zn-stat"><span>€{{ liveRevenue|number_format(2, '.', ',') }}</span>Real revenue ({{ liveOrders }} live orders)</div>
 </div>
 
+<h2 class="zn-h2">Chat</h2>
+{% if chat.configured %}
+<div class="zn-stats">
+    <div class="zn-stat"><span>{{ chat.today }}</span>Messages sent today</div>
+    <div class="zn-stat"><span>{{ chat.month.replies }}</span>Replies this month (in chats not deleted)</div>
+    <div class="zn-stat"><span>{{ (chat.month.input + chat.month.output)|number_format(0, '.', ' ') }}</span>Tokens this month ({{ chat.month.input|number_format(0, '.', ' ') }} in, {{ chat.month.output|number_format(0, '.', ' ') }} out)</div>
+    <div class="zn-stat"><span>{{ chat.limit }}</span>Daily limit per pet parent · {{ chat.model }}</div>
+</div>
+<p class="zn-note">Check the cost for these tokens in the Claude Console. The prompt is in <code>config/chatbot/system_prompt.md</code>.</p>
+{% else %}
+<p class="zn-note">The chat is switched off. Add <code>ANTHROPIC_API_KEY</code> in Coolify and redeploy.</p>
+{% endif %}
+
 <h2 class="zn-h2">Latest orders</h2>
 {% if latest|length %}
 <table class="table datagrid">

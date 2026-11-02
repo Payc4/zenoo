@@ -1,0 +1,122 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ conversation ? conversation.title ~ ' · ' }}Chat · ZENOO{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block body_class %}chat-page{% endblock %}
+{% block importmap %}{{ importmap(['app', 'chat']) }}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block body %}
+<div class="chat-app" id="chat"
+     data-send-url="{{ path('app_chat_send') }}"
+     data-csrf="{{ csrf_token('chat') }}"
+     data-conversation-id="{{ conversation ? conversation.id }}"
+     data-max-chars="{{ maxChars }}"
+     data-configured="{{ configured ? 'true' : 'false' }}"
+     data-limit="{{ limit }}"
+     data-reset-label="{{ resetLabel }}"
+     data-unlimited="{{ unlimited ? 'true' : 'false' }}">
+
+    {# ───────── Conversations ───────── #}
+    <aside class="chat-side" id="chat-side" aria-label="Conversations">
+        <a class="btn btn-block" href="{{ path('app_chat') }}">+ New chat</a>
+
+        <p class="chat-label">Your chats</p>
+        <nav class="chat-convs" id="chat-convs">
+            {% for c in conversations %}
+                <a class="chat-conv{{ conversation and conversation.id == c.id ? ' is-active' }}" href="{{ path('app_chat_conversation', {id: c.id}) }}">
+                    <span class="chat-conv__title">{{ c.title }}</span>
+                    <span class="chat-conv__date">{{ c.updatedAt|date('j M') }}</span>
+                </a>
+            {% else %}
+                <p class="chat-muted" id="chat-convs-empty">No chats yet.</p>
+            {% endfor %}
+        </nav>
+
+        <div class="chat-side__foot">
+            {% if unlimited %}
+                <p class="chat-muted">Admin: no daily limit.</p>
+            {% else %}
+                <p class="chat-quota"><strong id="chat-remaining">{{ remaining }}</strong> of {{ limit }} messages left today</p>
+                <p class="chat-muted">Resets at {{ resetLabel }}.</p>
+            {% endif %}
+        </div>
+    </aside>
+    <button type="button" class="chat-scrim" id="chat-scrim" aria-label="Close chat list" hidden></button>
+
+    {# ───────── Chat ───────── #}
+    <section class="chat-main">
+        <div class="chat-bar">
+            <button type="button" class="chat-bar__toggle" id="chat-toggle" aria-controls="chat-side" aria-expanded="false">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+                Chats
+            </button>
+            <span class="chat-bar__title" id="chat-title">{{ conversation ? conversation.title : 'New chat' }}</span>
+            {% if conversation %}
+                <form method="post" action="{{ path('app_chat_delete', {id: conversation.id}) }}" data-confirm="Delete this chat?">
+                    <input type="hidden" name="_token" value="{{ csrf_token('chat-delete-' ~ conversation.id) }}">
+                    <button type="submit" class="link-btn small">Delete chat</button>
+                </form>
+            {% endif %}
+        </div>
+
+        {% if not configured %}
+            <div class="flash flash-info chat-alert" role="status">
+                {% if is_granted('ROLE_ADMIN') %}
+                    Admin: add <code>ANTHROPIC_API_KEY</code> to the environment variables in Coolify and redeploy to switch the chat on.
+                {% else %}
+                    The chat isn’t switched on yet. Please check back soon.
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div class="chat-scroll" id="chat-scroll">
+            <div class="chat-thread" id="chat-thread">
+                {% if messages|length == 0 %}
+                    <div class="chat-empty" id="chat-empty">
+                        <img src="/apple-touch-icon.png" alt="" width="56" height="56">
+                        <h1>Hi {{ app.user.displayName }}, how can we help?</h1>
+                        <p class="chat-muted">Ask anything about feeding your dog or using ZENOO.</p>
+                        <div class="chat-suggest">
+                            {% for s in [
+                                'How much should my dog eat a day?',
+                                'How do I switch my dog to a new food?',
+                                'My dog is a picky eater. Any tips?',
+                                'How do I read a dog food label?'
+                            ] %}
+                                <button type="button" class="chat-suggest__btn" data-suggest="{{ s }}" {{ configured ? '' : 'disabled' }}>{{ s }}</button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% for m in messages %}
+                    {% if m.fromUser %}
+                        <div class="chat-msg chat-msg--user"><div class="chat-bubble">{{ m.content|nl2br }}</div></div>
+                    {% else %}
+                        <div class="chat-msg chat-msg--bot">
+                            <img class="chat-avatar" src="/favicon.png" alt="" width="32" height="32">
+                            <div class="chat-answer">{{ m.content|chat_markdown }}</div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <form class="chat-composer" id="chat-form">
+            <div class="chat-composer__box">
+                <label for="chat-input" class="visually-hidden">Your message</label>
+                <textarea id="chat-input" rows="1" maxlength="{{ maxChars }}" placeholder="Ask about your dog’s food…"
+                          {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}></textarea>
+                <button type="submit" class="chat-send" id="chat-send" aria-label="Send" {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                </button>
+            </div>
+            <p class="chat-composer__meta">
+                <span id="chat-limit-note">{% if not unlimited and remaining == 0 %}You’ve used all {{ limit }} messages for today. You can chat again after {{ resetLabel }}.{% else %}The assistant can make mistakes. For health questions, please ask your vet.{% endif %}</span>
+                <span id="chat-counter"></span>
+            </p>
+        </form>
+    </section>
+</div>
+{% endblock %}

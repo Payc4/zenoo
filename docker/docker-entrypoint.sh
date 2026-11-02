@@ -79,6 +79,10 @@ else
     esac
 fi
 
+if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+    echo "NOTE: ANTHROPIC_API_KEY is empty — the chat (/chat) is OFF."
+fi
+
 echo "Session storage: ${SESSION_DSN}"
 
 # --- Wait for the database --------------------------------------------------

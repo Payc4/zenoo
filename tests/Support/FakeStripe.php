@@ -5,8 +5,9 @@ namespace App\Tests\Support;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
 /**
- * Stands in for api.stripe.com in the test environment (wired as the HTTP client's
- * mock_response_factory). Records every request so tests can check what was sent.
+ * Answers every outgoing HTTP request in the test environment (wired as the HTTP client's
+ * mock_response_factory): api.stripe.com here, and the Claude API via FakeClaude.
+ * Records every Stripe request so tests can check what was sent.
  */
 final class FakeStripe
 {
@@ -25,6 +26,9 @@ final class FakeStripe
 
     public function __invoke(string $method, string $url, array $options = []): MockResponse
     {
+        if (str_ends_with($url, '/v1/messages')) {
+            return FakeClaude::respond($options);
+        }
         $body = (string) ($options['body'] ?? '');
         $key = null;
         foreach ($options['headers'] ?? [] as $h) {

@@ -29,6 +29,7 @@ abstract class AppTestCase extends WebTestCase
 
         static::getContainer()->get('cache.app')->clear();
         FakeStripe::reset();
+        \App\Tests\Support\FakeClaude::reset();
     }
 
     protected function createUser(string $email = 'maria@example.com', string $password = 'Password123', array $roles = []): User

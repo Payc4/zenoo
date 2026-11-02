@@ -9,4 +9,8 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
+    'chat' => [
+        'path' => './assets/chat.js',
+        'entrypoint' => true,
+    ],
 ];

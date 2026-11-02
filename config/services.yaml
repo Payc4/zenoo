@@ -11,6 +11,11 @@ parameters:
     app.quiz.klaviyo_list_id: '%env(default::KLAVIYO_LIST_ID)%'
     app.quiz.send_to_klaviyo: '%env(bool:default:app.quiz.send_default:QUIZ_SEND_TO_KLAVIYO)%'
     app.quiz.send_default: false
+    # Chatbot (/chat). ANTHROPIC_API_KEY switches it on; the prompt is config/chatbot/system_prompt.md.
+    chat.default_model: 'claude-haiku-5-5'
+    chat.default_base_url: 'https://api.anthropic.com'
+    chat.default_daily_limit: 60
+    chat.default_timezone: 'Europe/Vilnius'
 
 services:
     _defaults:
