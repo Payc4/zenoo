@@ -6,38 +6,19 @@
 
 .chat-app {
   flex: 1; min-height: 0;
-  display: grid; grid-template-columns: 290px 1fr;
+  display: flex; flex-direction: column;
 }
-
-/* ───────── Sidebar ───────── */
-.chat-side {
-  background: var(--white); border-right: 1px solid var(--line);
-  display: flex; flex-direction: column; gap: 10px; padding: 18px 14px; min-height: 0;
-}
-.chat-label { font: 800 12px var(--font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-muted); margin: 10px 8px 0; }
-.chat-convs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; min-height: 0; }
-.chat-conv {
-  display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
-  padding: 10px 12px; border-radius: 14px; text-decoration: none; color: var(--forest); font-size: 15px;
-}
-.chat-conv:hover { background: var(--cream); }
-.chat-conv.is-active { background: var(--mist); font-weight: 600; }
-.chat-conv__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-conv__date { font-size: 12px; color: var(--ink-muted); flex: none; }
-.chat-muted { color: var(--ink-muted); font-size: 14px; margin: 0 8px; }
-.chat-side__foot { border-top: 1px solid var(--line); padding-top: 12px; }
-.chat-quota { margin: 0 8px 2px; font-size: 15px; }
-.chat-quota strong { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--sun-700); }
-.chat-scrim { display: none; }
 
 /* ───────── Main column ───────── */
-.chat-main { display: flex; flex-direction: column; min-height: 0; background: var(--cream); }
+.chat-main { flex: 1; display: flex; flex-direction: column; min-height: 0; background: var(--cream); }
+.chat-muted { color: var(--ink-muted); font-size: 14px; }
+.chat-quota { font-size: 14px; color: var(--ink-muted); white-space: nowrap; flex: none; }
+.chat-quota strong { font-family: var(--font-display); font-weight: 800; font-size: 16px; color: var(--sun-700); }
 .chat-bar {
-  display: flex; align-items: center; gap: 14px; padding: 12px 24px; border-bottom: 1px solid var(--line); background: var(--cream);
+  display: flex; align-items: center; gap: 18px; padding: 12px max(24px, calc((100% - 760px) / 2 + 24px)); border-bottom: 1px solid var(--line); background: var(--cream);
 }
 .chat-bar__title { font: 800 16px var(--font-display); text-transform: uppercase; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .chat-bar form { margin: 0; flex: none; }
-.chat-bar__toggle { display: none; align-items: center; gap: 6px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 7px 14px; font: 600 14px var(--font-sans); color: var(--forest); cursor: pointer; flex: none; }
 .chat-alert { margin: 16px 24px 0; }
 
 .chat-scroll { flex: 1; overflow-y: auto; min-height: 0; }
@@ -47,7 +28,7 @@
 .chat-empty { text-align: center; padding: 6vh 0 12px; }
 .chat-empty img { margin: 0 auto 16px; border-radius: 16px; }
 .chat-empty h1 { font-size: clamp(26px, 3.6vw, 36px); margin-bottom: 8px; }
-.chat-empty .chat-muted { font-size: 17px; margin-bottom: 24px; }
+.chat-empty .chat-muted { font-size: 17px; margin: 0 0 24px; }
 .chat-suggest { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 620px; margin: 0 auto; }
 .chat-suggest__btn {
   text-align: left; font: 600 15px/1.35 var(--font-sans); color: var(--forest);
@@ -106,16 +87,10 @@
 
 /* ───────── Phones and small tablets ───────── */
 @media (max-width: 860px) {
-  .chat-app { grid-template-columns: 1fr; position: relative; }
-  .chat-side {
-    position: absolute; inset: 0 auto 0 0; width: min(86vw, 320px); z-index: 30;
-    transform: translateX(-102%); transition: transform 220ms var(--ease);
-  }
-  .chat-side.is-open { transform: none; }
-  .chat-scrim { display: block; position: absolute; inset: 0; z-index: 20; background: rgba(47, 63, 46, .35); border: 0; }
-  .chat-scrim[hidden] { display: none; }
-  .chat-bar { padding: 10px 14px; }
-  .chat-bar__toggle { display: inline-flex; }
+  .chat-bar { padding: 10px 14px; gap: 12px; flex-wrap: wrap; }
+  /* The menu already shows "Chat"; on phones the bar is just the counter and Clear chat. */
+  .chat-bar__title { display: none; }
+  .chat-quota { flex: 1; }
   .chat-alert { margin: 12px 14px 0; }
   .chat-thread { padding: 20px 14px 8px; }
   .chat-composer { padding: 6px 12px 12px; }

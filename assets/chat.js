@@ -16,13 +16,8 @@ if (app) {
   const counter = $('chat-counter');
   const limitNote = $('chat-limit-note');
   const remainingEl = $('chat-remaining');
-  const side = $('chat-side');
-  const scrim = $('chat-scrim');
-  const toggle = $('chat-toggle');
-  const convs = $('chat-convs');
   const maxChars = Number(app.dataset.maxChars) || 2000;
   const configured = app.dataset.configured === 'true';
-  let conversationId = app.dataset.conversationId || '';
   let busy = false;
 
   const scrollToBottom = (force = false) => {
@@ -46,14 +41,6 @@ if (app) {
       limitNote.textContent = `You’ve used all ${app.dataset.limit} messages for today. You can chat again after ${app.dataset.resetLabel}.`;
     }
   };
-
-  const toggleSide = (open = !side.classList.contains('is-open')) => {
-    side.classList.toggle('is-open', open);
-    scrim.hidden = !open;
-    toggle.setAttribute('aria-expanded', String(open));
-  };
-  toggle.addEventListener('click', () => toggleSide());
-  scrim.addEventListener('click', () => toggleSide(false));
 
   const addUserMessage = (text) => {
     const wrap = document.createElement('div');
@@ -83,29 +70,7 @@ if (app) {
     });
   };
 
-  const onMeta = (d) => {
-    setRemaining(d.remaining);
-    const wasNew = !conversationId;
-    conversationId = String(d.conversationId);
-    if (wasNew && d.url) {
-      history.replaceState({}, '', d.url);
-      document.title = `${d.title} · Chat · ZENOO`;
-      $('chat-title').textContent = d.title;
-      $('chat-convs-empty')?.remove();
-      convs.querySelectorAll('.chat-conv.is-active').forEach((a) => a.classList.remove('is-active'));
-      const a = document.createElement('a');
-      a.className = 'chat-conv is-active';
-      a.href = d.url;
-      const t = document.createElement('span');
-      t.className = 'chat-conv__title';
-      t.textContent = d.title;
-      const date = document.createElement('span');
-      date.className = 'chat-conv__date';
-      date.textContent = 'Now';
-      a.append(t, date);
-      convs.prepend(a);
-    }
-  };
+  const onMeta = (d) => setRemaining(d.remaining);
 
   const readStream = async (res, handlers) => {
     const reader = res.body.getReader();
@@ -148,7 +113,7 @@ if (app) {
       const res = await fetch(app.dataset.sendUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', 'X-CSRF-Token': app.dataset.csrf },
-        body: JSON.stringify({ conversationId: conversationId || null, message: text }),
+        body: JSON.stringify({ message: text }),
       });
       const type = res.headers.get('content-type') || '';
       if (!res.ok || !type.includes('text/event-stream')) {
@@ -167,7 +132,6 @@ if (app) {
         delta: (d) => { raw += d.text; renderInto(reply.answer, raw); },
         done: () => {},
         error: (d) => {
-          if (d.removedConversation) conversationId = '';
           setRemaining(d.remaining);
           throw new Error(d.message);
         },

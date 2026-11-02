@@ -22,7 +22,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * The ZENOO chatbot (Claude). Logged-in pet parents only, with a daily message limit (ChatQuota).
+ * The ZENOO chatbot (Claude). Each logged-in pet parent has exactly one chat, created with
+ * their first message. Daily message limit: ChatQuota.
  * Replies stream to the browser as server-sent events: meta, delta, done, error.
  */
 #[Route('/chat')]
@@ -40,22 +41,13 @@ class ChatController extends AbstractController
     }
 
     #[Route('', name: 'app_chat', methods: ['GET'])]
-    #[Route('/c/{id}', name: 'app_chat_conversation', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function index(ClaudeClient $claude, ?int $id = null): Response
+    public function index(ClaudeClient $claude): Response
     {
         $user = $this->currentUser();
-        $conversation = null;
-        if ($id !== null) {
-            $conversation = $this->conversations->findOneForUser($id, $user);
-            if (!$conversation) {
-                return $this->redirectToRoute('app_chat');
-            }
-        }
+        $conversation = $this->conversations->findForUser($user);
 
         return $this->render('chat/index.html.twig', [
-            'conversation' => $conversation,
             'messages' => $conversation ? $conversation->getMessages() : [],
-            'conversations' => $this->conversations->findRecentForUser($user),
             'configured' => $claude->isConfigured(),
             'unlimited' => $this->quota->isUnlimited($user),
             'limit' => $this->quota->dailyLimit(),
@@ -63,6 +55,13 @@ class ChatController extends AbstractController
             'resetLabel' => $this->quota->resetLabel(),
             'maxChars' => self::MAX_MESSAGE_CHARS,
         ]);
+    }
+
+    /** Old links from when there were several chats per person. */
+    #[Route('/c/{id}', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function legacyConversation(): Response
+    {
+        return $this->redirectToRoute('app_chat');
     }
 
     #[Route('/send', name: 'app_chat_send', methods: ['POST'])]
@@ -92,15 +91,12 @@ class ChatController extends AbstractController
             ], 429);
         }
 
-        $isNew = false;
-        $conversation = null;
-        if (!empty($data['conversationId'])) {
-            $conversation = $this->conversations->findOneForUser((int) $data['conversationId'], $user);
-        }
-        if (!$conversation) {
-            $conversation = (new ChatConversation($user))->setTitle($text);
+        // The one chat this pet parent has, started by their first message.
+        $conversation = $this->conversations->findForUser($user);
+        $isNew = $conversation === null;
+        if ($isNew) {
+            $conversation = new ChatConversation($user);
             $this->em->persist($conversation);
-            $isNew = true;
         }
 
         $userMessage = new ChatMessage($conversation, ChatMessage::ROLE_USER, $text);
@@ -130,13 +126,7 @@ class ChatController extends AbstractController
                 }
             };
 
-            $emit('meta', [
-                'conversationId' => $conversation->getId(),
-                'title' => $conversation->getTitle(),
-                'url' => $this->generateUrl('app_chat_conversation', ['id' => $conversation->getId()]),
-                'isNew' => $isNew,
-                'remaining' => $remaining,
-            ]);
+            $emit('meta', ['remaining' => $remaining]);
 
             try {
                 $result = $agent->reply($conversation, static fn (string $delta) => $emit('delta', ['text' => $delta]));
@@ -152,7 +142,7 @@ class ChatController extends AbstractController
             } catch (\Throwable $e) {
                 $logger->error('Chat reply failed', ['exception' => $e]);
 
-                // Roll the turn back: the conversation stays consistent and the message doesn't count.
+                // Roll the turn back: the chat stays consistent and the message doesn't count.
                 $quota->refund($user);
                 $this->em->remove($userMessage);
                 if ($isNew) {
@@ -162,7 +152,6 @@ class ChatController extends AbstractController
 
                 $emit('error', [
                     'message' => $this->friendlyError($e),
-                    'removedConversation' => $isNew,
                     'remaining' => $remaining === null ? null : $remaining + 1,
                 ]);
             }
@@ -175,13 +164,13 @@ class ChatController extends AbstractController
         return $response;
     }
 
-    #[Route('/c/{id}/delete', name: 'app_chat_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function delete(int $id, Request $request): Response
+    /** Empties the chat. The day's message count stays as it is. */
+    #[Route('/clear', name: 'app_chat_clear', methods: ['POST'])]
+    public function clear(Request $request): Response
     {
-        $conversation = $this->conversations->findOneForUser($id, $this->currentUser());
-        if ($conversation && $this->isCsrfTokenValid('chat-delete-' . $id, (string) $request->request->get('_token'))) {
-            $this->em->remove($conversation);
-            $this->em->flush();
+        $user = $this->currentUser();
+        if ($this->isCsrfTokenValid('chat-clear', (string) $request->request->get('_token'))) {
+            $this->conversations->deleteConversationsForUser($user);
         }
 
         return $this->redirectToRoute('app_chat');
@@ -200,9 +189,8 @@ class ChatController extends AbstractController
     /** What the pet parent sees; the details go to the log for the admin. */
     private function friendlyError(\Throwable $e): string
     {
-        $admin = $this->isGranted('ROLE_ADMIN');
         if ($e instanceof ClaudeException) {
-            if ($admin) {
+            if ($this->isGranted('ROLE_ADMIN')) {
                 return match (true) {
                     $e->getCode() === 401 => 'Admin: the Claude API key was rejected. Check ANTHROPIC_API_KEY in Coolify.',
                     $e->getCode() === 404 => 'Admin: the model name wasn’t recognised. Check ANTHROPIC_MODEL.',

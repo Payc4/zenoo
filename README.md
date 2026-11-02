@@ -19,7 +19,7 @@ in capitals, Inter body copy, 24px corners and no shadows.
 | **Shop** | Products from the database. **Buy now** opens Stripe Checkout, and the order is recorded by the signed Stripe webhook or the return page, whichever arrives first. It is never recorded twice. Refunds made in Stripe mark the order refunded. |
 | **Test product** | “ZENOO Test Product”, €1.00, created by the first migration. Nothing is shipped. |
 | **Bowl Score quiz** | The quiz from the ZENOO handoff at `/quiz/`. Answers are sent to Klaviyo (`QUIZ_SEND_TO_KLAVIYO=true`, see below). |
-| **Chat** (`/chat`) | A Claude-powered chatbot in its own tab. Logged-in pet parents only, **60 messages per person per day** (admins unlimited). Replies stream in as they're written, and chats are saved and can be deleted. See below. |
+| **Chat** (`/chat`) | A Claude-powered chatbot in its own tab. Logged-in pet parents only, **one chat per person**, **60 messages per day** (admins unlimited). Replies stream in as they're written, the chat is saved, and "Clear chat" empties it. See below. |
 | **Admin** (`/admin`) | Overview, products, purchases (read-only) and pet parents (create, edit, set passwords, grant Admin). |
 
 Security basics: CSRF tokens on every form, hashed passwords (Symfony `auto`), login
@@ -95,9 +95,9 @@ If you update the quiz from the handoff, copy the files over and update the hash
 - **Model:** `claude-haiku-5-5` by default. Set `ANTHROPIC_MODEL` to change it.
 - **Daily limit:** `CHAT_DAILY_LIMIT` (default `60`) messages per pet parent per calendar day in
   `CHAT_TIMEZONE` (default `Europe/Vilnius`). Counts are stored separately from the chats, so
-  deleting a chat doesn't give messages back. A reply that fails doesn't count. Admins have no
+  clearing the chat doesn't give messages back. A reply that fails doesn't count. Admins have no
   limit, so they can test the prompt.
-- Claude sees the last 20 messages of a chat. The admin overview shows messages today and tokens
+- Each pet parent has a single chat that keeps going. Claude sees its last 20 messages. The admin overview shows messages today and tokens
   this month.
 
 ## Project layout

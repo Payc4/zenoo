@@ -14,7 +14,7 @@
 {% if chat.configured %}
 <div class="zn-stats">
     <div class="zn-stat"><span>{{ chat.today }}</span>Messages sent today</div>
-    <div class="zn-stat"><span>{{ chat.month.replies }}</span>Replies this month (in chats not deleted)</div>
+    <div class="zn-stat"><span>{{ chat.month.replies }}</span>Replies this month (not counting cleared chats)</div>
     <div class="zn-stat"><span>{{ (chat.month.input + chat.month.output)|number_format(0, '.', ' ') }}</span>Tokens this month ({{ chat.month.input|number_format(0, '.', ' ') }} in, {{ chat.month.output|number_format(0, '.', ' ') }} out)</div>
     <div class="zn-stat"><span>{{ chat.limit }}</span>Daily limit per pet parent · {{ chat.model }}</div>
 </div>

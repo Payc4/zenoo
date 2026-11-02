@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ conversation ? conversation.title ~ ' · ' }}Chat · ZENOO{% endblock %}
+{% block title %}Chat · ZENOO{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block body_class %}chat-page{% endblock %}
 {% block importmap %}{{ importmap(['app', 'chat']) }}{% endblock %}
@@ -10,52 +10,23 @@
 <div class="chat-app" id="chat"
      data-send-url="{{ path('app_chat_send') }}"
      data-csrf="{{ csrf_token('chat') }}"
-     data-conversation-id="{{ conversation ? conversation.id }}"
      data-max-chars="{{ maxChars }}"
      data-configured="{{ configured ? 'true' : 'false' }}"
      data-limit="{{ limit }}"
-     data-reset-label="{{ resetLabel }}"
-     data-unlimited="{{ unlimited ? 'true' : 'false' }}">
+     data-reset-label="{{ resetLabel }}">
 
-    {# ───────── Conversations ───────── #}
-    <aside class="chat-side" id="chat-side" aria-label="Conversations">
-        <a class="btn btn-block" href="{{ path('app_chat') }}">+ New chat</a>
-
-        <p class="chat-label">Your chats</p>
-        <nav class="chat-convs" id="chat-convs">
-            {% for c in conversations %}
-                <a class="chat-conv{{ conversation and conversation.id == c.id ? ' is-active' }}" href="{{ path('app_chat_conversation', {id: c.id}) }}">
-                    <span class="chat-conv__title">{{ c.title }}</span>
-                    <span class="chat-conv__date">{{ c.updatedAt|date('j M') }}</span>
-                </a>
-            {% else %}
-                <p class="chat-muted" id="chat-convs-empty">No chats yet.</p>
-            {% endfor %}
-        </nav>
-
-        <div class="chat-side__foot">
-            {% if unlimited %}
-                <p class="chat-muted">Admin: no daily limit.</p>
-            {% else %}
-                <p class="chat-quota"><strong id="chat-remaining">{{ remaining }}</strong> of {{ limit }} messages left today</p>
-                <p class="chat-muted">Resets at {{ resetLabel }}.</p>
-            {% endif %}
-        </div>
-    </aside>
-    <button type="button" class="chat-scrim" id="chat-scrim" aria-label="Close chat list" hidden></button>
-
-    {# ───────── Chat ───────── #}
     <section class="chat-main">
         <div class="chat-bar">
-            <button type="button" class="chat-bar__toggle" id="chat-toggle" aria-controls="chat-side" aria-expanded="false">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-                Chats
-            </button>
-            <span class="chat-bar__title" id="chat-title">{{ conversation ? conversation.title : 'New chat' }}</span>
-            {% if conversation %}
-                <form method="post" action="{{ path('app_chat_delete', {id: conversation.id}) }}" data-confirm="Delete this chat?">
-                    <input type="hidden" name="_token" value="{{ csrf_token('chat-delete-' ~ conversation.id) }}">
-                    <button type="submit" class="link-btn small">Delete chat</button>
+            <span class="chat-bar__title">Chat with ZENOO</span>
+            {% if unlimited %}
+                <span class="chat-quota">Admin: no daily limit</span>
+            {% else %}
+                <span class="chat-quota" title="Resets at {{ resetLabel }}"><strong id="chat-remaining">{{ remaining }}</strong> of {{ limit }} messages left today</span>
+            {% endif %}
+            {% if messages|length %}
+                <form method="post" action="{{ path('app_chat_clear') }}" data-confirm="Clear your whole chat history? This can’t be undone.">
+                    <input type="hidden" name="_token" value="{{ csrf_token('chat-clear') }}">
+                    <button type="submit" class="link-btn small">Clear chat</button>
                 </form>
             {% endif %}
         </div>
@@ -84,7 +55,7 @@
                                 'My dog is a picky eater. Any tips?',
                                 'How do I read a dog food label?'
                             ] %}
-                                <button type="button" class="chat-suggest__btn" data-suggest="{{ s }}" {{ configured ? '' : 'disabled' }}>{{ s }}</button>
+                                <button type="button" class="chat-suggest__btn" data-suggest="{{ s }}" {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}>{{ s }}</button>
                             {% endfor %}
                         </div>
                     </div>
