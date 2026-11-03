@@ -37,6 +37,10 @@ class ChatMessage
     #[ORM\Column(type: 'text')]
     private string $content;
 
+    /** Question cards shown with this assistant message (see App\Chat\Questions), if any. */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $questions = null;
+
     #[ORM\Column(nullable: true)]
     private ?int $inputTokens = null;
 
@@ -88,6 +92,18 @@ class ChatMessage
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getQuestions(): ?array
+    {
+        return $this->questions;
+    }
+
+    public function setQuestions(?array $questions): static
+    {
+        $this->questions = $questions ?: null;
+
+        return $this;
     }
 
     /** For tests and data fixes only. */

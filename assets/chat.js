@@ -1,7 +1,11 @@
 /*
  * The chat page (templates/chat/index.html.twig, styles in assets/styles/chat.css).
  * Sends a message to /chat/send and renders the streamed reply
- * (server-sent events: meta, delta, done, error).
+ * (server-sent events: meta, delta, questions, done, error).
+ *
+ * Question cards: the starting questions (empty chat) and the ones Claude asks with its
+ * ask_questions tool are shown one at a time above the message box ("2 of 4", options,
+ * "Type your answer…", Skip / Next). All answers go back as one chat message.
  */
 import './styles/chat.css';
 
@@ -109,6 +113,7 @@ if (app) {
     scrollToBottom(true);
 
     let raw = '';
+    let cards = null;
     try {
       const res = await fetch(app.dataset.sendUrl, {
         method: 'POST',
@@ -130,13 +135,27 @@ if (app) {
       await readStream(res, {
         meta: onMeta,
         delta: (d) => { raw += d.text; renderInto(reply.answer, raw); },
+        questions: (d) => { cards = d.questions; },
         done: () => {},
         error: (d) => {
           setRemaining(d.remaining);
           throw new Error(d.message);
         },
       });
-      if (!raw.trim()) throw new Error('No reply came back. Please try again.');
+      if (!raw.trim() && !cards) throw new Error('No reply came back. Please try again.');
+      if (cards) {
+        if (frame) cancelAnimationFrame(frame);
+        reply.answer.innerHTML = (raw.trim() ? render(raw) : '<p>I have a few quick questions for you.</p>') + askedList(cards);
+        const again = document.createElement('button');
+        again.type = 'button';
+        again.className = 'btn btn-small chat-reopen';
+        again.textContent = 'Answer the questions';
+        again.hidden = true;
+        again.dataset.reopen = '';
+        reply.answer.appendChild(again);
+        again.addEventListener('click', () => openCards(cards, false));
+        openCards(cards, false);
+      }
     } catch (e) {
       if (frame) cancelAnimationFrame(frame);
       reply.el.classList.add('is-error');
@@ -159,10 +178,143 @@ if (app) {
   });
   document.querySelectorAll('[data-suggest]').forEach((b) => b.addEventListener('click', () => send(b.dataset.suggest)));
 
+  // ───────── Question cards ─────────
+  const card = $('chat-qcard');
+  let q = null; // { questions, intro, index, answers: [{ choice, text, skipped }] }
+
+  function askedList(questions) {
+    return '<ol class="chat-asked">' + questions.map((x) => `<li>${escapeHtml(x.question)}</li>`).join('') + '</ol>';
+  }
+
+  function openCards(questions, intro) {
+    if (!questions || !questions.length || input.disabled) return;
+    q = { questions, intro, index: 0, answers: questions.map(() => ({ choice: null, text: '', skipped: false })) };
+    document.querySelectorAll('[data-reopen]').forEach((b) => { b.hidden = true; });
+    form.hidden = true;
+    card.hidden = false;
+    renderCard();
+    scrollToBottom(true);
+  }
+
+  function closeCards(sent = false) {
+    if (!q) return;
+    const wasIntro = q.intro;
+    q = null;
+    card.hidden = true;
+    card.innerHTML = '';
+    form.hidden = false;
+    if (sent) return;
+    if (wasIntro) {
+      $('chat-suggest')?.removeAttribute('hidden');
+      const note = $('chat-intro-note');
+      if (note) note.textContent = 'Ask anything about feeding your dog or using ZENOO.';
+    } else {
+      // Claude's questions stay answerable from its last message.
+      const last = [...thread.querySelectorAll('[data-reopen]')].pop();
+      if (last) last.hidden = false;
+    }
+    input.focus();
+  }
+
+  const answered = (a) => a.skipped || a.choice !== null || a.text.trim() !== '';
+  const answerText = (x, a) => (a.text.trim() !== '' ? a.text.trim() : (a.choice !== null ? x.options[a.choice].label : null));
+
+  function renderCard() {
+    const { questions, index, answers } = q;
+    const x = questions[index];
+    const a = answers[index];
+    const last = index === questions.length - 1;
+    const canNext = a.choice !== null || a.text.trim() !== '';
+
+    card.innerHTML = `
+      <div class="qcard__head">
+        <button type="button" class="qcard__nav" data-q="prev" aria-label="Previous question" ${index === 0 ? 'disabled' : ''}>‹</button>
+        <span class="qcard__count">${index + 1} of ${questions.length}</span>
+        <button type="button" class="qcard__nav" data-q="next-nav" aria-label="Next question" ${last || !answered(a) ? 'disabled' : ''}>›</button>
+        <button type="button" class="qcard__close" data-q="close" aria-label="Close the questions">×</button>
+      </div>
+      <h2 class="qcard__question" id="qcard-question">${escapeHtml(x.question)}</h2>
+      ${x.options.length ? `<div class="qcard__options" role="radiogroup" aria-labelledby="qcard-question">${x.options.map((o, i) => `
+        <button type="button" class="qcard__option${a.choice === i ? ' is-selected' : ''}" role="radio" aria-checked="${a.choice === i}" data-option="${i}">
+          <span class="qcard__label">${escapeHtml(o.label)}</span>
+          ${o.description ? `<span class="qcard__desc">${escapeHtml(o.description)}</span>` : ''}
+        </button>`).join('')}</div>` : ''}
+      <label class="visually-hidden" for="qcard-text">Your own answer</label>
+      <input type="text" id="qcard-text" class="qcard__text" maxlength="300" autocomplete="off"
+             placeholder="${x.options.length ? 'Type your answer…' : 'Type your answer'}" value="${escapeHtml(a.text)}">
+      <div class="qcard__actions">
+        <button type="button" class="btn btn-outline btn-small" data-q="skip">Skip</button>
+        <button type="button" class="btn btn-small" data-q="next" ${canNext ? '' : 'disabled'}>${last ? 'Send answers' : 'Next →'}</button>
+      </div>`;
+
+    const text = card.querySelector('#qcard-text');
+    text.addEventListener('input', () => {
+      a.text = text.value;
+      a.skipped = false;
+      if (a.text.trim() !== '' && a.choice !== null) {
+        a.choice = null;
+        card.querySelectorAll('.qcard__option').forEach((b) => { b.classList.remove('is-selected'); b.setAttribute('aria-checked', 'false'); });
+      }
+      card.querySelector('[data-q="next"]').disabled = !(a.choice !== null || a.text.trim() !== '');
+    });
+    text.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); if (a.text.trim() !== '') next(); }
+    });
+    (x.options.length ? card.querySelector('.qcard__option.is-selected, .qcard__option') : text)?.focus({ preventScroll: true });
+  }
+
+  function next() {
+    if (q.index < q.questions.length - 1) {
+      q.index += 1;
+      renderCard();
+    } else {
+      submitCards();
+    }
+  }
+
+  function submitCards() {
+    const { questions, answers, intro } = q;
+    if (answers.every((a) => a.choice === null && a.text.trim() === '')) {
+      closeCards(false); // everything skipped: nothing to send
+      return;
+    }
+    const lines = questions.map((x, i) => `${x.question} — ${answerText(x, answers[i]) ?? 'skipped'}`);
+    const message = (intro ? 'A bit about my dog:\n' : '') + lines.join('\n');
+    closeCards(true);
+    send(message);
+  }
+
+  card.addEventListener('click', (e) => {
+    if (!q) return;
+    const opt = e.target.closest('[data-option]');
+    if (opt) {
+      const a = q.answers[q.index];
+      a.choice = Number(opt.dataset.option);
+      a.text = '';
+      a.skipped = false;
+      renderCard();
+      // Picking an option moves on by itself, except on the last question.
+      if (q.index < q.questions.length - 1) setTimeout(() => { if (q) next(); }, 220);
+      return;
+    }
+    const action = e.target.closest('[data-q]')?.dataset.q;
+    if (action === 'prev' && q.index > 0) { q.index -= 1; renderCard(); }
+    if (action === 'next-nav' && q.index < q.questions.length - 1) { q.index += 1; renderCard(); }
+    if (action === 'next') next();
+    if (action === 'skip') { const a = q.answers[q.index]; a.choice = null; a.text = ''; a.skipped = true; next(); }
+    if (action === 'close') closeCards(false);
+  });
+  card.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCards(false); });
+
+  // Reopen buttons on Claude's last message (rendered by the server).
+  const pending = $('chat-cards') ? JSON.parse($('chat-cards').textContent) : null;
+  document.querySelectorAll('[data-reopen]').forEach((b) => b.addEventListener('click', () => pending && openCards(pending.questions, false)));
+  if (pending) openCards(pending.questions, pending.intro);
+
   scrollToBottom(true);
   window.addEventListener('load', () => scrollToBottom(true), { once: true });
   resize();
-  if (configured && !input.disabled && window.matchMedia('(min-width: 900px)').matches) input.focus();
+  if (configured && !input.disabled && !q && window.matchMedia('(min-width: 900px)').matches) input.focus();
 }
 
 // Minimal, safe Markdown → HTML (mirrors App\Twig\ChatMarkdownExtension).

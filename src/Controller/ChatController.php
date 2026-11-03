@@ -24,7 +24,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * The ZENOO chatbot (Claude). Each logged-in pet parent has exactly one chat, created with
  * their first message. Daily message limit: ChatQuota.
- * Replies stream to the browser as server-sent events: meta, delta, done, error.
+ * Replies stream to the browser as server-sent events: meta, delta, questions, done, error.
+ * "questions" carries multiple-choice cards (starting questions or Claude's ask_questions tool).
  */
 #[Route('/chat')]
 #[IsGranted('ROLE_USER')]
@@ -41,13 +42,20 @@ class ChatController extends AbstractController
     }
 
     #[Route('', name: 'app_chat', methods: ['GET'])]
-    public function index(ClaudeClient $claude): Response
+    public function index(ClaudeClient $claude, ChatAgent $agent): Response
     {
         $user = $this->currentUser();
         $conversation = $this->conversations->findForUser($user);
+        $messages = $conversation ? $conversation->getMessages()->toArray() : [];
+
+        // Cards to show: the starting questions in an empty chat, or the ones in Claude's last reply.
+        $last = end($messages) ?: null;
+        $cards = !$messages ? $agent->introQuestions() : ($last && !$last->isFromUser() ? $last->getQuestions() : null);
 
         return $this->render('chat/index.html.twig', [
-            'messages' => $conversation ? $conversation->getMessages() : [],
+            'messages' => $messages,
+            'cards' => $cards,
+            'cardsAreIntro' => !$messages && $cards !== null,
             'configured' => $claude->isConfigured(),
             'unlimited' => $this->quota->isUnlimited($user),
             'limit' => $this->quota->dailyLimit(),
@@ -130,14 +138,21 @@ class ChatController extends AbstractController
 
             try {
                 $result = $agent->reply($conversation, static fn (string $delta) => $emit('delta', ['text' => $delta]));
-                $reply = $result['text'] !== '' ? $result['text'] : 'Sorry, I couldn’t come up with an answer. Could you rephrase that?';
+                $reply = $result['text'];
+                if ($reply === '' && !$result['questions']) {
+                    $reply = 'Sorry, I couldn’t come up with an answer. Could you rephrase that?';
+                }
 
                 $assistant = (new ChatMessage($conversation, ChatMessage::ROLE_ASSISTANT, $reply))
+                    ->setQuestions($result['questions'])
                     ->setUsage($result['usage']['input'], $result['usage']['output']);
                 $this->em->persist($assistant);
                 $conversation->touch();
                 $this->em->flush();
 
+                if ($result['questions']) {
+                    $emit('questions', ['questions' => $result['questions']]);
+                }
                 $emit('done', []);
             } catch (\Throwable $e) {
                 $logger->error('Chat reply failed', ['exception' => $e]);

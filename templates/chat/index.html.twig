@@ -47,8 +47,12 @@
                     <div class="chat-empty" id="chat-empty">
                         <img src="/apple-touch-icon.png" alt="" width="56" height="56">
                         <h1>Hi {{ app.user.displayName }}, how can we help?</h1>
-                        <p class="chat-muted">Ask anything about feeding your dog or using ZENOO.</p>
-                        <div class="chat-suggest">
+                        {% if cardsAreIntro and configured %}
+                            <p class="chat-muted" id="chat-intro-note">A few quick questions first, so the tips fit your dog. You can skip any of them.</p>
+                        {% else %}
+                            <p class="chat-muted">Ask anything about feeding your dog or using ZENOO.</p>
+                        {% endif %}
+                        <div class="chat-suggest" id="chat-suggest" {{ cardsAreIntro and configured ? 'hidden' }}>
                             {% for s in [
                                 'How much should my dog eat a day?',
                                 'How do I switch my dog to a new food?',
@@ -67,12 +71,23 @@
                     {% else %}
                         <div class="chat-msg chat-msg--bot">
                             <img class="chat-avatar" src="/favicon.png" alt="" width="32" height="32">
-                            <div class="chat-answer">{{ m.content|chat_markdown }}</div>
+                            <div class="chat-answer">
+                                {{ m.content ? m.content|chat_markdown : '<p>I have a few quick questions for you.</p>' }}
+                                {% if m.questions %}
+                                    <ol class="chat-asked">{% for q in m.questions %}<li>{{ q.question }}</li>{% endfor %}</ol>
+                                    {% if loop.last %}<button type="button" class="btn btn-small chat-reopen" data-reopen hidden>Answer the questions</button>{% endif %}
+                                {% endif %}
+                            </div>
                         </div>
                     {% endif %}
                 {% endfor %}
             </div>
         </div>
+
+        <div class="qcard" id="chat-qcard" role="dialog" aria-modal="false" aria-labelledby="qcard-question" hidden></div>
+        {% if cards and configured %}
+            <script type="application/json" id="chat-cards">{{ {questions: cards, intro: cardsAreIntro}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
+        {% endif %}
 
         <form class="chat-composer" id="chat-form">
             <div class="chat-composer__box">

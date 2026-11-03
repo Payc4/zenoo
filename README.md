@@ -62,10 +62,10 @@ Pay with card `4242 4242 4242 4242`, any future date and any CVC.
 php bin/phpunit
 ```
 
-51 tests cover sign-up, login, the lockout, login links, password reset, account changes,
+59 tests cover sign-up, login, the lockout, login links, password reset, account changes,
 photo uploads, deletion, access control, checkout parameters, the return page, webhooks
 (valid, forged, old, retried), refunds, private orders, the chat (streaming, history, daily limit, refunds,
-privacy, escaping), and that the quiz files still match the handoff. Stripe and Claude are replaced by `tests/Support/FakeStripe.php` and
+privacy, escaping, question cards), and that the quiz files still match the handoff. Stripe and Claude are replaced by `tests/Support/FakeStripe.php` and
 `FakeClaude.php`, so tests never touch the network.
 
 ## The Bowl Score quiz
@@ -97,14 +97,23 @@ If you update the quiz from the handoff, copy the files over and update the hash
   `CHAT_TIMEZONE` (default `Europe/Vilnius`). Counts are stored separately from the chats, so
   clearing the chat doesn't give messages back. A reply that fails doesn't count. Admins have no
   limit, so they can test the prompt.
-- Each pet parent has a single chat that keeps going. Claude sees its last 20 messages. The admin overview shows messages today and tokens
+- Each pet parent has a single chat that keeps going. Claude sees its last 20 messages.
+- **Question cards** (one at a time: "2 of 4", options with a short description, "Type your answer…",
+  Skip / Next):
+  - **Starting questions** open in an empty chat. Edit them in `config/chatbot/intro_questions.yaml`
+    (up to 5 questions, up to 5 options each; no options = a typed answer; `questions: []` turns them off).
+    They're shown without calling Claude, so they cost nothing.
+  - **Claude can ask** with the `ask_questions` tool (up to 4 questions) whenever it needs details.
+    Unanswered cards open again after a reload, and can be closed and reopened.
+  - All answers are sent back as one chat message (one of the day's messages), so Claude remembers them. The admin overview shows messages today and tokens
   this month.
 
 ## Project layout
 
 ```
 src/
-  Chat/              ClaudeClient (streaming, no SDK), ChatAgent (prompt + history), ChatQuota (daily limit)
+  Chat/              ClaudeClient (streaming, no SDK), ChatAgent (prompt + history), ChatQuota (daily limit),
+                     Questions (question cards and the ask_questions tool)
   Controller/        Home, Security (login, login links), Registration, PasswordReset,
                      Account, Shop, Chat, Webhook, Admin/ (EasyAdmin)
   Entity/            User, Product, Purchase, ChatConversation, ChatMessage, ChatUsage

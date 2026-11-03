@@ -6,6 +6,7 @@ use App\Entity\ChatConversation;
 use App\Entity\ChatMessage;
 use App\Repository\ChatMessageRepository;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Runs one chat turn: sends the system prompt and the recent conversation to Claude,
@@ -13,6 +14,9 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  *
  * The prompt lives in config/chatbot/system_prompt.md. It may use {{name}} (the pet
  * parent's first name) and {{today}} (today's date); both are filled in for every reply.
+ *
+ * Claude can also show multiple-choice question cards with the ask_questions tool (see Questions).
+ * The starting questions shown in an empty chat come from config/chatbot/intro_questions.yaml.
  */
 class ChatAgent
 {
@@ -27,12 +31,28 @@ class ChatAgent
         private readonly ClaudeClient $claude,
         private readonly ChatMessageRepository $messages,
         #[Autowire('%kernel.project_dir%/config/chatbot/system_prompt.md')] private readonly string $promptFile,
+        #[Autowire('%kernel.project_dir%/config/chatbot/intro_questions.yaml')] private readonly string $introFile,
     ) {
+    }
+
+    /** The starting questions for an empty chat, or null when there are none. */
+    public function introQuestions(): ?array
+    {
+        if (!is_file($this->introFile)) {
+            return null;
+        }
+        try {
+            $data = Yaml::parseFile($this->introFile);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return Questions::normalise($data['questions'] ?? null);
     }
 
     /**
      * @param callable(string): void $onText
-     * @return array{text: string, usage: array{input: int, output: int}}
+     * @return array{text: string, questions: ?array, usage: array{input: int, output: int}}
      */
     public function reply(ChatConversation $conversation, callable $onText): array
     {
@@ -40,9 +60,18 @@ class ChatAgent
             'max_tokens' => self::MAX_TOKENS,
             'system' => $this->systemPrompt($conversation),
             'messages' => $this->history($conversation),
+            'tools' => [Questions::toolDefinition()],
         ], $onText);
 
-        return ['text' => trim($result['text']), 'usage' => $result['usage']];
+        $questions = null;
+        foreach ($result['tool_uses'] as $use) {
+            if ($use['name'] === 'ask_questions') {
+                $questions = Questions::normalise($use['input']['questions'] ?? null, 4);
+                break;
+            }
+        }
+
+        return ['text' => trim($result['text']), 'questions' => $questions, 'usage' => $result['usage']];
     }
 
     public function systemPrompt(ChatConversation $conversation): string
@@ -71,11 +100,19 @@ class ChatAgent
             if (!$out && $role === 'assistant') {
                 continue;
             }
-            if ($out && end($out)['role'] === $role) {
-                $out[count($out) - 1]['content'] .= "\n\n" . $m->getContent();
+            $content = $m->getContent();
+            if ($m->getQuestions()) {
+                // Claude only sees text in the history, so earlier cards are written out.
+                $content = trim($content . "\n\n" . Questions::asHistoryText($m->getQuestions()));
+            }
+            if ($content === '') {
                 continue;
             }
-            $out[] = ['role' => $role, 'content' => $m->getContent()];
+            if ($out && end($out)['role'] === $role) {
+                $out[count($out) - 1]['content'] .= "\n\n" . $content;
+                continue;
+            }
+            $out[] = ['role' => $role, 'content' => $content];
         }
 
         return $out;

@@ -1,0 +1,36 @@
+# Starting questions: shown as cards when a pet parent opens an empty chat.
+# Their answers are sent as the first message, so the assistant knows the dog from the start.
+# Up to 5 questions. Each has a "question" and up to 5 "options" (label + optional description).
+# Leave "options" empty for a question that is answered by typing (like the dog's name).
+# Remove all questions (questions: []) to switch the starting questions off.
+
+questions:
+  - question: "What's your dog's name?"
+    options: []
+
+  - question: "How old is your dog?"
+    options:
+      - { label: "Puppy", description: "Under 1 year" }
+      - { label: "Adult", description: "1 to 7 years" }
+      - { label: "Senior", description: "7 years or older" }
+
+  - question: "How big is your dog?"
+    options:
+      - { label: "Toy", description: "Under 5 kg" }
+      - { label: "Small", description: "5 to 10 kg" }
+      - { label: "Medium", description: "10 to 25 kg" }
+      - { label: "Large", description: "Over 25 kg" }
+
+  - question: "What does your dog mostly eat now?"
+    options:
+      - { label: "Dry food", description: "Kibble" }
+      - { label: "Wet food", description: "Tins or pouches" }
+      - { label: "Raw or home-made", description: "BARF, frozen raw or cooked at home" }
+      - { label: "ZENOO", description: "On its own or mixed" }
+
+  - question: "What would you most like help with?"
+    options:
+      - { label: "Picky eating", description: "Leaves food or is fussy" }
+      - { label: "Portions and weight", description: "How much to feed" }
+      - { label: "Switching food", description: "Changing to a new diet" }
+      - { label: "Tummy and digestion", description: "Stools, gas, upset tummy" }

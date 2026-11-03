@@ -32,8 +32,9 @@ class ClaudeClient
 
     /**
      * Sends one streamed request and calls $onText for every text fragment as it arrives.
+     * Tool calls (e.g. ask_questions) are collected and returned once complete.
      *
-     * @return array{text: string, stop_reason: ?string, usage: array{input: int, output: int}}
+     * @return array{text: string, tool_uses: list<array{id: string, name: string, input: array}>, stop_reason: ?string, usage: array{input: int, output: int}}
      */
     public function stream(array $payload, callable $onText): array
     {
@@ -60,6 +61,7 @@ class ClaudeClient
             }
 
             $text = '';
+            $tools = [];      // index => ['id', 'name', 'json']
             $stopReason = null;
             $usage = ['input' => 0, 'output' => 0];
             $buffer = '';
@@ -94,10 +96,23 @@ class ClaudeClient
                             $usage['output'] = (int) ($u['output_tokens'] ?? 0);
                             break;
 
+                        case 'content_block_start':
+                            if (($data['content_block']['type'] ?? '') === 'tool_use') {
+                                $tools[(int) $data['index']] = [
+                                    'id' => (string) ($data['content_block']['id'] ?? ''),
+                                    'name' => (string) ($data['content_block']['name'] ?? ''),
+                                    'json' => '',
+                                ];
+                            }
+                            break;
+
                         case 'content_block_delta':
-                            if (($data['delta']['type'] ?? '') === 'text_delta') {
+                            $type = $data['delta']['type'] ?? '';
+                            if ($type === 'text_delta') {
                                 $text .= $data['delta']['text'];
                                 $onText($data['delta']['text']);
+                            } elseif ($type === 'input_json_delta' && isset($tools[(int) $data['index']])) {
+                                $tools[(int) $data['index']]['json'] .= $data['delta']['partial_json'];
                             }
                             break;
 
@@ -117,6 +132,13 @@ class ClaudeClient
             throw new ClaudeException('Could not reach Claude: ' . $e->getMessage(), 503);
         }
 
-        return ['text' => $text, 'stop_reason' => $stopReason, 'usage' => $usage];
+        ksort($tools);
+        $toolUses = [];
+        foreach ($tools as $t) {
+            $input = $t['json'] !== '' ? json_decode($t['json'], true) : [];
+            $toolUses[] = ['id' => $t['id'], 'name' => $t['name'], 'input' => is_array($input) ? $input : []];
+        }
+
+        return ['text' => $text, 'tool_uses' => $toolUses, 'stop_reason' => $stopReason, 'usage' => $usage];
     }
 }
