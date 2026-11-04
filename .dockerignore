@@ -47,4 +47,5 @@ docker-compose.local.yaml
 # here is local test data.
 public/uploads/profiles/*
 !public/uploads/profiles/.gitkeep
+public/uploads/lesson-audio/
 **/.DS_Store

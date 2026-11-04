@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Courses · ZENOO{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block importmap %}{{ importmap(['app', 'courses']) }}{% endblock %}
+
+{% block body %}
+<section class="section">
+  <div class="wrap cl-wrap">
+    <header class="cl-head">
+      <div>
+        <p class="kicker">Courses</p>
+        <h1 class="cl-title">A few minutes a day for a healthier dog.</h1>
+      </div>
+      {% if streak %}<p class="cl-streak">🔥 <strong>{{ streak }}</strong> day streak</p>{% endif %}
+    </header>
+
+    {% for item in items %}
+      {% set c = item.course %}
+      <section class="cl-course" lang="{{ c.locale }}">
+        <div class="cl-course__top">
+          <div>
+            <h2 class="cl-course__title">{{ c.title }}{% if not c.published %} <span class="cl-tag">Draft</span>{% endif %}{% if c.locale != 'en' %} <span class="cl-tag cl-tag--lang">{{ c.locale|upper }}</span>{% endif %}</h2>
+            {% if c.description %}<p class="cl-course__desc">{{ c.description }}</p>{% endif %}
+          </div>
+          <div class="cl-course__count">{{ item.done }} / {{ item.lessons|length }}<small>lessons done</small></div>
+        </div>
+        <div class="cl-bar"><span style="width: {{ item.lessons|length ? (item.done / item.lessons|length * 100)|round : 0 }}%"></span></div>
+
+        {% if not item.canAccess %}
+          <div class="cl-locked">
+            <p>🔒 This course is for ZENOO customers.</p>
+            <a href="{{ path('app_shop') }}" class="btn btn-small">Visit the shop</a>
+          </div>
+        {% else %}
+          {% if item.next %}
+            <a class="cl-continue" href="{{ path('app_course_lesson', {slug: c.slug, id: item.next.id}) }}">
+              <span><small>{{ item.progress[item.next.id] is defined ? 'Continue' : 'Up next' }}</small>{{ item.next.title }}</span>
+              <span class="cl-continue__go" aria-hidden="true">▶</span>
+            </a>
+          {% endif %}
+          <ol class="cl-lessons">
+            {% for l in item.lessons %}
+              {% set p = item.progress[l.id] ?? null %}
+              <li class="cl-lesson{% if p and p.completed %} is-done{% endif %}">
+                <a href="{{ path('app_course_lesson', {slug: c.slug, id: l.id}) }}">
+                  <span class="cl-lesson__n">{% if p and p.completed %}✓{% else %}{{ loop.index }}{% endif %}</span>
+                  <span class="cl-lesson__t">{{ l.title }}{% if not l.published %} <span class="cl-tag">Draft</span>{% endif %}
+                    <small>{% if l.subtitle %}{{ l.subtitle }} · {% endif %}{% if l.durationMinutes %}{{ l.durationMinutes }} min{% else %}{{ l.slideCount }} screens{% endif %}{% if p and not p.completed %} · {{ p.percent }}%{% endif %}</small></span>
+                </a>
+              </li>
+            {% endfor %}
+          </ol>
+        {% endif %}
+      </section>
+    {% else %}
+      <div class="cl-empty">
+        <p class="kicker">Coming soon</p>
+        <h2 class="cl-title">Courses are on their way.</h2>
+        <p>{% if is_granted('ROLE_ADMIN') %}Create the first one in the <a href="{{ path('admin_course_studio') }}">Course studio</a>.{% else %}Check back soon.{% endif %}</p>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

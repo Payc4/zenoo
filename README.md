@@ -19,6 +19,8 @@ in capitals, Inter body copy, 24px corners and no shadows.
 | **Shop** | Products from the database. **Buy now** opens Stripe Checkout, and the order is recorded by the signed Stripe webhook or the return page, whichever arrives first. It is never recorded twice. Refunds made in Stripe mark the order refunded. |
 | **Test product** | “ZENOO Test Product”, €1.00, created by the first migration. Nothing is shipped. |
 | **Bowl Score quiz** | The quiz from the ZENOO handoff at `/quiz/`. Answers are sent to Klaviyo (`QUIZ_SEND_TO_KLAVIYO=true`, see below). |
+| **Courses** (`/courses`) | The ZENOO Dog Wellness Course: 30 lessons in English and 30 in Lithuanian, 9 screens each, played one screen at a time. Logged-in pet parents only. Progress, quiz answers and written answers are saved; finished lessons and a day streak show on the course list. See below. |
+| **Course studio** (`/admin/course-studio`) | Admins edit courses and lessons screen by screen with a live phone preview, publish them, and upload Agota's audio. |
 | **Chat** (`/chat`) | A Claude-powered chatbot in its own tab. Logged-in pet parents only, **one chat per person**, **60 messages per day** (admins unlimited). Replies stream in as they're written, the chat is saved, and "Clear chat" empties it. See below. |
 | **Admin** (`/admin`) | Overview, products, purchases (read-only) and pet parents (create, edit, set passwords, grant Admin). |
 
@@ -84,12 +86,37 @@ Coolify for a staging copy), or use your own address. When it's off, the quiz st
 If you update the quiz from the handoff, copy the files over and update the hashes in
 `tests/Functional/PagesTest.php`.
 
+## The course
+
+- **Source:** `content/courses/zenoo-dog-wellness.md`, the course document converted from Word with
+  `pandoc -t gfm --wrap=none`. English lessons first, then the Lithuanian version.
+- **Loading it:** `php bin/console app:course:import`. On deploy the container runs it with
+  `--if-empty`, so a new database gets both courses automatically. Both start as **drafts**: only
+  admins see them until "Published" is ticked in the Course studio (or the command runs with
+  `--publish`). Lessons already in the database are never overwritten unless you pass `--force`;
+  learners keep their progress either way, because screen ids stay the same.
+- **Team notes** in the document (`[Agota: add your story here]`, `[Vet/Agota: …]`, `App note: …`) are
+  left out of the lessons and listed by the command.
+- **The 9 screens** (layouts in `src/Course/LessonLayouts.php`): the hook, the science, listen (audio
+  + transcript + check question), quick check, write (saved to the account), do it with your dog
+  (steps + "done" tick), go deeper, vet check + today's practice, achievement (badge, lesson x of 30,
+  streak). Tables in the text (`| a | b |`) show as tables, and as cards on phones.
+- **Audio:** there is no recording yet, so the Listen screen shows the transcript. Upload an MP3 per
+  lesson in the Course studio.
+- **Language:** a course's language (English or Lietuvių) sets the player's buttons and labels.
+- **Access:** courses marked "Free" (both are) are open to every logged-in pet parent; otherwise only
+  to people with a paid order.
+
 ## The chatbot
 
 - **The prompt** is in `config/chatbot/system_prompt.md`. Edit that file and deploy to change how
-  the assistant behaves. It can use `{{name}}` (the pet parent's first name) and `{{today}}`
-  (today's date). A short formatting note is added automatically, because the chat window only
-  shows bold, italic and lists.
+  the coach behaves. It can use `{{name}}` (the pet parent's first name), `{{today}}` (today's date),
+  `{{course_knowledge}}` (the English course lessons, read from the database, so studio edits reach
+  the coach) and `{{course_progress}}` (this pet parent's finished lessons and what they wrote in
+  them). A short formatting note is added automatically, because the chat window only shows bold,
+  italic and lists.
+- Everything above the `## This conversation` heading is the same for everyone and is sent with
+  prompt caching, so the long course text is mostly read from Claude's cache (about 19,000 tokens).
 - **Switching it on:** set `ANTHROPIC_API_KEY` (from the Claude Console). Without it, the Chat
   tab says the chat isn't switched on yet.
 - **Model:** `claude-haiku-5-5` by default. Set `ANTHROPIC_MODEL` to change it.
@@ -113,17 +140,22 @@ If you update the quiz from the handoff, copy the files over and update the hash
 ```
 src/
   Chat/              ClaudeClient (streaming, no SDK), ChatAgent (prompt + history), ChatQuota (daily limit),
-                     Questions (question cards and the ask_questions tool)
+                     Questions (question cards and the ask_questions tool), CourseKnowledge (course → prompt)
+  Course/            LessonLayouts (the 9 screen types), CourseDocumentParser (course document → lessons)
+  Command/           app:course:import
   Controller/        Home, Security (login, login links), Registration, PasswordReset,
-                     Account, Shop, Chat, Webhook, Admin/ (EasyAdmin)
-  Entity/            User, Product, Purchase, ChatConversation, ChatMessage, ChatUsage
+                     Account, Shop, Chat, Course, Webhook, Admin/ (EasyAdmin, CourseStudio)
+  Entity/            User, Product, Purchase, ChatConversation, ChatMessage, ChatUsage,
+                     Course, Lesson, LessonProgress
   Payment/           StripeClient (no SDK), StripeCheckout (session + fulfilment)
   Security/          LoginFormAuthenticator, LoginAttemptLimiter, LoginSuccessHandler
   Service/           EmailService, AvatarUploader
 templates/           Twig pages and emails (emails/_layout.html.twig)
-assets/              app.css (design tokens), app.js, fonts (served by AssetMapper)
+assets/              app.css (design tokens), app.js, chat.js, lesson.js (player), studio.js (editor),
+                     controllers/ (Stimulus), lib/stimulus.js, fonts (served by AssetMapper)
+content/courses/     The course document
 public/images/       Logos and photos; public/quiz/ is the Bowl Score quiz
-migrations/          One initial migration (MySQL and SQLite statements)
+migrations/          Schema migrations (MySQL and SQLite statements in each)
 docker/, Dockerfile  Single-container image for Coolify (nginx, PHP-FPM, email worker)
 ```
 

@@ -1,0 +1,21 @@
+{% import 'course/_macros.html.twig' as m %}
+<p class="lp-mode">🎧 {{ ctx.ui.listen }}</p>
+<h1 class="lp-h1">{{ m.text(f.headline, 'Headline', ctx.preview) }}</h1>
+<div class="lp-audio">
+  {% if f.audio is not empty %}
+    <audio controls preload="metadata" src="{{ f.audio }}"></audio>
+  {% else %}
+    <div class="lp-audio__empty">🎧 {{ ctx.preview ? 'Upload an audio file in the studio' : ctx.ui.audioSoon }}</div>
+  {% endif %}
+</div>
+{% if f.script is not empty or ctx.preview %}
+<details class="lp-details" {% if f.audio is empty %}open{% endif %}>
+  <summary>{{ ctx.ui.readAlong }}</summary>
+  <div class="lp-prose lp-prose--script">{{ m.rich(f.script, 'Transcript', ctx.preview) }}</div>
+</details>
+{% endif %}
+{% if ctx.preview or f.choices|default([])|filter(c => c.text is not empty)|length > 0 %}
+  {% set saved = answer.quiz[0].choice ?? null %}
+  {% include 'course/slides/_choices.html.twig' with {q: f.question, choices: f.choices, fbRight: f.feedback, fbWrong: f.incorrect|default(ctx.ui.incorrect ~ ' ' ~ f.feedback), qIndex: 0, saved: saved} %}
+{% endif %}
+<div class="lp-foot"><button type="button" class="lp-btn" data-action="lesson-player#next" data-requires="questions">{{ f.button|default(ctx.ui.continue) }}</button></div>

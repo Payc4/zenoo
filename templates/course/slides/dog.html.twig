@@ -1,0 +1,19 @@
+{% import 'course/_macros.html.twig' as m %}
+{% if f.headline|default('')|lower != ctx.ui.do|lower %}<p class="lp-mode">🐾 {{ ctx.ui.do }}</p>{% endif %}
+<h1 class="lp-h1">{{ m.text(f.headline, 'Headline', ctx.preview) }}</h1>
+{% if f.task is not empty or ctx.preview %}
+<div class="lp-card lp-card--task">
+  <div class="lp-prose">{{ m.rich(f.task, 'Task', ctx.preview) }}</div>
+  {% if f.steps|default([]) is not empty or ctx.preview %}
+  <ol class="lp-steps">
+    {% for s in f.steps|default([]) %}<li>{{ s|lesson_inline }}</li>{% else %}<li class="lp-ph">Steps</li>{% endfor %}
+  </ol>
+  {% endif %}
+</div>
+{% endif %}
+{% if f.body is not empty %}<div class="lp-prose">{{ f.body|lesson_text }}</div>{% endif %}
+<label class="lp-done">
+  <input type="checkbox" data-action="change->lesson-player#toggleDone" {{ answer.done|default(false) ? 'checked' }}>
+  <span>{{ f.doneLabel|default(ctx.ui.done) }}</span>
+</label>
+<div class="lp-foot"><button type="button" class="lp-btn" data-action="lesson-player#next">{{ f.button|default(ctx.ui.continue) }}</button></div>

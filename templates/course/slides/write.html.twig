@@ -1,0 +1,28 @@
+{% import 'course/_macros.html.twig' as m %}
+<p class="lp-mode">✍️ {{ ctx.ui.write }}</p>
+<h1 class="lp-h1">{{ m.text(f.headline, 'Headline', ctx.preview) }}</h1>
+{% if f.intro is not empty or ctx.preview %}<div class="lp-prose">{{ m.rich(f.intro, 'Intro', ctx.preview) }}</div>{% endif %}
+{% for p in f.prompts|default([]) %}
+  {% set saved = answer.text[loop.index0] ?? '' %}
+  <div class="lp-task" data-lesson-player-target="task" data-task-index="{{ loop.index0 }}" {% if saved %}data-done="1"{% endif %}>
+    {% if f.prompts|length > 1 %}<p class="lp-task__part">{{ ctx.ui.part }} {{ 'ABC'|slice(loop.index0, 1) }}</p>{% endif %}
+    <div class="lp-prose">{{ m.rich(p.instructions, 'Instructions', ctx.preview) }}</div>
+    {% if p.weak is not empty or ctx.preview %}
+    <div class="lp-example lp-example--weak">
+      <p class="lp-example__label">{{ ctx.ui.weak }}</p>
+      <p class="lp-example__text">{{ m.text(p.weak, 'Weak example', ctx.preview) }}</p>
+      {% if p.weakWhy is not empty %}<p class="lp-example__why">{{ p.weakWhy|lesson_inline }}</p>{% endif %}
+    </div>
+    {% endif %}
+    <textarea class="lp-input" rows="4" maxlength="2000" placeholder="{{ p.placeholder|default(ctx.ui.placeholder) }}" data-lesson-player-target="taskInput">{{ saved }}</textarea>
+    {% if p.helper is not empty %}<p class="lp-helper">{{ p.helper|lesson_inline }}</p>{% endif %}
+    <button type="button" class="lp-btn lp-btn--ghost lp-task__check" data-action="lesson-player#submitTask">{{ ctx.ui.check }}</button>
+    <div class="lp-example lp-example--model" {% if not saved %}hidden{% endif %} data-model>
+      <p class="lp-example__label">{{ ctx.ui.model }}</p>
+      <p class="lp-example__text">{{ m.text(p.model, 'Model answer', ctx.preview) }}</p>
+      {% if p.modelWhy is not empty %}<p class="lp-example__why">{{ p.modelWhy|lesson_inline }}</p>{% endif %}
+      {% if not ctx.preview %}<p class="lp-helper lp-saved">✓ {{ ctx.ui.savedNote }}</p>{% endif %}
+    </div>
+  </div>
+{% endfor %}
+<div class="lp-foot"><button type="button" class="lp-btn" data-action="lesson-player#next" data-requires="tasks">{{ f.button|default(ctx.ui.continue) }}</button></div>

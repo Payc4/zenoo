@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="{{ ctx.locale }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {{ importmap(['app', 'lesson']) }}
+</head>
+<body class="lp-page lp-page--preview">
+  {% include 'course/_player.html.twig' with {exitUrl: '#', progressUrl: null} %}
+</body>
+</html>

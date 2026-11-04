@@ -1,0 +1,10 @@
+{% import 'course/_macros.html.twig' as m %}
+{% if f.headline|default('')|lower != ctx.ui.quiz|lower %}<p class="lp-mode">✅ {{ ctx.ui.quiz }}</p>{% endif %}
+<h1 class="lp-h1">{{ m.text(f.headline, 'Headline', ctx.preview) }}</h1>
+{% for q in f.questions|default([]) %}
+  {% if ctx.preview or q.question is not empty or q.choices|default([])|filter(c => c.text is not empty)|length > 0 %}
+  {% set saved = answer.quiz[loop.index0].choice ?? null %}
+  {% include 'course/slides/_choices.html.twig' with {q: q.question, choices: q.choices, fbRight: q.correct, fbWrong: q.incorrect, qIndex: loop.index0, saved: saved} %}
+  {% endif %}
+{% endfor %}
+<div class="lp-foot"><button type="button" class="lp-btn" data-action="lesson-player#next" data-requires="questions">{{ f.button|default(ctx.ui.continue) }}</button></div>

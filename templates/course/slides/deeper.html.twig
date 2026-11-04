@@ -1,0 +1,5 @@
+{% import 'course/_macros.html.twig' as m %}
+<p class="lp-mode">🔍 {{ ctx.ui.deeper }}</p>
+<h1 class="lp-h1">{{ m.text(f.headline, 'Headline', ctx.preview) }}</h1>
+<div class="lp-prose">{{ m.rich(f.body, 'Text', ctx.preview) }}</div>
+<div class="lp-foot"><button type="button" class="lp-btn" data-action="lesson-player#next">{{ f.button|default(ctx.ui.continue) }}</button></div>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>{% block title %}Course studio{% endblock %} · ZENOO</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  {{ importmap(['app', 'studio']) }}
+</head>
+<body class="cs-page {% block body_class %}{% endblock %}">
+  <header class="cs-top">
+    <a class="cs-top__brand" href="{{ path('admin_course_studio') }}">Course studio</a>
+    {% block topbar %}{% endblock %}
+    <nav class="cs-top__nav">
+      <a href="{{ path('app_courses') }}" target="_blank" rel="noopener">View as learner ↗</a>
+      <a href="{{ path('admin') }}">Admin panel</a>
+    </nav>
+  </header>
+  {% for type, messages in app.flashes %}
+    {% for message in messages %}<div class="cs-flash cs-flash--{{ type }}">{{ message }}</div>{% endfor %}
+  {% endfor %}
+  {% block body %}{% endblock %}
+</body>
+</html>

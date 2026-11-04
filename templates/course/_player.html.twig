@@ -1,0 +1,27 @@
+{#
+  The lesson player shell, shared by the learner page (course/lesson.html.twig)
+  and the studio's live preview (admin/course_studio/preview.html.twig).
+  Vars: lesson, slides, answers, ctx, exitUrl, progressUrl (null in preview)
+#}
+<div class="lp-shell"
+     data-controller="lesson-player"
+     data-lesson-player-start-value="{{ ctx.start }}"
+     data-lesson-player-preview-value="{{ ctx.preview ? 'true' : 'false' }}"
+     data-lesson-player-progress-url-value="{{ progressUrl ?? '' }}"
+     data-lesson-player-csrf-value="{{ ctx.preview ? '' : csrf_token('lesson' ~ lesson.id) }}"
+     data-lesson-player-exit-url-value="{{ exitUrl }}"
+     data-lesson-player-ui-value="{{ ctx.ui|json_encode }}">
+  <header class="lp-top">
+    <a class="lp-top__close" href="{{ exitUrl }}" aria-label="{{ ctx.ui.close }}" {% if ctx.preview %}data-action="lesson-player#noop"{% endif %}>✕</a>
+    <div class="lp-top__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><span data-lesson-player-target="bar"></span></div>
+    <button type="button" class="lp-top__back" data-lesson-player-target="back" data-action="lesson-player#prev" aria-label="{{ ctx.ui.back }}" hidden>‹</button>
+  </header>
+
+  <main class="lp-main">
+    {% for slide in slides %}
+      {% include 'course/_slide.html.twig' with {slide: slide, index: loop.index0, total: slides|length, answer: answers[slide.id] ?? {}} %}
+    {% else %}
+      <section class="lp-slide"><div class="lp-slide__body lp-empty"><p class="lp-mode">Empty lesson</p><h1 class="lp-h1">No slides yet</h1><p class="lp-helper">Add a slide in the studio to see it here.</p></div></section>
+    {% endfor %}
+  </main>
+</div>

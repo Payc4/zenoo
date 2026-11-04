@@ -1,0 +1,12 @@
+{% import 'course/_macros.html.twig' as m %}
+<div class="lp-achieve">
+  <div class="lp-badge" aria-hidden="true">{{ f.emoji|default('🏅') }}</div>
+  <p class="lp-mode">{{ ctx.ui.badge }}</p>
+  <h1 class="lp-h1">{{ m.text(f.badge, 'Badge name', ctx.preview) }}</h1>
+  <p class="lp-achieve__meta" data-lesson-player-target="achieveMeta">
+    {{ ctx.ui.lessonOf|replace({'%n%': ctx.number, '%total%': ctx.lessonCount}) }}{% if ctx.streak %} · {{ ctx.ui.streak|replace({'%n%': ctx.streak}) }} 🔥{% endif %}
+  </p>
+  {% if f.extra is not empty %}<p class="lp-achieve__extra">{{ f.extra|lesson_inline }}</p>{% endif %}
+  <div class="lp-prose">{{ m.rich(f.celebration, 'Celebration text', ctx.preview) }}</div>
+</div>
+<div class="lp-foot"><button type="button" class="lp-btn lp-btn--cta" data-action="lesson-player#finish">{{ f.button|default(ctx.ui.finish) }}</button></div>

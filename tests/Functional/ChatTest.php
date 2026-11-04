@@ -73,7 +73,11 @@ class ChatTest extends AppTestCase
         $request = FakeClaude::$requests[0];
         $this->assertSame('claude-haiku-5-5', $request['model']);
         $this->assertTrue($request['stream']);
-        $this->assertStringContainsString('talking with Maria', $request['system'], 'the prompt file placeholders are filled in');
+        $this->assertCount(2, $request['system'], 'shared (cached) block + personal block');
+        $this->assertSame(['type' => 'ephemeral'], $request['system'][0]['cache_control']);
+        $this->assertStringNotContainsString('{{', $request['system'][0]['text'].$request['system'][1]['text'], 'every placeholder is filled in');
+        $this->assertStringContainsString('talking with Maria', $request['system'][1]['text'], 'the personal block names the pet parent');
+        $this->assertStringContainsString('not started the course', $request['system'][1]['text']);
         $this->assertSame([['role' => 'user', 'content' => 'How much should my dog eat?']], $request['messages']);
 
         // The chat page shows the reply as formatted, escaped HTML.

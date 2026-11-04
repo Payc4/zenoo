@@ -153,6 +153,16 @@ if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
     fi
 fi
 
+# --- Course lessons ---------------------------------------------------------
+#
+# Loads the 30-lesson ZENOO Dog Wellness Course (English + Lithuanian) into an
+# empty database, as drafts. Once any course exists this does nothing, so edits
+# made in the Course studio are never overwritten. Failure is reported, not fatal.
+if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
+    php bin/console app:course:import --if-empty --no-interaction \
+        || echo "WARNING: course import failed — run 'php bin/console app:course:import' by hand." >&2
+fi
+
 # --- Admin bootstrap ---------------------------------------------------------
 #
 # Only for the very first deploy against an empty database, and only when both

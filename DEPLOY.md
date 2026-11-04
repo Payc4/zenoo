@@ -55,6 +55,8 @@ production access before real pet parents sign up.
 
 - Log in at `/login` with `ADMIN_EMAIL`, then remove `ADMIN_EMAIL` and `ADMIN_PASSWORD` from Coolify.
 - Check `/health` returns `{"status":"ok"}`.
+- The 30-lesson course (English and Lithuanian) is loaded automatically as drafts. Publish each
+  course in Admin → Course studio once the vet review is done.
 - `docker exec <container> check-messenger.sh` shows whether the email worker is running.
 
 ## Troubleshooting

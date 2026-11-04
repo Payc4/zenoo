@@ -1,0 +1,86 @@
+{% extends 'admin/course_studio/_layout.html.twig' %}
+{% set token = csrf_token('studio') %}
+
+{% block body %}
+<main class="cs-wrap">
+  <div class="cs-intro">
+    <div>
+      <h1 class="cs-h1">Your courses</h1>
+      <p class="cs-muted">Create a course, add lessons, then build each lesson slide by slide. Changes go live when you save; drafts are only visible to admins.</p>
+    </div>
+    <form method="post" action="{{ path('admin_course_studio_course_new') }}" class="cs-inline">
+      <input type="hidden" name="_token" value="{{ token }}">
+      <input class="cs-input" name="title" placeholder="New course title" required maxlength="255">
+      <button class="cs-btn">+ New course</button>
+    </form>
+  </div>
+
+  {% for course in courses %}
+  <section class="cs-course" id="course-{{ course.id }}">
+    <form method="post" action="{{ path('admin_course_studio_course_update', {id: course.id}) }}" class="cs-course__settings">
+      <input type="hidden" name="_token" value="{{ token }}">
+      <div class="cs-course__title-row">
+        <input class="cs-input cs-input--title" name="title" value="{{ course.title }}" maxlength="255" aria-label="Course title">
+        <span class="cs-pill {{ course.published ? 'cs-pill--on' : '' }}">{{ course.published ? 'Published' : 'Draft' }}</span>
+      </div>
+      <textarea class="cs-input" name="description" rows="2" placeholder="Short description shown to learners">{{ course.description }}</textarea>
+      <div class="cs-course__opts">
+        <label class="cs-check"><input type="checkbox" name="published" value="1" {{ course.published ? 'checked' }}> Published (visible to learners)</label>
+        <label class="cs-check"><input type="checkbox" name="free" value="1" {{ course.free ? 'checked' }}> Free for every logged-in user <span class="cs-muted">(otherwise only people with a paid order)</span></label>
+        <label class="cs-check">Language
+          <select class="cs-input cs-select" name="locale">
+            <option value="en" {{ course.locale == 'en' ? 'selected' }}>English</option>
+            <option value="lt" {{ course.locale == 'lt' ? 'selected' }}>Lietuvių</option>
+          </select>
+        </label>
+        <button class="cs-btn cs-btn--ghost">Save course</button>
+      </div>
+    </form>
+
+    <table class="cs-lessons">
+      <thead><tr><th>#</th><th>Lesson</th><th>Slides</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for lesson in course.lessons %}
+        <tr>
+          <td class="cs-num">{{ loop.index }}</td>
+          <td><a class="cs-lesson-link" href="{{ path('admin_course_studio_lesson', {id: lesson.id}) }}">{{ lesson.title }}</a>{% if lesson.subtitle %}<div class="cs-muted cs-small">{{ lesson.subtitle }}</div>{% endif %}</td>
+          <td>{{ lesson.slideCount }}</td>
+          <td><span class="cs-pill {{ lesson.published ? 'cs-pill--on' : '' }}">{{ lesson.published ? 'Published' : 'Draft' }}</span></td>
+          <td class="cs-actions">
+            <a class="cs-btn cs-btn--sm" href="{{ path('admin_course_studio_lesson', {id: lesson.id}) }}">Edit slides</a>
+            <form method="post" action="{{ path('admin_course_studio_lesson_move', {id: lesson.id, dir: 'up'}) }}"><input type="hidden" name="_token" value="{{ token }}"><button class="cs-icon" title="Move up" {{ loop.first ? 'disabled' }}>↑</button></form>
+            <form method="post" action="{{ path('admin_course_studio_lesson_move', {id: lesson.id, dir: 'down'}) }}"><input type="hidden" name="_token" value="{{ token }}"><button class="cs-icon" title="Move down" {{ loop.last ? 'disabled' }}>↓</button></form>
+            <form method="post" action="{{ path('admin_course_studio_lesson_duplicate', {id: lesson.id}) }}"><input type="hidden" name="_token" value="{{ token }}"><button class="cs-icon" title="Duplicate">⧉</button></form>
+            <form method="post" action="{{ path('admin_course_studio_lesson_delete', {id: lesson.id}) }}" onsubmit="return confirm('Delete “{{ lesson.title|e('js') }}”? This cannot be undone.');"><input type="hidden" name="_token" value="{{ token }}"><button class="cs-icon cs-icon--danger" title="Delete">✕</button></form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="cs-muted cs-empty-row">No lessons yet. Add the first one below.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="cs-course__foot">
+      <form method="post" action="{{ path('admin_course_studio_lesson_new', {id: course.id}) }}" class="cs-inline">
+        <input type="hidden" name="_token" value="{{ token }}">
+        <input class="cs-input" name="title" placeholder="Lesson {{ course.lessons|length + 1 }} title" maxlength="255">
+        <select class="cs-input cs-select" name="template" aria-label="Start from">
+          <option value="standard">Start from the 9-screen ZENOO lesson format</option>
+          <option value="blank">Start from a blank lesson</option>
+        </select>
+        <button class="cs-btn">+ New lesson</button>
+      </form>
+      <form method="post" action="{{ path('admin_course_studio_course_delete', {id: course.id}) }}" onsubmit="return confirm('Delete the course “{{ course.title|e('js') }}” and all its lessons? This cannot be undone.');">
+        <input type="hidden" name="_token" value="{{ token }}">
+        <button class="cs-link-danger">Delete course</button>
+      </form>
+    </div>
+  </section>
+  {% else %}
+  <section class="cs-course cs-empty">
+    <h2 class="cs-h2">No courses yet</h2>
+    <p class="cs-muted">Type a title above and click “New course” to start.</p>
+  </section>
+  {% endfor %}
+</main>
+{% endblock %}

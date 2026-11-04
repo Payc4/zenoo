@@ -1,0 +1,4 @@
+{# Small helpers for lesson slides. In editor preview, empty boxes show a faint
+   placeholder so the author sees where each box lands. #}
+{% macro text(value, label, preview) %}{% if value is not empty %}{{ value|lesson_inline }}{% elseif preview %}<span class="lp-ph">{{ label }}</span>{% endif %}{% endmacro %}
+{% macro rich(value, label, preview) %}{% if value is not empty %}{{ value|lesson_text }}{% elseif preview %}<p class="lp-ph">{{ label }}</p>{% endif %}{% endmacro %}

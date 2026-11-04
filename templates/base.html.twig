@@ -26,6 +26,7 @@
             <nav class="nav" id="site-nav" aria-label="Main">
                 <a href="{{ path('app_shop') }}" {{ route starts with 'app_shop' or route == 'app_product' ? 'aria-current="page"' }}>Shop</a>
                 <a href="{{ path('app_quiz') }}">Bowl Score quiz</a>
+                <a href="{{ path('app_courses') }}" {{ route starts with 'app_course' ? 'aria-current="page"' }}>Courses</a>
                 <a href="{{ path('app_chat') }}" {{ route starts with 'app_chat' ? 'aria-current="page"' }}>Chat</a>
                 {% if app.user %}
                     {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin') }}">Admin</a>{% endif %}

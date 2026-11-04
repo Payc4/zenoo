@@ -1,0 +1,19 @@
+{# A multiple-choice question. Vars: q (question text), choices, fbRight, fbWrong, qIndex, saved (saved choice index or null) #}
+{% import 'course/_macros.html.twig' as m %}
+{# Learners only see answers that have text; the editor preview shows empty ones as placeholders. #}
+{% set shown = ctx.preview ? choices|default([]) : choices|default([])|filter(c => c.text is not empty) %}
+<div class="lp-q" data-lesson-player-target="question" data-q-index="{{ qIndex }}" {% if saved is not null %}data-saved="{{ saved }}"{% endif %}>
+  {% if q is not empty or ctx.preview %}<p class="lp-q__text">{{ m.text(q, 'Question', ctx.preview) }}</p>{% endif %}
+  <div class="lp-choices">
+    {% for c in shown %}
+      <button type="button" class="lp-choice" data-correct="{{ c.correct ? '1' : '0' }}" data-index="{{ loop.index0 }}" data-action="lesson-player#choose">
+        <span class="lp-choice__mark" aria-hidden="true"></span>
+        <span>{{ c.text is not empty ? c.text|lesson_inline : (ctx.preview ? '<span class="lp-ph">Answer</span>' : '') }}</span>
+      </button>
+    {% else %}
+      {% if ctx.preview %}<p class="lp-ph">Answer buttons</p>{% endif %}
+    {% endfor %}
+  </div>
+  <div class="lp-fb lp-fb--right" hidden><strong>✓</strong> <div>{{ fbRight is not empty ? fbRight|lesson_text : '<p>' ~ ctx.ui.correct ~ '</p>' }}</div></div>
+  <div class="lp-fb lp-fb--wrong" hidden><strong>✕</strong> <div>{{ fbWrong is not empty ? fbWrong|lesson_text : '<p>' ~ ctx.ui.incorrect ~ '</p>' }}</div></div>
+</div>

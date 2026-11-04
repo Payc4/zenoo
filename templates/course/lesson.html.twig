@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="{{ ctx.locale }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f8f7f2">
+  <title>{{ lesson.title }} · {{ course.title }}</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  {{ importmap(['app', 'lesson']) }}
+</head>
+<body class="lp-page">
+  {% include 'course/_player.html.twig' with {
+      exitUrl: path('app_courses'),
+      progressUrl: path('app_course_progress', {id: lesson.id})
+  } %}
+</body>
+</html>

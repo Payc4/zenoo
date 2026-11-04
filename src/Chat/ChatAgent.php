@@ -12,8 +12,15 @@ use Symfony\Component\Yaml\Yaml;
  * Runs one chat turn: sends the system prompt and the recent conversation to Claude,
  * streams the reply through $onText and returns it.
  *
- * The prompt lives in config/chatbot/system_prompt.md. It may use {{name}} (the pet
- * parent's first name) and {{today}} (today's date); both are filled in for every reply.
+ * The prompt lives in config/chatbot/system_prompt.md. It may use:
+ *   {{name}}              the pet parent's first name
+ *   {{today}}             today's date
+ *   {{course_knowledge}}  the course lessons (CourseKnowledge::knowledge(), from the database)
+ *   {{course_progress}}   this pet parent's finished lessons and written answers
+ *
+ * Everything above the "## This conversation" heading is the same for every pet parent, so it
+ * is sent as a separate block marked for prompt caching: repeat requests read the long course
+ * text from Claude's cache instead of paying for it in full each time.
  *
  * Claude can also show multiple-choice question cards with the ask_questions tool (see Questions).
  * The starting questions shown in an empty chat come from config/chatbot/intro_questions.yaml.
@@ -30,6 +37,7 @@ class ChatAgent
     public function __construct(
         private readonly ClaudeClient $claude,
         private readonly ChatMessageRepository $messages,
+        private readonly CourseKnowledge $course,
         #[Autowire('%kernel.project_dir%/config/chatbot/system_prompt.md')] private readonly string $promptFile,
         #[Autowire('%kernel.project_dir%/config/chatbot/intro_questions.yaml')] private readonly string $introFile,
     ) {
@@ -58,7 +66,7 @@ class ChatAgent
     {
         $result = $this->claude->stream([
             'max_tokens' => self::MAX_TOKENS,
-            'system' => $this->systemPrompt($conversation),
+            'system' => $this->systemBlocks($conversation),
             'messages' => $this->history($conversation),
             'tools' => [Questions::toolDefinition()],
         ], $onText);
@@ -74,20 +82,46 @@ class ChatAgent
         return ['text' => trim($result['text']), 'questions' => $questions, 'usage' => $result['usage']];
     }
 
+    /** The whole system prompt as one text (for display and tests). */
     public function systemPrompt(ChatConversation $conversation): string
+    {
+        return implode("\n\n", array_column($this->systemBlocks($conversation), 'text'));
+    }
+
+    /**
+     * The system prompt as API content blocks: the shared part (rules + course) first, marked
+     * for caching, then the part about this pet parent.
+     *
+     * @return list<array{type: string, text: string, cache_control?: array{type: string}}>
+     */
+    public function systemBlocks(ChatConversation $conversation): array
     {
         $template = is_file($this->promptFile) ? (string) file_get_contents($this->promptFile) : '';
         if (trim($template) === '') {
             $template = 'You are a helpful assistant on the ZENOO website.';
         }
+        $parts = preg_split('/^(?=## This conversation\s*$)/mu', trim($template), 2);
+        $shared = trim($parts[0]) . self::FORMAT_NOTE;
+        $personal = trim($parts[1] ?? '');
 
         $user = $conversation->getUser();
-        $today = (new \DateTimeImmutable('now', new \DateTimeZone('Europe/Vilnius')))->format('l, j F Y');
-
-        return strtr(trim($template), [
+        $vars = [
             '{{name}}' => trim((string) $user->getFirstName()) ?: 'a pet parent',
-            '{{today}}' => $today,
-        ]) . self::FORMAT_NOTE;
+            '{{today}}' => (new \DateTimeImmutable('now', new \DateTimeZone('Europe/Vilnius')))->format('l, j F Y'),
+        ];
+        // Only look things up when the prompt asks for them.
+        if (str_contains($template, '{{course_knowledge}}')) {
+            $vars['{{course_knowledge}}'] = $this->course->knowledge();
+        }
+        if (str_contains($template, '{{course_progress}}')) {
+            $vars['{{course_progress}}'] = $this->course->progress($user);
+        }
+
+        $blocks = [['type' => 'text', 'text' => strtr($shared, $vars), 'cache_control' => ['type' => 'ephemeral']]];
+        if ($personal !== '') {
+            $blocks[] = ['type' => 'text', 'text' => strtr($personal, $vars)];
+        }
+        return $blocks;
     }
 
     /** @return list<array{role: string, content: string}> */

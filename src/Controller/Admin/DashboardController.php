@@ -73,6 +73,9 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToCrud('Purchases', 'fas fa-receipt', Purchase::class);
         yield MenuItem::section('Accounts');
         yield MenuItem::linkToCrud('Pet parents', 'fas fa-users', User::class);
+        yield MenuItem::section('Courses');
+        yield MenuItem::linkToRoute('Course studio', 'fas fa-chalkboard', 'admin_course_studio');
+        yield MenuItem::linkToUrl('View courses', 'fas fa-graduation-cap', '/courses');
         yield MenuItem::section('Chat');
         yield MenuItem::linkToUrl('Open the chat', 'fas fa-comments', '/chat');
         yield MenuItem::section();

@@ -1,0 +1,13 @@
+{% import 'course/_macros.html.twig' as m %}
+<p class="lp-mode">📖 {{ ctx.ui.read }}</p>
+<h1 class="lp-h1">{{ m.text(f.headline, 'Headline', ctx.preview) }}</h1>
+<div class="lp-prose">{{ m.rich(f.body, 'Story text', ctx.preview) }}</div>
+{% if f.list|default([]) is not empty or ctx.preview %}
+<div class="lp-card lp-card--soft">
+  <p class="lp-card__title">{{ m.text(f.listTitle, 'List title', ctx.preview) }}</p>
+  <ul class="lp-checks">
+    {% for item in f.list|default([]) %}<li>{{ item|lesson_inline }}</li>{% else %}<li class="lp-ph">List items</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+<div class="lp-foot"><button type="button" class="lp-btn" data-action="lesson-player#next">{{ f.button|default(ctx.ui.continue) }}</button></div>

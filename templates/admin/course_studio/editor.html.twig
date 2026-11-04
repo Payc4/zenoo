@@ -1,0 +1,73 @@
+{% extends 'admin/course_studio/_layout.html.twig' %}
+
+{% block title %}{{ lesson.title }}{% endblock %}
+{% block body_class %}cs-page--editor{% endblock %}
+
+{% block topbar %}
+  <span class="cs-top__crumb">› <a href="{{ path('admin_course_studio', {_fragment: 'course-' ~ course.id}) }}">{{ course.title }}</a> › {{ lesson.title }}</span>
+{% endblock %}
+
+{% block body %}
+<div class="cs-editor"
+     data-controller="course-editor"
+     data-course-editor-save-url-value="{{ path('admin_course_studio_lesson_save', {id: lesson.id}) }}"
+     data-course-editor-preview-url-value="{{ path('admin_course_studio_lesson_preview', {id: lesson.id}) }}"
+     data-course-editor-upload-url-value="{{ path('admin_course_studio_upload_audio') }}"
+     data-course-editor-csrf-value="{{ csrf_token('studio') }}">
+
+  <script type="application/json" data-course-editor-target="layouts">{{ layouts|json_encode|raw }}</script>
+  <script type="application/json" data-course-editor-target="lessonData">{{ {
+      title: lesson.title,
+      subtitle: lesson.subtitle,
+      durationMinutes: lesson.durationMinutes,
+      isPublished: lesson.published,
+      slides: lesson.slides
+  }|json_encode|raw }}</script>
+  <script type="application/json" data-course-editor-target="transitions">{{ transitions|json_encode|raw }}</script>
+
+  {# ── Lesson bar ── #}
+  <div class="cs-bar">
+    <input class="cs-input cs-input--title" data-course-editor-target="title" data-action="input->course-editor#metaChanged" placeholder="Lesson title" maxlength="255">
+    <input class="cs-input" data-course-editor-target="subtitle" data-action="input->course-editor#metaChanged" placeholder="Subtitle (optional)" maxlength="255">
+    <label class="cs-bar__min"><input class="cs-input" type="number" min="0" max="600" data-course-editor-target="duration" data-action="input->course-editor#metaChanged"> min</label>
+    <label class="cs-check"><input type="checkbox" data-course-editor-target="published" data-action="change->course-editor#metaChanged"> Published</label>
+    <span class="cs-status" data-course-editor-target="status">Saved</span>
+    <a class="cs-btn cs-btn--ghost" href="{{ path('app_course_lesson', {slug: course.slug, id: lesson.id}) }}" target="_blank" rel="noopener">Try it ↗</a>
+    <button class="cs-btn" data-course-editor-target="saveBtn" data-action="course-editor#save">Save</button>
+  </div>
+
+  <div class="cs-panes">
+    {# ── Slides list ── #}
+    <aside class="cs-slides">
+      <p class="cs-label">Slides</p>
+      <ol class="cs-slides__list" data-course-editor-target="list"></ol>
+      <button type="button" class="cs-btn cs-btn--ghost cs-btn--block" data-action="course-editor#openPicker">+ New slide</button>
+    </aside>
+
+    {# ── Slide form ── #}
+    <section class="cs-form" data-course-editor-target="form"></section>
+
+    {# ── Phone preview ── #}
+    <aside class="cs-preview">
+      <p class="cs-label">Phone preview <span class="cs-muted">· updates as you type</span></p>
+      <div class="cs-phone">
+        <iframe name="cs-preview-frame" title="Lesson preview" data-course-editor-target="frame"></iframe>
+      </div>
+      <form method="post" target="cs-preview-frame" data-course-editor-target="previewForm" hidden>
+        <input type="hidden" name="payload" data-course-editor-target="previewPayload">
+      </form>
+    </aside>
+  </div>
+
+  {# ── Layout picker ── #}
+  <div class="cs-modal" data-course-editor-target="picker" hidden>
+    <div class="cs-modal__box" role="dialog" aria-modal="true" aria-label="Choose a slide layout">
+      <div class="cs-modal__head">
+        <h2 class="cs-h2" data-course-editor-target="pickerTitle">Choose a layout</h2>
+        <button type="button" class="cs-icon" data-action="course-editor#closePicker" aria-label="Close">✕</button>
+      </div>
+      <div class="cs-layouts" data-course-editor-target="pickerGrid"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

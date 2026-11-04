@@ -1,0 +1,23 @@
+{% import 'course/_macros.html.twig' as m %}
+{% if f.headline|default('')|lower != ctx.ui.vet|lower %}<p class="lp-mode">🩺 {{ ctx.ui.vet }}</p>{% endif %}
+<h1 class="lp-h1">{{ m.text(f.headline, 'Headline', ctx.preview) }}</h1>
+{% if f.vet is not empty or ctx.preview %}
+<div class="lp-card lp-card--vet">
+  <div class="lp-prose">{{ m.rich(f.vet, 'When to call the vet', ctx.preview) }}</div>
+</div>
+{% endif %}
+{% if f.action is not empty or ctx.preview %}
+<div class="lp-card">
+  <p class="lp-card__title">{{ m.text(f.actionTitle, 'Practice title', ctx.preview) }}</p>
+  <div class="lp-prose">{{ m.rich(f.action, 'Practice', ctx.preview) }}</div>
+</div>
+{% endif %}
+{% if f.takeaways|default([]) is not empty or ctx.preview %}
+<div class="lp-card lp-card--soft">
+  <p class="lp-card__title">{{ m.text(f.takeawaysTitle, 'Takeaways title', ctx.preview) }}</p>
+  <ul class="lp-checks">
+    {% for t in f.takeaways|default([]) %}<li>{{ t|lesson_inline }}</li>{% else %}<li class="lp-ph">Takeaways</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+<div class="lp-foot"><button type="button" class="lp-btn" data-action="lesson-player#next">{{ f.button|default(ctx.ui.continue) }}</button></div>

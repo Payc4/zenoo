@@ -1,0 +1,18 @@
+{#
+  One lesson slide. Variables:
+    slide    {id, layout, transition, fields}
+    index    0-based position;  total  slide count
+    answer   this learner's saved answer for the slide (array, may be empty)
+    ctx      {number, lessonCount, streak, preview, locale, ui (player words)}
+#}
+{% set f = slide.fields %}
+<section class="lp-slide lp-slide--{{ slide.layout }}"
+         data-lesson-player-target="slide"
+         data-slide-id="{{ slide.id }}"
+         data-layout="{{ slide.layout }}"
+         data-transition="{{ slide.transition|default('slide') }}"
+         {% if index != (ctx.start ?? 0) %}hidden{% endif %}>
+  <div class="lp-slide__body">
+    {% include 'course/slides/' ~ slide.layout ~ '.html.twig' %}
+  </div>
+</section>

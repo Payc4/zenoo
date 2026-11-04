@@ -1,0 +1,30 @@
+/* "My courses" page (templates/course/index.html.twig). Prefix: cl- */
+.cl { background: var(--cream); }
+.cl-wrap { max-width: 760px; padding-top: clamp(2rem, 6vw, 3.5rem); padding-bottom: 4rem; }
+.cl-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.75rem; }
+.cl-title { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.1; color: var(--forest); margin: 0; }
+.cl-streak { margin: 0; padding: 0.5rem 0.9rem; border-radius: 999px; background: #fff; border: 1px solid var(--line); color: var(--forest); }
+.cl-course { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; }
+.cl-course__top { display: flex; justify-content: space-between; gap: 1rem; }
+.cl-course__title { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; font-size: 1.35rem; line-height: 1.15; color: var(--forest); margin: 0 0 0.35rem; }
+.cl-course__desc { margin: 0; color: var(--ink-muted); }
+.cl-course__count { text-align: right; font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; color: var(--forest); white-space: nowrap; }
+.cl-course__count small { display: block; font-family: var(--font-sans); font-size: 0.75rem; color: var(--ink-muted); }
+.cl-bar { height: 6px; border-radius: 6px; background: rgba(68, 89, 66, 0.08); margin: 1rem 0 1.1rem; overflow: hidden; }
+.cl-bar span { display: block; height: 100%; background: var(--sun); border-radius: 6px; }
+.cl-tag { display: inline-block; vertical-align: middle; font-family: var(--font-sans); font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 999px; background: var(--mist); color: var(--forest); }
+.cl-tag--lang { background: var(--forest); color: #fff; }
+.cl-continue { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; border-radius: 16px; background: var(--forest); color: #fff; text-decoration: none; margin-bottom: 1rem; }
+.cl-continue:hover { color: #fff; background: var(--forest-800); }
+.cl-continue small { display: block; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sun); }
+.cl-continue__go { width: 2.4rem; height: 2.4rem; border-radius: 50%; display: grid; place-items: center; background: var(--sun); color: #fff; font-size: 0.85rem; flex-shrink: 0; }
+.cl-lessons { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.cl-lesson a { display: flex; align-items: center; gap: 0.85rem; padding: 0.7rem 0.6rem; border-radius: 12px; color: var(--forest); text-decoration: none; }
+.cl-lesson a:hover { background: rgba(68, 89, 66, 0.04); color: var(--forest); }
+.cl-lesson__n { width: 2rem; height: 2rem; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid #c9d3c8; font-size: 0.85rem; color: var(--ink-muted); }
+.cl-lesson.is-done .cl-lesson__n { background: #3f7a3b; border-color: #3f7a3b; color: #fff; }
+.cl-lesson__t small { display: block; font-size: 0.78rem; color: var(--ink-muted); }
+.cl-locked { display: grid; gap: 0.75rem; justify-items: start; }
+.cl-locked p { margin: 0; color: var(--ink-muted); }
+.cl-empty { text-align: center; padding: 4rem 1rem; }
+@media (max-width: 520px) { .cl-course__top { flex-direction: column; } .cl-course__count { text-align: left; } .cl-course { padding: 1.15rem; } }

@@ -36,6 +36,7 @@
 # Uploads are user data (a Docker volume in production): keep the folder, not the files.
 /public/uploads/profiles/*
 !/public/uploads/profiles/.gitkeep
+/public/uploads/lesson-audio/
 
 # Local SQLite databases and the local .env override
 /var/
