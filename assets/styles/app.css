@@ -69,10 +69,17 @@ h3 { font-size: 20px; line-height: 1.2; }
 .nav a:hover, .nav a[aria-current="page"] { background: rgba(255, 255, 255, .12); color: var(--white); }
 .nav .btn { margin-left: 6px; }
 .nav-avatar { display: inline-flex; align-items: center; gap: 8px; }
-.nav-toggle { display: none; margin-left: auto; background: none; border: 0; color: var(--white); padding: 8px; cursor: pointer; }
+/* EN / LT selector, top right (before the menu button on phones) */
+.nav { order: 1; }
+.lang-switch { order: 2; display: inline-flex; gap: 2px; margin-left: 12px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.12); }
+.lang-switch a { color: var(--white); text-decoration: none; font-size: .8rem; font-weight: 700; letter-spacing: .04em; padding: 4px 9px; border-radius: 999px; opacity: .75; }
+.lang-switch a:hover { opacity: 1; }
+.lang-switch a[aria-current] { background: var(--white); color: var(--forest); opacity: 1; }
+.nav-toggle { order: 3; display: none; margin-left: auto; background: none; border: 0; color: var(--white); padding: 8px; cursor: pointer; }
 .nav-toggle svg { width: 28px; height: 28px; }
 @media (max-width: 760px) {
-  .nav-toggle { display: block; }
+  .nav-toggle { display: block; margin-left: 4px; }
+  .lang-switch { margin-left: auto; }
   .nav { display: none; position: absolute; top: 68px; left: 0; right: 0; flex-direction: column; align-items: stretch; background: var(--forest); padding: 8px 20px 20px; gap: 2px; }
   .nav.open { display: flex; }
   .nav a { padding: 12px 14px; }

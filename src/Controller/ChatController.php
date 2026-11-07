@@ -10,6 +10,7 @@ use App\Entity\ChatConversation;
 use App\Entity\ChatMessage;
 use App\Entity\User;
 use App\Repository\ChatConversationRepository;
+use App\Repository\DogProfileRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,6 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -37,20 +39,23 @@ class ChatController extends AbstractController
         private readonly ChatConversationRepository $conversations,
         private readonly ChatQuota $quota,
         private readonly EntityManagerInterface $em,
+        private readonly TranslatorInterface $translator,
         #[Autowire('%kernel.environment%')] private readonly string $environment,
     ) {
     }
 
     #[Route('', name: 'app_chat', methods: ['GET'])]
-    public function index(ClaudeClient $claude, ChatAgent $agent): Response
+    public function index(Request $request, ClaudeClient $claude, ChatAgent $agent, DogProfileRepository $dogs): Response
     {
         $user = $this->currentUser();
         $conversation = $this->conversations->findForUser($user);
         $messages = $conversation ? $conversation->getMessages()->toArray() : [];
+        $dog = $dogs->findForUser($user);
 
-        // Cards to show: the starting questions in an empty chat, or the ones in Claude's last reply.
+        // Cards to show: the starting questions in an empty chat (not needed when the quiz
+        // already told us about the dog), or the ones in Claude's last reply.
         $last = end($messages) ?: null;
-        $cards = !$messages ? $agent->introQuestions() : ($last && !$last->isFromUser() ? $last->getQuestions() : null);
+        $cards = !$messages ? ($dog ? null : $agent->introQuestions($request->getLocale())) : ($last && !$last->isFromUser() ? $last->getQuestions() : null);
 
         return $this->render('chat/index.html.twig', [
             'messages' => $messages,
@@ -62,6 +67,9 @@ class ChatController extends AbstractController
             'remaining' => $this->quota->remaining($user),
             'resetLabel' => $this->quota->resetLabel(),
             'maxChars' => self::MAX_MESSAGE_CHARS,
+            'dog' => $dog,
+            // Starter question from the dashboard (/chat?ask=…), put in the message box.
+            'ask' => mb_substr(trim((string) $request->query->get('ask', '')), 0, 300),
         ]);
     }
 
@@ -78,23 +86,23 @@ class ChatController extends AbstractController
         $user = $this->currentUser();
 
         if (!$this->isCsrfTokenValid('chat', (string) $request->headers->get('X-CSRF-Token'))) {
-            return new JsonResponse(['error' => 'Your session expired. Please reload the page.'], 403);
+            return new JsonResponse(['error' => $this->translator->trans('Your session expired. Please reload the page.')], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
         $text = trim((string) ($data['message'] ?? ''));
         if ($text === '') {
-            return new JsonResponse(['error' => 'Type a message first.'], 400);
+            return new JsonResponse(['error' => $this->translator->trans('Type a message first.')], 400);
         }
         if (mb_strlen($text) > self::MAX_MESSAGE_CHARS) {
-            return new JsonResponse(['error' => sprintf('That message is too long (max %d characters).', self::MAX_MESSAGE_CHARS)], 400);
+            return new JsonResponse(['error' => $this->translator->trans('That message is too long (max %max% characters).', ['%max%' => self::MAX_MESSAGE_CHARS])], 400);
         }
         if (!$claude->isConfigured()) {
-            return new JsonResponse(['error' => 'The chat isn’t switched on yet. Please try again later.'], 503);
+            return new JsonResponse(['error' => $this->translator->trans('The chat isn’t switched on yet. Please try again later.')], 503);
         }
         if (!$this->quota->consume($user)) {
             return new JsonResponse([
-                'error' => sprintf('You’ve used all %d messages for today. You can chat again after %s.', $this->quota->dailyLimit(), $this->quota->resetLabel()),
+                'error' => $this->translator->trans('You’ve used all %limit% messages for today. You can chat again after %time%.', ['%limit%' => $this->quota->dailyLimit(), '%time%' => $this->translator->trans($this->quota->resetLabel())]),
                 'remaining' => 0,
             ], 429);
         }
@@ -215,11 +223,11 @@ class ChatController extends AbstractController
                 };
             }
 
-            return $e->getCode() === 429
+            return $this->translator->trans($e->getCode() === 429
                 ? 'The chat is very busy right now. Please try again in a minute.'
-                : 'The chat isn’t available right now. Please try again in a moment.';
+                : 'The chat isn’t available right now. Please try again in a moment.');
         }
 
-        return 'Something went wrong while answering. Please try again in a moment.';
+        return $this->translator->trans('Something went wrong while answering. Please try again in a moment.');
     }
 }

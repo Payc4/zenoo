@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class RegistrationController extends AbstractController
 {
@@ -25,9 +26,10 @@ class RegistrationController extends AbstractController
         EntityManagerInterface $em,
         EmailService $emails,
         LoggerInterface $logger,
+        TranslatorInterface $translator,
     ): Response {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_account');
+            return $this->redirectToRoute('app_dashboard');
         }
 
         $user = new User();
@@ -36,6 +38,7 @@ class RegistrationController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $user->setPassword($hasher->hashPassword($user, (string) $form->get('plainPassword')->getData()));
+            $user->setLocale($request->getLocale());
             $em->persist($user);
             $em->flush();
 
@@ -45,7 +48,7 @@ class RegistrationController extends AbstractController
                 $logger->error('Welcome email failed', ['user' => $user->getId(), 'error' => $e->getMessage()]);
             }
 
-            $this->addFlash('success', sprintf('Welcome to ZENOO, %s! Your account is ready.', $user->getDisplayName()));
+            $this->addFlash('success', $translator->trans('Welcome to ZENOO, %name%! Your account is ready.', ['%name%' => $user->getDisplayName()]));
 
             // Logs the new account in and follows any saved ?next= page (e.g. the product they wanted).
             return $security->login($user, LoginFormAuthenticator::class, 'main');

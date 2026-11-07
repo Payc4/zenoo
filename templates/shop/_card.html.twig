@@ -3,5 +3,5 @@
     <h3><a href="{{ path('app_product', {slug: product.slug}) }}" style="text-decoration:none">{{ product.name }}</a></h3>
     {% if product.tagline %}<p class="muted">{{ product.tagline }}</p>{% endif %}
     <p class="price">€{{ product.price|number_format(2, '.', ',') }}</p>
-    <div class="btn-row"><a class="btn btn-small" href="{{ path('app_product', {slug: product.slug}) }}">View</a></div>
+    <div class="btn-row"><a class="btn btn-small" href="{{ path('app_product', {slug: product.slug}) }}">{{ 'View'|trans }}</a></div>
 </article>

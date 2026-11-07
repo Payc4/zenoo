@@ -4,44 +4,44 @@
 <section class="hero">
     <div class="wrap">
         <div>
-            <p class="kicker">Your ZENOO account</p>
-            <h1>Real food. <span class="accent">Healthy pet.</span></h1>
-            <p class="lead">Check what’s in your dog’s bowl with the free Bowl Score quiz, shop with ZENOO and keep every order in one place.</p>
+            <p class="kicker">{{ 'Your ZENOO account'|trans }}</p>
+            <h1>{{ 'Real food.'|trans }} <span class="accent">{{ 'Healthy pet.'|trans }}</span></h1>
+            <p class="lead">{{ 'Check what’s in your dog’s bowl with the free Bowl Score quiz, shop with ZENOO and keep every order in one place.'|trans }}</p>
             <div class="btn-row">
-                <a class="btn" href="{{ path('app_quiz') }}">Take the Bowl Score quiz</a>
+                <a class="btn" href="{{ path('app_quiz') }}">{{ 'Take the Bowl Score quiz'|trans }}</a>
                 {% if app.user %}
-                    <a class="btn btn-ghost-light" href="{{ path('app_account') }}">My account</a>
+                    <a class="btn btn-ghost-light" href="{{ path('app_account') }}">{{ 'My account'|trans }}</a>
                 {% else %}
-                    <a class="btn btn-ghost-light" href="{{ path('app_register') }}">Create an account</a>
+                    <a class="btn btn-ghost-light" href="{{ path('app_register') }}">{{ 'Create an account'|trans }}</a>
                 {% endif %}
             </div>
         </div>
-        <img class="hero-photo" src="/images/intro-hero.jpg" alt="A curly-coated dog looking up at a bowl of food" width="1000" height="750">
+        <img class="hero-photo" src="/images/intro-hero.jpg" alt="{{ 'A curly-coated dog looking up at a bowl of food'|trans }}" width="1000" height="750">
     </div>
 </section>
 
 <section class="section">
     <div class="wrap">
-        <p class="kicker">How it works</p>
-        <h2>Three simple steps</h2>
+        <p class="kicker">{{ 'How it works'|trans }}</p>
+        <h2>{{ 'Three simple steps'|trans }}</h2>
         <div class="grid grid-3" style="margin-top:24px">
             <div class="card">
                 <span class="feature-num">01</span>
-                <h3>Check the bowl</h3>
-                <p>Answer a few questions about your dog and their food. You get a Bowl Score out of 100 and a daily plan.</p>
-                <a href="{{ path('app_quiz') }}">Start the quiz</a>
+                <h3>{{ 'Check the bowl'|trans }}</h3>
+                <p>{{ 'Answer a few questions about your dog and their food. You get a Bowl Score out of 100 and a daily plan.'|trans }}</p>
+                <a href="{{ path('app_quiz') }}">{{ 'Start the quiz'|trans }}</a>
             </div>
             <div class="card">
                 <span class="feature-num">02</span>
-                <h3>Create your account</h3>
-                <p>One login for your orders and details. Sign in with your password or a one-time link sent to your email.</p>
-                <a href="{{ path(app.user ? 'app_account' : 'app_register') }}">{{ app.user ? 'Go to my account' : 'Create an account' }}</a>
+                <h3>{{ 'Create your account'|trans }}</h3>
+                <p>{{ 'One login for your orders and details. Sign in with your password or a one-time link sent to your email.'|trans }}</p>
+                <a href="{{ path(app.user ? 'app_account' : 'app_register') }}">{{ app.user ? 'Go to my account'|trans : 'Create an account'|trans }}</a>
             </div>
             <div class="card">
                 <span class="feature-num">03</span>
-                <h3>Order with ease</h3>
-                <p>Pay safely on Stripe’s secure checkout. Your receipt lands in your inbox and in your account.</p>
-                <a href="{{ path('app_shop') }}">Visit the shop</a>
+                <h3>{{ 'Order with ease'|trans }}</h3>
+                <p>{{ 'Pay safely on Stripe’s secure checkout. Your receipt lands in your inbox and in your account.'|trans }}</p>
+                <a href="{{ path('app_shop') }}">{{ 'Visit the shop'|trans }}</a>
             </div>
         </div>
     </div>
@@ -49,12 +49,12 @@
 
 <section class="band">
     <div class="wrap">
-        <img src="/images/body-check.jpg" alt="Two hands gently feeling a dog’s ribs" width="1000" height="750" loading="lazy">
+        <img src="/images/body-check.jpg" alt="{{ 'Two hands gently feeling a dog’s ribs'|trans }}" width="1000" height="750" loading="lazy">
         <div>
-            <p class="kicker">Free · about 3 minutes</p>
-            <h2>Is your dog eating properly?</h2>
-            <p class="lead">The Bowl Score quiz looks at breed, age, weight, body shape, activity and food, then shows how much to feed and the first two things to try.</p>
-            <div class="btn-row"><a class="btn btn-forest" href="{{ path('app_quiz') }}">Get the Bowl Score</a></div>
+            <p class="kicker">{{ 'Free · about 3 minutes'|trans }}</p>
+            <h2>{{ 'Is your dog eating properly?'|trans }}</h2>
+            <p class="lead">{{ 'The Bowl Score quiz looks at breed, age, weight, body shape, activity and food, then shows how much to feed and the first two things to try.'|trans }}</p>
+            <div class="btn-row"><a class="btn btn-forest" href="{{ path('app_quiz') }}">{{ 'Get the Bowl Score'|trans }}</a></div>
         </div>
     </div>
 </section>
@@ -62,8 +62,8 @@
 {% if products|length %}
 <section class="section">
     <div class="wrap">
-        <p class="kicker">Shop</p>
-        <h2>In the shop</h2>
+        <p class="kicker">{{ 'Shop'|trans }}</p>
+        <h2>{{ 'In the shop'|trans }}</h2>
         <div class="grid grid-3" style="margin-top:24px">
             {% for product in products|slice(0, 3) %}
                 {{ include('shop/_card.html.twig', {product: product}) }}

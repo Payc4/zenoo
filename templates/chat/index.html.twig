@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Chat · ZENOO{% endblock %}
+{% block title %}{{ 'Chat'|trans }} · ZENOO{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block body_class %}chat-page{% endblock %}
 {% block importmap %}{{ importmap(['app', 'chat']) }}{% endblock %}
@@ -13,20 +13,38 @@
      data-max-chars="{{ maxChars }}"
      data-configured="{{ configured ? 'true' : 'false' }}"
      data-limit="{{ limit }}"
-     data-reset-label="{{ resetLabel }}">
+     data-reset-label="{{ resetLabel|trans }}"
+     data-i18n="{{ {
+        limitAll: 'You’ve used all %limit% messages for today. You can chat again after %time%.'|trans({'%limit%': limit, '%time%': resetLabel|trans}),
+        error: 'Something went wrong. Please try again.'|trans,
+        noReply: 'No reply came back. Please try again.'|trans,
+        answerQuestions: 'Answer the questions'|trans,
+        askAnything: 'Ask anything about feeding your dog or using ZENOO.'|trans,
+        prevQ: 'Previous question'|trans,
+        nextQ: 'Next question'|trans,
+        closeQ: 'Close the questions'|trans,
+        count: '%n% of %total%'|trans,
+        ownAnswer: 'Your own answer'|trans,
+        typeAnswer: 'Type your answer…'|trans,
+        skip: 'Skip'|trans,
+        sendAnswers: 'Send answers'|trans,
+        next: 'Next →'|trans,
+        skipped: 'skipped'|trans,
+        aboutDog: 'A bit about my dog:'|trans,
+     }|json_encode }}">
 
     <section class="chat-main">
         <div class="chat-bar">
-            <span class="chat-bar__title">Chat with ZENOO</span>
+            <span class="chat-bar__title">{{ 'Chat with ZENOO'|trans }}</span>
             {% if unlimited %}
-                <span class="chat-quota">Admin: no daily limit</span>
+                <span class="chat-quota">{{ 'Admin: no daily limit'|trans }}</span>
             {% else %}
-                <span class="chat-quota" title="Resets at {{ resetLabel }}"><strong id="chat-remaining">{{ remaining }}</strong> of {{ limit }} messages left today</span>
+                <span class="chat-quota" title="{{ 'Resets at %time%'|trans({'%time%': resetLabel|trans}) }}">{{ '<strong id="chat-remaining">%remaining%</strong> of %limit% messages left today'|trans({'%remaining%': remaining, '%limit%': limit})|raw }}</span>
             {% endif %}
             {% if messages|length %}
-                <form method="post" action="{{ path('app_chat_clear') }}" data-confirm="Clear your whole chat history? This can’t be undone.">
+                <form method="post" action="{{ path('app_chat_clear') }}" data-confirm="{{ 'Clear your whole chat history? This can’t be undone.'|trans }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('chat-clear') }}">
-                    <button type="submit" class="link-btn small">Clear chat</button>
+                    <button type="submit" class="link-btn small">{{ 'Clear chat'|trans }}</button>
                 </form>
             {% endif %}
         </div>
@@ -34,9 +52,9 @@
         {% if not configured %}
             <div class="flash flash-info chat-alert" role="status">
                 {% if is_granted('ROLE_ADMIN') %}
-                    Admin: add <code>ANTHROPIC_API_KEY</code> to the environment variables in Coolify and redeploy to switch the chat on.
+                    {{ 'Admin: add <code>ANTHROPIC_API_KEY</code> to the environment variables in Coolify and redeploy to switch the chat on.'|trans|raw }}
                 {% else %}
-                    The chat isn’t switched on yet. Please check back soon.
+                    {{ 'The chat isn’t switched on yet. Please check back soon.'|trans }}
                 {% endif %}
             </div>
         {% endif %}
@@ -46,11 +64,11 @@
                 {% if messages|length == 0 %}
                     <div class="chat-empty" id="chat-empty">
                         <img src="/apple-touch-icon.png" alt="" width="56" height="56">
-                        <h1>Hi {{ app.user.displayName }}, how can we help?</h1>
+                        <h1>{{ 'Hi %name%, how can we help?'|trans({'%name%': app.user.displayName}) }}</h1>
                         {% if cardsAreIntro and configured %}
-                            <p class="chat-muted" id="chat-intro-note">A few quick questions first, so the tips fit your dog. You can skip any of them.</p>
+                            <p class="chat-muted" id="chat-intro-note">{{ 'A few quick questions first, so the tips fit your dog. You can skip any of them.'|trans }}</p>
                         {% else %}
-                            <p class="chat-muted">Ask anything about feeding your dog or using ZENOO.</p>
+                            <p class="chat-muted">{{ 'Ask anything about feeding your dog or using ZENOO.'|trans }}</p>
                         {% endif %}
                         <div class="chat-suggest" id="chat-suggest" {{ cardsAreIntro and configured ? 'hidden' }}>
                             {% for s in [
@@ -59,7 +77,7 @@
                                 'My dog is a picky eater. Any tips?',
                                 'How do I read a dog food label?'
                             ] %}
-                                <button type="button" class="chat-suggest__btn" data-suggest="{{ s }}" {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}>{{ s }}</button>
+                                <button type="button" class="chat-suggest__btn" data-suggest="{{ s|trans }}" {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}>{{ s|trans }}</button>
                             {% endfor %}
                         </div>
                     </div>
@@ -72,10 +90,10 @@
                         <div class="chat-msg chat-msg--bot">
                             <img class="chat-avatar" src="/favicon.png" alt="" width="32" height="32">
                             <div class="chat-answer">
-                                {{ m.content ? m.content|chat_markdown : '<p>I have a few quick questions for you.</p>' }}
+                                {{ m.content ? m.content|chat_markdown : '<p>' ~ ('I have a few quick questions for you.'|trans|e) ~ '</p>' }}
                                 {% if m.questions %}
                                     <ol class="chat-asked">{% for q in m.questions %}<li>{{ q.question }}</li>{% endfor %}</ol>
-                                    {% if loop.last %}<button type="button" class="btn btn-small chat-reopen" data-reopen hidden>Answer the questions</button>{% endif %}
+                                    {% if loop.last %}<button type="button" class="btn btn-small chat-reopen" data-reopen hidden>{{ 'Answer the questions'|trans }}</button>{% endif %}
                                 {% endif %}
                             </div>
                         </div>
@@ -91,15 +109,15 @@
 
         <form class="chat-composer" id="chat-form">
             <div class="chat-composer__box">
-                <label for="chat-input" class="visually-hidden">Your message</label>
-                <textarea id="chat-input" rows="1" maxlength="{{ maxChars }}" placeholder="Ask about your dog’s food…"
-                          {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}></textarea>
-                <button type="submit" class="chat-send" id="chat-send" aria-label="Send" {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}>
+                <label for="chat-input" class="visually-hidden">{{ 'Your message'|trans }}</label>
+                <textarea id="chat-input" rows="1" maxlength="{{ maxChars }}" placeholder="{{ 'Ask about your dog’s food…'|trans }}"
+                          {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}>{{ ask }}</textarea>
+                <button type="submit" class="chat-send" id="chat-send" aria-label="{{ 'Send'|trans }}" {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}>
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
                 </button>
             </div>
             <p class="chat-composer__meta">
-                <span id="chat-limit-note">{% if not unlimited and remaining == 0 %}You’ve used all {{ limit }} messages for today. You can chat again after {{ resetLabel }}.{% else %}The assistant can make mistakes. For health questions, please ask your vet.{% endif %}</span>
+                <span id="chat-limit-note">{% if not unlimited and remaining == 0 %}{{ 'You’ve used all %limit% messages for today. You can chat again after %time%.'|trans({'%limit%': limit, '%time%': resetLabel|trans}) }}{% else %}{{ 'The assistant can make mistakes. For health questions, please ask your vet.'|trans }}{% endif %}</span>
                 <span id="chat-counter"></span>
             </p>
         </form>

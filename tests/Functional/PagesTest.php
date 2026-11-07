@@ -32,13 +32,13 @@ class PagesTest extends AppTestCase
         $this->assertCount(0, FakeStripe::$requests);
     }
 
-    public function testQuizFilesMatchTheHandoff(): void
+    public function testQuizScoringAndStylesMatchTheHandoff(): void
     {
-        // public/quiz/*.js and styles.css are copies of the ZENOO handoff; the hashes guard against silent edits.
+        // scoring.js and styles.css are untouched copies of the ZENOO handoff; the hashes guard against
+        // silent edits. app.js and content.*.js were changed on purpose: the quiz → account step and
+        // the Lithuanian translation.
         $expected = [
-            'app.js' => '213c2dc66a275a58303e391efb33e05a5bcf5944f457cb70c8c1c0f2483ddb92',
             'scoring.js' => 'f288dafd778bb1dae7c79a19e121b2dbca1f4b1e468dad739e8fa2857cdbb1e7',
-            'content.en.js' => '7a0967762bf5b66249ecfa27aa6e307abc68298277fcfede7de8735e02b1f611',
             'styles.css' => '3341429afe83cb14429dee3f008dc3276a014ecef9e02352b0ec0f62e2d02572',
         ];
         foreach ($expected as $file => $hash) {

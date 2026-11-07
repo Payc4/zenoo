@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class PasswordResetController extends AbstractController
@@ -19,10 +20,10 @@ class PasswordResetController extends AbstractController
     private const TOKEN_LIFETIME = '+1 hour';
 
     #[Route('/forgot-password', name: 'app_forgot_password', methods: ['GET', 'POST'])]
-    public function request(Request $request, UserRepository $users, EntityManagerInterface $em, EmailService $emails, LoggerInterface $logger): Response
+    public function request(Request $request, UserRepository $users, EntityManagerInterface $em, EmailService $emails, LoggerInterface $logger, TranslatorInterface $translator): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_account');
+            return $this->redirectToRoute('app_dashboard');
         }
 
         if ($request->isMethod('POST')) {
@@ -55,7 +56,7 @@ class PasswordResetController extends AbstractController
     }
 
     #[Route('/reset-password/{token}', name: 'app_reset_password', requirements: ['token' => '[a-f0-9]{64}'], methods: ['GET', 'POST'])]
-    public function reset(string $token, Request $request, UserRepository $users, EntityManagerInterface $em, UserPasswordHasherInterface $hasher, EmailService $emails, LoggerInterface $logger): Response
+    public function reset(string $token, Request $request, UserRepository $users, EntityManagerInterface $em, UserPasswordHasherInterface $hasher, EmailService $emails, LoggerInterface $logger, TranslatorInterface $translator): Response
     {
         $user = $users->findOneByResetToken($token);
         if (!$user || !$user->getResetTokenExpiresAt() || $user->getResetTokenExpiresAt() < new \DateTimeImmutable()) {
@@ -70,7 +71,7 @@ class PasswordResetController extends AbstractController
             if (!$this->isCsrfTokenValid('reset-password', (string) $request->request->get('_csrf_token'))) {
                 $error = 'Your session expired. Please try again.';
             } elseif (strlen($password) < RegistrationFormType::MIN_PASSWORD) {
-                $error = sprintf('Your password needs at least %d characters.', RegistrationFormType::MIN_PASSWORD);
+                $error = $translator->trans('Your password needs at least %n% characters.', ['%n%' => RegistrationFormType::MIN_PASSWORD]);
             } elseif ($password !== (string) $request->request->get('password_confirm', '')) {
                 $error = 'The two passwords don’t match.';
             } else {

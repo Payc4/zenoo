@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app.locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}ZENOO · Real Food. Healthy Pet.{% endblock %}</title>
-    <meta name="description" content="{% block description %}Your ZENOO account: take the Bowl Score quiz, shop and keep your orders in one place.{% endblock %}">
+    <title>{% block title %}ZENOO · {{ 'Real Food. Healthy Pet.'|trans }}{% endblock %}</title>
+    <meta name="description" content="{% block description %}{{ 'Your ZENOO account: take the Bowl Score quiz, shop and keep your orders in one place.'|trans }}{% endblock %}">
     <meta name="theme-color" content="#445942">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" href="/favicon.png" type="image/png">
@@ -13,30 +13,36 @@
     {% block importmap %}{{ importmap('app') }}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
-    <a class="skip" href="#main">Skip to content</a>
+    <a class="skip" href="#main">{{ 'Skip to content'|trans }}</a>
 
     {% set route = app.request.attributes.get('_route') %}
     <header class="site-header">
         <div class="wrap">
-            <a class="brand" href="{{ path('app_homepage') }}"><img src="/images/logo-white.png" alt="ZENOO home" width="94" height="26"></a>
+            <a class="brand" href="{{ path('app_homepage') }}"><img src="/images/logo-white.png" alt="{{ 'ZENOO home'|trans }}" width="94" height="26"></a>
+            {% set lang = app.locale %}
+            <div class="lang-switch" role="group" aria-label="{{ 'Language'|trans }}">
+                <a href="{{ path('app_language', {locale: 'en'}) }}" lang="en" hreflang="en" {{ lang == 'en' ? 'aria-current="true"' }}>EN</a>
+                <a href="{{ path('app_language', {locale: 'lt'}) }}" lang="lt" hreflang="lt" {{ lang == 'lt' ? 'aria-current="true"' }}>LT</a>
+            </div>
             <button class="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false">
-                <span class="visually-hidden">Menu</span>
+                <span class="visually-hidden">{{ 'Menu'|trans }}</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
             </button>
-            <nav class="nav" id="site-nav" aria-label="Main">
-                <a href="{{ path('app_shop') }}" {{ route starts with 'app_shop' or route == 'app_product' ? 'aria-current="page"' }}>Shop</a>
-                <a href="{{ path('app_quiz') }}">Bowl Score quiz</a>
-                <a href="{{ path('app_courses') }}" {{ route starts with 'app_course' ? 'aria-current="page"' }}>Courses</a>
-                <a href="{{ path('app_chat') }}" {{ route starts with 'app_chat' ? 'aria-current="page"' }}>Chat</a>
+            <nav class="nav" id="site-nav" aria-label="{{ 'Main'|trans }}">
+                <a href="{{ path('app_shop') }}" {{ route starts with 'app_shop' or route == 'app_product' ? 'aria-current="page"' }}>{{ 'Shop'|trans }}</a>
+                <a href="{{ path('app_quiz') }}">{{ 'Bowl Score quiz'|trans }}</a>
+                <a href="{{ path('app_courses') }}" {{ route starts with 'app_course' ? 'aria-current="page"' }}>{{ 'Courses'|trans }}</a>
+                <a href="{{ path('app_chat') }}" {{ route starts with 'app_chat' ? 'aria-current="page"' }}>{{ 'Chat'|trans }}</a>
                 {% if app.user %}
-                    {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin') }}">Admin</a>{% endif %}
+                    <a href="{{ path('app_dashboard') }}" {{ route == 'app_dashboard' ? 'aria-current="page"' }}>{{ 'My dog'|trans }}</a>
+                    {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin') }}">{{ 'Admin'|trans }}</a>{% endif %}
                     <a class="nav-avatar" href="{{ path('app_account') }}" {{ route starts with 'app_account' ? 'aria-current="page"' }}>
-                        {{ include('account/_avatar.html.twig', {user: app.user, size: 'sm'}) }} My account
+                        {{ include('account/_avatar.html.twig', {user: app.user, size: 'sm'}) }} {{ 'My account'|trans }}
                     </a>
-                    <a href="{{ path('app_logout') }}">Log out</a>
+                    <a href="{{ path('app_logout') }}">{{ 'Log out'|trans }}</a>
                 {% else %}
-                    <a href="{{ path('app_login') }}" {{ route == 'app_login' ? 'aria-current="page"' }}>Log in</a>
-                    <a class="btn btn-small" href="{{ path('app_register') }}">Create account</a>
+                    <a href="{{ path('app_login') }}" {{ route == 'app_login' ? 'aria-current="page"' }}>{{ 'Log in'|trans }}</a>
+                    <a class="btn btn-small" href="{{ path('app_register') }}">{{ 'Create account'|trans }}</a>
                 {% endif %}
             </nav>
         </div>
@@ -48,7 +54,7 @@
             <div class="wrap flashes" role="status">
                 {% for type, messages in flashes %}
                     {% for message in messages %}
-                        <div class="flash flash-{{ type in ['success', 'error'] ? type : 'info' }}">{{ message }}</div>
+                        <div class="flash flash-{{ type in ['success', 'error'] ? type : 'info' }}">{{ message|trans }}</div>
                     {% endfor %}
                 {% endfor %}
             </div>
@@ -62,12 +68,12 @@
         <div class="wrap">
             <div>
                 <img src="/images/logo-white.png" alt="ZENOO" width="80" height="22">
-                <p class="tagline">Real Food. Healthy Pet.</p>
+                <p class="tagline">{{ 'Real Food. Healthy Pet.'|trans }}</p>
             </div>
-            <nav aria-label="Footer">
-                <a href="{{ path('app_shop') }}">Shop</a>
-                <a href="{{ path('app_quiz') }}">Bowl Score quiz</a>
-                <a href="{{ path('app_privacy_policy') }}">Privacy policy</a>
+            <nav aria-label="{{ 'Footer'|trans }}">
+                <a href="{{ path('app_shop') }}">{{ 'Shop'|trans }}</a>
+                <a href="{{ path('app_quiz') }}">{{ 'Bowl Score quiz'|trans }}</a>
+                <a href="{{ path('app_privacy_policy') }}">{{ 'Privacy policy'|trans }}</a>
                 <a href="https://myzenoo.com">myzenoo.com</a>
             </nav>
         </div>

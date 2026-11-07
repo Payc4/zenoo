@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ 'Link not valid'|trans }} · ZENOO{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block body %}
+<section class="section">
+  <div class="wrap narrow">
+    <p class="kicker">{{ 'Bowl Score quiz'|trans }}</p>
+    <h1>{{ reason == 'expired' ? 'This link has expired'|trans : 'This link doesn’t work'|trans }}</h1>
+    <p>{{ 'Confirmation links work for 7 days and only once. Take the quiz again to get a new one, or log in if you already have an account.'|trans }}</p>
+    <p class="btn-row">
+      <a class="btn" href="{{ path('app_quiz') }}">{{ 'Take the quiz'|trans }}</a>
+      <a class="btn btn-outline" href="{{ path('app_login') }}">{{ 'Log in'|trans }}</a>
+    </p>
+  </div>
+</section>
+{% endblock %}

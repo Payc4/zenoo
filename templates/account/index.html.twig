@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}My account · ZENOO{% endblock %}
+{% block title %}{{ 'My account'|trans }} · ZENOO{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
 
 {% block body %}
@@ -8,25 +8,25 @@
     <div class="wrap">
         {{ include('account/_avatar.html.twig', {user: user}) }}
         <div>
-            <h1>Hi, {{ user.displayName }}</h1>
-            <p>{{ user.email }} · member since {{ user.createdAt|date('F Y') }}</p>
+            <h1>{{ 'Hi, %name%'|trans({'%name%': user.displayName}) }}</h1>
+            <p>{{ user.email }} · {{ 'member since %date%'|trans({'%date%': user.createdAt|local_date('month')}) }}</p>
         </div>
     </div>
 </section>
 
 <div class="wrap account-grid">
-    <nav class="account-nav" aria-label="Account">
-        <a href="#orders">My orders</a>
-        <a href="#details">My details</a>
-        <a href="#password">Password</a>
-        <a href="#delete">Delete account</a>
+    <nav class="account-nav" aria-label="{{ 'Account'|trans }}">
+        <a href="#orders">{{ 'My orders'|trans }}</a>
+        <a href="#details">{{ 'My details'|trans }}</a>
+        <a href="#password">{{ 'Password'|trans }}</a>
+        <a href="#delete">{{ 'Delete account'|trans }}</a>
     </nav>
 
     <div class="account-panels">
         {# ---------- Orders ---------- #}
         {% set purchases = user.purchases %}
         <section class="card" id="orders">
-            <h2>My orders</h2>
+            <h2>{{ 'My orders'|trans }}</h2>
             {% if purchases|length %}
                 <ul class="orders">
                     {% for purchase in purchases %}
@@ -35,9 +35,9 @@
                             <div>
                                 <a class="order-title" href="{{ path('app_account_order', {id: purchase.id}) }}">{{ purchase.product.name }}</a>
                                 <div class="order-meta">
-                                    Order #{{ purchase.id }} · {{ purchase.createdAt|date('j M Y') }}
-                                    {% if not purchase.completed %} · <span class="tag tag-sun">Refunded</span>{% endif %}
-                                    {% if purchase.testMode %} · <span class="tag tag-test">Test</span>{% endif %}
+                                    {{ 'Order #%id%'|trans({'%id%': purchase.id}) }} · {{ purchase.createdAt|local_date('day') }}
+                                    {% if not purchase.completed %} · <span class="tag tag-sun">{{ 'Refunded'|trans }}</span>{% endif %}
+                                    {% if purchase.testMode %} · <span class="tag tag-test">{{ 'Test'|trans }}</span>{% endif %}
                                 </div>
                             </div>
                             <div class="order-amount">€{{ purchase.amount|number_format(2, '.', ',') }}</div>
@@ -46,25 +46,25 @@
                 </ul>
             {% else %}
                 <div class="empty">
-                    <p>No orders yet.</p>
-                    <a class="btn btn-small" href="{{ path('app_shop') }}">Visit the shop</a>
+                    <p>{{ 'No orders yet.'|trans }}</p>
+                    <a class="btn btn-small" href="{{ path('app_shop') }}">{{ 'Visit the shop'|trans }}</a>
                 </div>
             {% endif %}
         </section>
 
         {# ---------- Details ---------- #}
         <section class="card" id="details">
-            <h2>My details</h2>
-            <p class="panel-intro">Your name and photo. Your email is your login: <strong>{{ user.email }}</strong>.</p>
+            <h2>{{ 'My details'|trans }}</h2>
+            <p class="panel-intro">{{ 'Your name and photo. Your email is your login:'|trans }} <strong>{{ user.email }}</strong>.</p>
 
             <div class="photo-row">
                 {{ include('account/_avatar.html.twig', {user: user}) }}
                 <form method="post" action="{{ path('app_account_photo') }}" enctype="multipart/form-data">
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token('account-photo') }}">
-                    <label class="visually-hidden" for="photo">Profile photo</label>
+                    <label class="visually-hidden" for="photo">{{ 'Profile photo'|trans }}</label>
                     <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" data-enable="photo-save">
-                    <button class="btn btn-small btn-forest" id="photo-save" type="submit">Upload photo</button>
-                    {% if user.profileImage %}<button class="link-btn small" type="submit" name="remove" value="1">Remove photo</button>{% endif %}
+                    <button class="btn btn-small btn-forest" id="photo-save" type="submit">{{ 'Upload photo'|trans }}</button>
+                    {% if user.profileImage %}<button class="link-btn small" type="submit" name="remove" value="1">{{ 'Remove photo'|trans }}</button>{% endif %}
                 </form>
             </div>
 
@@ -72,57 +72,66 @@
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('account-details') }}">
                 <div class="field-row">
                     <div class="field">
-                        <label for="firstName">First name</label>
+                        <label for="firstName">{{ 'First name'|trans }}</label>
                         <input type="text" id="firstName" name="firstName" value="{{ user.firstName }}" autocomplete="given-name" maxlength="100" required>
                     </div>
                     <div class="field">
-                        <label for="lastName">Last name</label>
+                        <label for="lastName">{{ 'Last name'|trans }}</label>
                         <input type="text" id="lastName" name="lastName" value="{{ user.lastName }}" autocomplete="family-name" maxlength="100">
                     </div>
                 </div>
-                <button class="btn btn-small" type="submit">Save name</button>
+                <button class="btn btn-small" type="submit">{{ 'Save name'|trans }}</button>
             </form>
         </section>
 
         {# ---------- Password ---------- #}
         <section class="card" id="password">
-            <h2>Password</h2>
-            <p class="panel-intro">Changing it logs you out on your other devices.</p>
+            <h2>{{ 'Password'|trans }}</h2>
+            <p class="panel-intro">{{ 'Changing it logs you out on your other devices.'|trans }}</p>
             <form method="post" action="{{ path('app_account_password') }}">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('account-password') }}">
+                {% if user.hasPassword %}
                 <div class="field">
-                    <label for="currentPassword">Current password</label>
+                    <label for="currentPassword">{{ 'Current password'|trans }}</label>
                     <input type="password" id="currentPassword" name="currentPassword" autocomplete="current-password" required>
-                    <p class="help">Logged in with an email link and don’t know it? <a href="{{ path('app_logout') }}">Log out</a> and use “Forgot password?”.</p>
+                    <p class="help">{{ 'Logged in with an email link and don’t know it?'|trans }} <a href="{{ path('app_logout') }}">{{ 'Log out'|trans }}</a> {{ 'and use “Forgot password?”.'|trans }}</p>
                 </div>
+                {% else %}
+                <p class="help">{{ 'You made your account from the quiz, so you don’t have a password yet. Choose one here.'|trans }}</p>
+                {% endif %}
                 <div class="field-row">
                     <div class="field">
-                        <label for="newPassword">New password</label>
+                        <label for="newPassword">{{ 'New password'|trans }}</label>
                         <input type="password" id="newPassword" name="newPassword" autocomplete="new-password" minlength="8" required>
                     </div>
                     <div class="field">
-                        <label for="confirmPassword">Repeat new password</label>
+                        <label for="confirmPassword">{{ 'Repeat new password'|trans }}</label>
                         <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" minlength="8" required>
                     </div>
                 </div>
-                <button class="btn btn-small" type="submit">Change password</button>
+                <button class="btn btn-small" type="submit">{{ 'Change password'|trans }}</button>
             </form>
         </section>
 
         {# ---------- Delete ---------- #}
         <section class="card danger-zone" id="delete">
-            <h2>Delete account</h2>
+            <h2>{{ 'Delete account'|trans }}</h2>
             {% if user.admin %}
-                <p class="panel-intro">Admin accounts can’t be deleted here. Ask another admin to remove the Admin role first.</p>
+                <p class="panel-intro">{{ 'Admin accounts can’t be deleted here. Ask another admin to remove the Admin role first.'|trans }}</p>
             {% else %}
-                <p class="panel-intro">This deletes your account, your details and your order history here. It can’t be undone. Payment records stay with Stripe, as the law requires.</p>
-                <form method="post" action="{{ path('app_account_delete') }}" data-confirm="Delete your ZENOO account for good?">
+                <p class="panel-intro">{{ 'This deletes your account, your details and your order history here. It can’t be undone. Payment records stay with Stripe, as the law requires.'|trans }}</p>
+                <form method="post" action="{{ path('app_account_delete') }}" data-confirm="{{ 'Delete your ZENOO account for good?'|trans }}">
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token('account-delete') }}">
                     <div class="field" style="max-width:360px">
-                        <label for="delete-password">Your password, to confirm</label>
+                        {% if user.hasPassword %}
+                        <label for="delete-password">{{ 'Your password, to confirm'|trans }}</label>
                         <input type="password" id="delete-password" name="password" autocomplete="current-password" required>
+                        {% else %}
+                        <label for="delete-password">{{ 'Type DELETE to confirm'|trans }}</label>
+                        <input type="text" id="delete-password" name="password" autocomplete="off" required>
+                        {% endif %}
                     </div>
-                    <button class="btn btn-small btn-danger" type="submit">Delete my account</button>
+                    <button class="btn btn-small btn-danger" type="submit">{{ 'Delete my account'|trans }}</button>
                 </form>
             {% endif %}
         </section>

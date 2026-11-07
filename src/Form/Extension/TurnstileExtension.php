@@ -14,6 +14,7 @@ use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Cloudflare Turnstile captcha for any form built with 'turnstile_enabled' => true.
@@ -30,6 +31,7 @@ class TurnstileExtension extends AbstractTypeExtension
         private readonly ?string $siteKey,
         private readonly ?string $secretKey,
         private readonly string $environment,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -60,7 +62,7 @@ class TurnstileExtension extends AbstractTypeExtension
 
         $token = (string) $request->request->get('cf-turnstile-response', '');
         if ($token === '') {
-            $form->addError(new FormError('Please confirm you are human.'));
+            $form->addError(new FormError($this->translator->trans('Please confirm you are human.')));
 
             return;
         }
@@ -72,14 +74,14 @@ class TurnstileExtension extends AbstractTypeExtension
             ])->toArray(false);
         } catch (\Throwable $e) {
             $this->logger->error('Turnstile verification request failed', ['error' => $e->getMessage()]);
-            $form->addError(new FormError('We could not check the captcha just now. Please try again.'));
+            $form->addError(new FormError($this->translator->trans('We could not check the captcha just now. Please try again.')));
 
             return;
         }
 
         if (empty($result['success'])) {
             $this->logger->info('Turnstile rejected a submission', ['errors' => $result['error-codes'] ?? []]);
-            $form->addError(new FormError('The captcha check failed. Please try again.'));
+            $form->addError(new FormError($this->translator->trans('The captcha check failed. Please try again.')));
         }
     }
 

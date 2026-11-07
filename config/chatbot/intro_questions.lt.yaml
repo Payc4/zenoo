@@ -1,0 +1,33 @@
+# Lithuanian version of intro_questions.yaml (used when the site language is Lithuanian).
+# Keep the two files in step: same questions, same order.
+
+questions:
+  - question: "Kaip vardu jūsų šuo?"
+    options: []
+
+  - question: "Kiek jūsų šuniui metų?"
+    options:
+      - { label: "Šuniukas", description: "Iki 1 metų" }
+      - { label: "Suaugęs", description: "Nuo 1 iki 7 metų" }
+      - { label: "Senjoras", description: "7 metų ar vyresnis" }
+
+  - question: "Koks jūsų šuns dydis?"
+    options:
+      - { label: "Labai mažas", description: "Iki 5 kg" }
+      - { label: "Mažas", description: "5–10 kg" }
+      - { label: "Vidutinis", description: "10–25 kg" }
+      - { label: "Didelis", description: "Daugiau nei 25 kg" }
+
+  - question: "Kuo dabar daugiausia šeriate savo šunį?"
+    options:
+      - { label: "Sausu maistu", description: "Granulėmis" }
+      - { label: "Drėgnu maistu", description: "Konservais ar maišeliais" }
+      - { label: "Žaliu ar namų gamybos", description: "BARF, šaldytu žaliu ar namuose gamintu" }
+      - { label: "ZENOO", description: "Vien juo arba maišant" }
+
+  - question: "Kuo labiausiai norėtumėte, kad padėtume?"
+    options:
+      - { label: "Išrankus valgymas", description: "Palieka maistą ar yra išrankus" }
+      - { label: "Porcijos ir svoris", description: "Kiek šerti" }
+      - { label: "Maisto keitimas", description: "Perėjimas prie naujos mitybos" }
+      - { label: "Pilvukas ir virškinimas", description: "Išmatos, dujos, sutrikęs pilvukas" }

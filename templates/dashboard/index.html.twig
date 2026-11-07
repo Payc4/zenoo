@@ -1,0 +1,136 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ dog ? '%dog%’s dashboard'|trans({'%dog%': dog.name}) : 'My dog'|trans }} · ZENOO{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block importmap %}{{ importmap(['app', 'dashboard']) }}{% endblock %}
+
+{% set subLabels = {protein: 'Protein', carbs: 'Carb load', freshness: 'Freshness', body: 'Body shape', activity: 'Activity', signals: 'Bowl signals', routine: 'Portions & routine'} %}
+{% set stages = {puppy: 'Puppy', adult: 'Adult', senior: 'Senior'} %}
+
+{% block body %}
+<section class="dash-head">
+  <div class="wrap dash-head__in">
+    {% if photo %}<img class="dash-photo" src="{{ photo }}" alt="">{% elseif dog %}<span class="dash-photo dash-photo--empty" aria-hidden="true">🐾</span>{% endif %}
+    <div class="dash-head__text">
+      <p class="kicker">{{ 'Hi, %name%'|trans({'%name%': user.displayName}) }}</p>
+      <h1>{{ dog ? '%dog%’s dashboard'|trans({'%dog%': dog.name}) : 'My dog'|trans }}</h1>
+      {% if dog %}
+        <ul class="dash-facts">
+          {% if dog.get('breed') %}<li>{{ dog.get('breed') == 'mixed' ? 'Mixed breed'|trans : dog.get('breed') }}</li>{% endif %}
+          {% if dog.get('age_years') is not null %}<li>{{ '%n% years'|trans({'%n%': dog.get('age_years')|number_format(1, app.locale == 'lt' ? ',' : '.', '')|replace({'.0': '', ',0': ''})}) }}{% if stages[dog.get('life_stage')] is defined %} · {{ stages[dog.get('life_stage')]|trans }}{% endif %}</li>{% endif %}
+          {% if dog.get('weight_kg') %}<li>{{ dog.get('weight_kg') }} kg</li>{% endif %}
+        </ul>
+      {% endif %}
+    </div>
+    <a class="btn btn-ghost-light btn-small dash-retake" href="{{ path('app_quiz') }}">{{ dog ? 'Retake the quiz'|trans : 'Take the quiz'|trans }}</a>
+  </div>
+</section>
+
+<div class="wrap dash">
+  {% if not user.hasPassword %}
+    <div class="card card-sun-border dash-notice">
+      <p><strong>{{ 'Choose a password'|trans }}</strong> {{ 'so you can log in any time. Until then, use “Email me a login link” on the login page.'|trans }}</p>
+      <a class="btn btn-small" href="{{ path('app_account') }}#password">{{ 'Choose a password'|trans }}</a>
+    </div>
+  {% endif %}
+
+  {% if not dog %}
+    <section class="card dash-empty">
+      <h2>{{ 'How is your dog really eating?'|trans }}</h2>
+      <p>{{ 'Take the free 3-minute Bowl Score quiz. Your dog’s score, a daily plan and lessons picked for your dog will appear here.'|trans }}</p>
+      <a class="btn" href="{{ path('app_quiz') }}">{{ 'Take the quiz'|trans }}</a>
+    </section>
+  {% else %}
+    <div class="dash-grid">
+      {# ---------- Score ---------- #}
+      <section class="card dash-score" aria-labelledby="score-h">
+        <p class="kicker" id="score-h">{{ 'Bowl Score'|trans }}</p>
+        <div class="dash-score__num"><span>{{ dog.bowlScore }}</span><small>/100</small></div>
+        {% if dog.get('score_title') %}<h2>{{ dog.get('score_title') }}</h2>{% endif %}
+        {% if dog.get('score_text') %}<p>{{ dog.get('score_text') }}</p>{% endif %}
+        <p class="small muted">{{ 'From the quiz on %date%'|trans({'%date%': dog.updatedAt|local_date('long')}) }}</p>
+      </section>
+
+      {# ---------- Breakdown ---------- #}
+      <section class="card dash-breakdown" aria-labelledby="bd-h">
+        <h2 id="bd-h">{{ 'The breakdown'|trans }}</h2>
+        <ul class="dash-bars">
+          {% for s in dog.subScores %}
+            <li class="{{ s.percent < 60 ? 'is-low' }}">
+              <span class="dash-bars__label">{{ subLabels[s.key]|trans }}</span>
+              <span class="dash-bars__track" aria-hidden="true"><span style="width: {{ s.percent }}%"></span></span>
+              <span class="dash-bars__val">{{ s.score }}/{{ s.max }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      {# ---------- Tips ---------- #}
+      <section class="card dash-tips" aria-labelledby="tips-h">
+        <h2 id="tips-h">{{ 'What we’d do first'|trans }}</h2>
+        <ol>
+          <li>{{ dog.get('fix_1_text') ?: 'Keep doing what you’re doing!'|trans }}</li>
+          {% if dog.get('fix_2_text') %}<li>{{ dog.get('fix_2_text') }}</li>{% endif %}
+        </ol>
+      </section>
+
+      {# ---------- Daily plan ---------- #}
+      <section class="card card-mist dash-plan" aria-labelledby="plan-h">
+        <h2 id="plan-h">{{ '%dog%’s daily plan'|trans({'%dog%': dog.name}) }}</h2>
+        <dl>
+          {% if dog.get('kcal_target') %}<div><dt>{{ 'Energy'|trans }}</dt><dd>{{ 'about %kcal% kcal a day'|trans({'%kcal%': dog.get('kcal_target')|round}) }}</dd></div>{% endif %}
+          {% if dog.get('plan_food') %}<div><dt>{{ 'Food'|trans }}</dt><dd>{{ dog.get('plan_food') }}</dd></div>{% endif %}
+          {% if dog.get('plan_meals') %}<div><dt>{{ 'Meals'|trans }}</dt><dd>{{ dog.get('plan_meals') }}</dd></div>{% endif %}
+          {% if dog.get('plan_protein_g') %}<div><dt>{{ 'Protein'|trans }}</dt><dd>{{ dog.get('plan_protein_g') }}</dd></div>{% endif %}
+          {% if dog.get('plan_fat_g') %}<div><dt>{{ 'Fat'|trans }}</dt><dd>{{ dog.get('plan_fat_g') }}</dd></div>{% endif %}
+        </dl>
+        <p class="small muted">{{ 'A starting point, not a prescription. Weigh %dog% every 2–3 weeks and adjust by about 10%.'|trans({'%dog%': dog.name}) }}</p>
+      </section>
+    </div>
+  {% endif %}
+
+  {# ---------- Lessons ---------- #}
+  {% if course %}
+    <section class="dash-section" aria-labelledby="lessons-h">
+      <div class="dash-section__head">
+        <h2 id="lessons-h">{{ dog ? 'Lessons for %dog%'|trans({'%dog%': dog.name}) : 'Your course'|trans }}</h2>
+        <p class="muted">{{ '%done% of %total% lessons done'|trans({'%done%': done, '%total%': total}) }}{% if streak %} · 🔥 {{ '%n%-day streak'|trans({'%n%': streak}) }}{% endif %}</p>
+      </div>
+      <div class="dash-bar" aria-hidden="true"><span style="width: {{ total ? (done / total * 100)|round : 0 }}%"></span></div>
+      {% if picks %}
+        <ol class="dash-lessons">
+          {% for p in picks %}
+            <li class="card dash-lesson">
+              <span class="dash-lesson__n">{{ p.number }}</span>
+              <div>
+                <h3><a href="{{ path('app_course_lesson', {slug: course.slug, id: p.lesson.id}) }}">{{ p.lesson.title }}</a></h3>
+                <p class="small">{{ p.reason|trans }}{% if p.lesson.durationMinutes %} · {{ '%n% min'|trans({'%n%': p.lesson.durationMinutes}) }}{% endif %}</p>
+              </div>
+              <a class="btn btn-small" href="{{ path('app_course_lesson', {slug: course.slug, id: p.lesson.id}) }}">{{ 'Start'|trans }}</a>
+            </li>
+          {% endfor %}
+        </ol>
+      {% elseif next %}
+        <a class="card dash-next" href="{{ path('app_course_lesson', {slug: course.slug, id: next.id}) }}"><span class="small muted">{{ 'Up next'|trans }}</span><strong>{{ next.title }}</strong></a>
+      {% endif %}
+      <p><a href="{{ path('app_courses') }}">{{ 'See all lessons'|trans }} →</a></p>
+    </section>
+  {% endif %}
+
+  {# ---------- Coach ---------- #}
+  <section class="card card-forest dash-coach" aria-labelledby="coach-h">
+    <div>
+      <p class="kicker">{{ 'AI coach'|trans }}</p>
+      <h2 id="coach-h">{{ dog ? 'Ask the ZENOO coach about %dog%'|trans({'%dog%': dog.name}) : 'Ask the ZENOO coach'|trans }}</h2>
+      <p>{{ dog ? 'The coach knows %dog%’s quiz answers and your lessons, so you can skip the basics.'|trans({'%dog%': dog.name}) : 'Questions about feeding, digestion or your dog’s weight? Ask any time.'|trans }}</p>
+    </div>
+    <div class="dash-coach__qs">
+      {% for q in coachQuestions %}
+        {% set text = q|trans({'%dog%': dog.name}) %}
+        <a class="dash-chip" href="{{ path('app_chat', {ask: text}) }}">{{ text }}</a>
+      {% endfor %}
+      <a class="btn btn-small" href="{{ path('app_chat') }}">{{ 'Open the chat'|trans }}</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

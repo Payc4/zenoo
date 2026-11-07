@@ -11,6 +11,10 @@ parameters:
     app.quiz.klaviyo_list_id: '%env(default::KLAVIYO_LIST_ID)%'
     app.quiz.send_to_klaviyo: '%env(bool:default:app.quiz.send_default:QUIZ_SEND_TO_KLAVIYO)%'
     app.quiz.send_default: false
+    # The Lithuanian quiz goes to its own Klaviyo account (zenoo.lt). Until these are set, LT quiz
+    # results are not sent to Klaviyo; the site's own confirmation email still goes out.
+    app.quiz.klaviyo_lt_company_id: '%env(default::KLAVIYO_LT_COMPANY_ID)%'
+    app.quiz.klaviyo_lt_list_id: '%env(default::KLAVIYO_LT_LIST_ID)%'
     # Chatbot (/chat). ANTHROPIC_API_KEY switches it on; the prompt is config/chatbot/system_prompt.md.
     chat.default_model: 'claude-haiku-5-5'
     chat.default_base_url: 'https://api.anthropic.com'

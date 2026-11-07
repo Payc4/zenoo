@@ -32,12 +32,19 @@ final class CourseController extends AbstractController
     ) {}
 
     #[Route('', name: 'app_courses', methods: ['GET'])]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $user = $this->getUser();
         $isAdmin = $this->isGranted('ROLE_ADMIN');
+        $courses = $this->courses->findAllOrdered(!$isAdmin);
+        // Pet parents see the courses in the site language (others only if there are none);
+        // admins see every course, so they can check both languages.
+        if (!$isAdmin) {
+            $inLanguage = array_values(array_filter($courses, fn (Course $c) => $c->getLocale() === $request->getLocale()));
+            $courses = $inLanguage ?: $courses;
+        }
         $list = [];
-        foreach ($this->courses->findAllOrdered(!$isAdmin) as $course) {
+        foreach ($courses as $course) {
             $lessons = $isAdmin ? $course->getLessons()->toArray() : $course->getPublishedLessons();
             $progress = $user instanceof User ? $this->progressRepo->findForCourse($user, $course) : [];
             $done = \count(array_filter($progress, fn (LessonProgress $p) => $p->isCompleted()));

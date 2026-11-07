@@ -1,9 +1,9 @@
 {% extends 'emails/_layout.html.twig' %}
-{% block title %}Your login link{% endblock %}
+{% block title %}{{ 'Your login link'|trans }}{% endblock %}
 {% block content %}
-<h1 style="font-family:'Inter Tight',Inter,Helvetica,Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">Your login link</h1>
-<p style="margin:0 0 12px;">Hi {{ user.displayName }}, tap the button to log in to ZENOO. No password needed.</p>
-{{ include('emails/_button.html.twig', {url: loginUrl, label: 'Log me in'}) }}
-<p style="margin:0 0 12px;font-size:14px;">The link works once, for 10 minutes. If you didn’t ask for it, you can ignore this email.</p>
-<p style="margin:0;font-size:12px;color:#7c8a7b;word-break:break-all;">Button not working? Copy this link: {{ loginUrl }}</p>
+<h1 style="font-family:'Inter Tight',Inter,Helvetica,Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">{{ 'Your login link'|trans }}</h1>
+<p style="margin:0 0 12px;">{{ 'Hi %name%, tap the button to log in to ZENOO. No password needed.'|trans({'%name%': user.displayName}) }}</p>
+{{ include('emails/_button.html.twig', {url: loginUrl, label: 'Log me in'|trans}) }}
+<p style="margin:0 0 12px;font-size:14px;">{{ 'The link works once, for 10 minutes. If you didn’t ask for it, you can ignore this email.'|trans }}</p>
+<p style="margin:0;font-size:12px;color:#7c8a7b;word-break:break-all;">{{ 'Button not working? Copy this link:'|trans }} {{ loginUrl }}</p>
 {% endblock %}

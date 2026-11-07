@@ -19,6 +19,9 @@ in capitals, Inter body copy, 24px corners and no shadows.
 | **Shop** | Products from the database. **Buy now** opens Stripe Checkout, and the order is recorded by the signed Stripe webhook or the return page, whichever arrives first. It is never recorded twice. Refunds made in Stripe mark the order refunded. |
 | **Test product** | “ZENOO Test Product”, €1.00, created by the first migration. Nothing is shipped. |
 | **Bowl Score quiz** | The quiz from the ZENOO handoff at `/quiz/`. Answers are sent to Klaviyo (`QUIZ_SEND_TO_KLAVIYO=true`, see below). |
+| **Quiz → account** | At the end of the Bowl Score quiz the result is posted to the site, which emails a “confirm your email” link. Clicking it creates the account (no password yet) or finds the existing one, saves the dog profile and opens the dashboard. Logged-in pet parents get the profile saved straight away. See below. |
+| **My dog** (`/dashboard`) | The dog profile from the quiz: Bowl Score with the 7-part breakdown, the first tips, the daily plan, 3 lessons picked for the dog, course progress and the AI coach with starter questions. It's where pet parents land after logging in. |
+| **EN / LT** | Language selector top right. The whole site, emails, quiz, course and chat coach work in English and Lithuanian. See below. |
 | **Courses** (`/courses`) | The ZENOO Dog Wellness Course: 30 lessons in English and 30 in Lithuanian, 9 screens each, played one screen at a time. Logged-in pet parents only. Progress, quiz answers and written answers are saved; finished lessons and a day streak show on the course list. See below. |
 | **Course studio** (`/admin/course-studio`) | Admins edit courses and lessons screen by screen with a live phone preview, publish them, and upload Agota's audio. |
 | **Chat** (`/chat`) | A Claude-powered chatbot in its own tab. Logged-in pet parents only, **one chat per person**, **60 messages per day** (admins unlimited). Replies stream in as they're written, the chat is saved, and "Clear chat" empties it. See below. |
@@ -86,6 +89,42 @@ Coolify for a staging copy), or use your own address. When it's off, the quiz st
 If you update the quiz from the handoff, copy the files over and update the hashes in
 `tests/Functional/PagesTest.php`.
 
+## Quiz → account and the dashboard
+
+- `public/quiz/app.js` posts the quiz result (the same `quiz_*` fields it sends to Klaviyo) to
+  `POST /quiz/submit` (`QuizAccountController`), with a CSRF token from the page.
+- Not logged in: the result waits as a `QuizSubmission` and the pet parent gets the
+  `emails/quiz_confirm.html.twig` email. The link (`/quiz/confirm/{token}`, 7 days, single use)
+  creates the account or uses the existing one for that email, saves the `DogProfile`, logs them in
+  and opens `/dashboard`. Unconfirmed submissions are only kept for the link's 7 days.
+  Limits: 3 submissions per email and 10 per IP address per hour.
+- Accounts made this way have no password (`hasPassword = false`). The dashboard asks them to choose
+  one (no current password needed); until then they can use the email login link. They delete their
+  account by typing DELETE.
+- One dog per account: taking the quiz again replaces the profile.
+- **Lesson picks** (`src/Dog/LessonRecommender.php`): rules map quiz answers (life stage, body
+  condition, signs, low parts of the score, food type) to lesson numbers, one lesson per concern,
+  most important first, skipping finished lessons.
+- The chat coach gets the dog profile in its prompt (`{{dog_profile}}`), and skips the starting
+  question cards when it already knows the dog. Dashboard starter questions open `/chat?ask=…`.
+
+## Languages (English / Lithuanian)
+
+- `LocaleSubscriber` picks the language: the `zenoo_lang` cookie (set by the EN/LT selector,
+  `/language/{en|lt}`), else the browser's language, else English. No language prefix in URLs.
+  The choice is saved on the account (`User::locale`), and emails go out in it.
+- Text in templates and PHP is the English sentence itself, wrapped in `|trans` / `trans()`.
+  Lithuanian lives in `translations/messages.lt.yaml` (and `validators.lt.yaml` for form errors).
+  To add text: write it in English with `|trans`, then add the same English line with its
+  Lithuanian translation to `messages.lt.yaml`. `php bin/console debug:translation lt --only-missing --domain=messages`
+  lists anything untranslated.
+- Dates use `|local_date('long')` etc. (`src/Twig/LocaleExtension.php`).
+- Separate Lithuanian files: `templates/legal/privacy.lt.html.twig`,
+  `config/chatbot/intro_questions.lt.yaml`, `public/quiz/content.lt.js`.
+- The quiz uses `KLAVIYO_LT_COMPANY_ID` / `KLAVIYO_LT_LIST_ID` in Lithuanian. Until they're set,
+  the Lithuanian quiz doesn't send to Klaviyo (the site's own confirmation email still goes out).
+- Pet parents see the course in their language; admins see both. The admin area stays in English.
+
 ## The course
 
 - **Source:** `content/courses/zenoo-dog-wellness.md`, the course document converted from Word with
@@ -144,9 +183,12 @@ src/
   Course/            LessonLayouts (the 9 screen types), CourseDocumentParser (course document → lessons)
   Command/           app:course:import
   Controller/        Home, Security (login, login links), Registration, PasswordReset,
-                     Account, Shop, Chat, Course, Webhook, Admin/ (EasyAdmin, CourseStudio)
+                     Account, Shop, Chat, Course, QuizAccount, Dashboard, Language, Webhook,
+                     Admin/ (EasyAdmin, CourseStudio)
   Entity/            User, Product, Purchase, ChatConversation, ChatMessage, ChatUsage,
-                     Course, Lesson, LessonProgress
+                     Course, Lesson, LessonProgress, DogProfile, QuizSubmission
+  Dog/               QuizResult (cleans quiz results), LessonRecommender
+  EventSubscriber/   LocaleSubscriber (EN/LT)
   Payment/           StripeClient (no SDK), StripeCheckout (session + fulfilment)
   Security/          LoginFormAuthenticator, LoginAttemptLimiter, LoginSuccessHandler
   Service/           EmailService, AvatarUploader
@@ -154,6 +196,7 @@ templates/           Twig pages and emails (emails/_layout.html.twig)
 assets/              app.css (design tokens), app.js, chat.js, lesson.js (player), studio.js (editor),
                      controllers/ (Stimulus), lib/stimulus.js, fonts (served by AssetMapper)
 content/courses/     The course document
+translations/        Lithuanian text (messages.lt.yaml, validators.lt.yaml)
 public/images/       Logos and photos; public/quiz/ is the Bowl Score quiz
 migrations/          Schema migrations (MySQL and SQLite statements in each)
 docker/, Dockerfile  Single-container image for Coolify (nginx, PHP-FPM, email worker)

@@ -153,7 +153,7 @@ window.ZQ_CONTENT = {
     },
     activity: {
       ok: '{name} gets plenty of activity for a {breed}.',
-      why: '{breed}s typically need {need}. {name} currently gets {got} a day.',
+      why: '{breeds} typically need {need}. {name} currently gets {got} a day.',
       fix: 'Add a 15–20 minute sniff walk or a game of fetch to the daily routine.',
     },
     // routine picks the most useful line in app.js
@@ -177,6 +177,163 @@ window.ZQ_CONTENT = {
       ok: 'No worrying signs at the bowl. A happy eater!',
       why: 'You\'ve noticed {signs}. What\'s in the bowl is one of the things worth looking at.',
       fix: 'Change one thing at a time and keep a quick note of what you see over 3–4 weeks.',
+    },
+  },
+  // Site only: the ZENOO account box on the result screen (see submitAccount() in app.js).
+  account: {
+    title: 'YOUR FREE ZENOO ACCOUNT',
+    sending: 'Saving {name}’s profile…',
+    sent: 'We’ve sent a confirmation link to {email}. Click it and we’ll create your free account with {name}’s dashboard: the score, the plan and lessons picked for {name}.',
+    savedTitle: 'SAVED TO YOUR DASHBOARD',
+    saved: '{name}’s profile is saved to your ZENOO account.',
+    open: 'OPEN THE DASHBOARD',
+    error: 'We couldn’t save the profile just now. Your result is all here, so take a screenshot to keep it.',
+  },
+
+  // Screen copy used by app.js. Placeholders: {name} = the dog's name, {NAME} = the same in capitals,
+  // {poss} / {POSS} = English possessive of the name ("Bella’s", "Charles’"); other {placeholders} as noted.
+  ui: {
+    yourDog: 'your dog', // used when no name has been typed yet
+    and: ' and ', // last joiner in lists: "itching, tear stains and gas"
+    decimalSep: '.',
+    mixedBreedName: 'mixed-breed dog',
+    back: 'Back',
+    next: 'NEXT',
+    gotIt: 'GOT IT',
+    questionOf: 'QUESTION {n} OF {total}',
+    shapes: { 2: 'Very thin', 4: 'Slim', 5: 'Just right', 7: 'A bit heavy', 8: 'Heavy' },
+    stages: { puppy: 'puppy', adult: 'adult', senior: 'senior' },
+
+    intro: {
+      alt: 'A curly-coated dog looking up at a bowl of food',
+      title: 'IS YOUR DOG EATING PROPERLY?',
+      lead: 'A free 3-minute check of your dog’s bowl, body and day. You’ll get a Bowl Score and a personal daily plan.',
+      start: 'START THE CHECK',
+      small: 'No right or wrong answers. Just tell us about your dog.',
+    },
+    name: { title: 'WHAT’S YOUR DOG’S NAME?', placeholder: 'e.g. Bella' },
+    breed: { title: 'WHAT BREED IS {NAME}?', search: 'Search breeds', mixed: 'Mixed breed or not listed', mixedHint: 'we’ll go by size and type' },
+    mixed: { title: 'TELL US A BIT MORE ABOUT {NAME}', size: 'Size when fully grown', type: 'Closest type' },
+    slideBreed: { tag: 'DID YOU KNOW?', mixedTitle: 'EVERY MIX IS ONE OF A KIND', mixedAlt: 'A mixed-breed dog' },
+    age: { title: 'HOW OLD IS {NAME}?', years: 'Years', months: 'Months' },
+    slideAge: {
+      tag: 'LIFE STAGE',
+      puppy: { title: 'GROWING UP FAST', text: 'Puppies need more energy and protein per kilo than adult dogs, to build bones and muscle. Growth needs are special, so follow your vet’s guidance on portions while {name} grows.', alt: 'A puppy dog' },
+      adult: { title: 'IN THE PRIME OF LIFE', text: 'Adult dogs need food that matches how active they are. Too much energy in the bowl shows up on the waistline long before you notice it on the scales.', alt: 'An adult dog' },
+      senior: { title: 'THE GOLDEN YEARS', text: 'Older dogs usually need fewer calories as they slow down, but protein still matters: it supports the muscle that keeps {name} moving.', alt: 'A senior dog' },
+    },
+    sex: {
+      title: 'A COUPLE OF QUICK ONES ABOUT {NAME}',
+      isA: '{name} is a…', girl: 'Girl', boy: 'Boy',
+      neutered: 'Neutered or spayed?', yes: 'Yes', no: 'No',
+      note: 'Neutered dogs usually need a little less energy, so this helps us get the portions right.',
+    },
+    weight: {
+      title: 'HOW MUCH DOES {NAME} WEIGH?',
+      lead: 'Your best guess is fine. A recent vet visit or bathroom scales (you holding them, minus you) works well.',
+      label: 'Weight in kg', placeholder: 'e.g. 6.5',
+      // {breed} = breed name, {min}/{max} = typical adult weight in kg
+      warn: 'Most adult {breed}s weigh {min}–{max} kg. Worth a quick double-check? If it’s right, carry on.',
+    },
+    shape: {
+      title: 'WHICH SHAPE LOOKS MOST LIKE {NAME}?',
+      lead: 'Look from above. You should see a waist behind the ribs, and feel the ribs easily without pressing.',
+    },
+    slideBody: {
+      tag: 'BODY CHECK', title: 'THE RIB AND WAIST TEST', alt: 'Hands gently feeling a dog’s ribs',
+      ok: '<p>{name} sounds just right. Keep checking monthly: run your hands along the ribs and look for the waist from above.</p>',
+      // {ideal} = ideal weight in kg
+      heavy: '<p>Extra weight is really common, especially in small dogs, where a few treats a day can be a big share of their energy. From the shape you picked, {poss} ideal weight is around <b>{ideal} kg</b>.</p><p>Every point on the scale matters for joints and energy, and it’s one of the easiest things to change.</p>',
+      thin: '<p>From the shape you picked, {name} may be on the lean side. Ideal is around <b>{ideal} kg</b>. Some dogs are naturally slim, so a quick check with your vet is a good idea if you’re unsure.</p>',
+    },
+    activity: { title: 'HOW ACTIVE IS {NAME} ON A TYPICAL DAY?', band: 'Walks and play, all added up', type: 'Mostly…' },
+    slideActivity: {
+      tag: 'ACTIVITY', titleOk: 'A WELL-EXERCISED DOG', titleMore: 'ROOM FOR A LITTLE MORE', alt: 'A dog trotting along a park path',
+      // {need} = activityNeed text, {got} = the chosen activity band in lower case
+      textBreed: '{breed}s typically do best on <b>{need}</b>. {name} gets <b>{got}</b> a day.',
+      textMixed: 'Dogs like {name} typically do best on <b>{need}</b>. {name} gets <b>{got}</b> a day.',
+      ok: 'That’s right on track. Activity also sets how much energy belongs in the bowl, so we’ll use it for the daily plan.',
+      more: 'Even 15 extra minutes of sniffing and exploring helps. It also changes how much food belongs in the bowl, so we’ll factor it into the plan.',
+    },
+    food: { title: 'WHAT DOES {NAME} EAT NOW?', lead: 'Pick everything that goes in the bowl regularly.' },
+    foodMain: { title: 'WHICH ONE IS THE MAIN MEAL?' },
+    amounts: { title: 'HOW MUCH DOES {NAME} EAT IN A DAY?', lead: 'Add up all meals for the whole day. A rough guess is fine.', notSure: 'Not sure' },
+    routine: { title: '{POSS} EATING ROUTINE', meals: 'How often does {name} eat?', treats: 'Treats, chews and bites from the table' },
+    label: {
+      title: 'WHAT’S IN {POSS} MAIN FOOD?',
+      lead: 'Grab the bag or can and find “analytical constituents”. Type in the percentages and we’ll show you what’s really in the bowl.',
+      skip: 'I DON’T HAVE THE LABEL INFO',
+      skipNote: 'No problem. We’ll use typical values for {name}’s type of food.',
+      alt: 'Pointing at the nutrition panel on a pet food bag',
+      fields: { p: 'Protein', f: 'Fat', fi: 'Fibre', a: 'Ash', m: 'Moisture' },
+      moistureNote: 'No moisture listed? Dry food is usually around 8–10%.',
+      submit: 'SHOW ME',
+    },
+    slideBowl: {
+      tag: 'WHAT’S IN THE BOWL',
+      // {food} / {FOOD} = the main food type in lower case / capitals
+      titleLabel: 'HERE’S WHAT’S REALLY IN {POSS} BOWL',
+      titleTypical: 'A TYPICAL {FOOD} BOWL',
+      introLabel: '<p>Labels list everything “as fed”, water included. Carbs aren’t listed at all, so we worked them out: 100 minus protein, fat, fibre, ash and moisture. Take the water out, and this is {poss} bowl:</p>',
+      introTypical: '<p>Without the label we’ve used typical values for {food}, with the water taken out so all foods compare fairly. Your own label could look different.</p>',
+      bars: { p: 'Protein', f: 'Fat', c: 'Carbohydrate (mostly starch)' },
+      outro: 'Dogs evolved eating mostly protein and fat, with very little starch. The closer the bowl is to that, the closer it is to what their bodies are built for.',
+    },
+    appetite: { title: 'HOW DOES {NAME} USUALLY EAT?' },
+    signs: { title: 'HAVE YOU NOTICED ANY OF THESE IN {NAME}?', lead: 'Tick any that apply, or skip if none do.', none: 'NONE OF THESE' },
+    slideSigns: { tag: 'GOOD TO KNOW', title: 'WHAT YOU’VE NOTICED', alt: 'A dog relaxing on a blanket' },
+    gate: {
+      tag: '{POSS} PLAN IS READY',
+      title: 'WHERE SHOULD WE SEND IT?',
+      lead: 'We’ll email you {poss} Bowl Score and daily plan, plus our <b>free ZENOO feeding guide</b>.',
+      firstName: 'Your first name', email: 'Your email', submit: 'SEND MY PLAN',
+      // consent is also stored on the Klaviyo profile as consent_text_shown
+      consent: 'By submitting your email, you agree to receive {poss} plan, the feeding guide and tips from ZENOO.',
+      unsubscribe: 'Unsubscribe anytime.', privacy: 'Privacy policy',
+    },
+    profile: {
+      breed: 'Breed', age: 'Age', weight: 'Weight', sex: 'Sex',
+      mixed: 'Mixed breed, {size}', // {size} = mixed size label in lower case
+      // Plural forms by Intl.PluralRules category (en: one/other; lt also uses few)
+      years: { one: '{n} year', other: '{n} years' },
+      months: { one: '{n} month', other: '{n} months' },
+      underMonth: 'Under a month',
+      girl: 'Girl', boy: 'Boy',
+      spayed: 'spayed', notSpayed: 'not spayed', neutered: 'neutered', notNeutered: 'not neutered',
+    },
+    plan: {
+      title: '{POSS} DAILY PLAN',
+      energy: 'Energy', energyText: 'About {kcal} kcal a day', puppyNote: ' (puppy estimate: follow your vet’s growth guidance)',
+      currentFood: 'Current food',
+      feedText: 'About {grams} g a day', feedNow: '(now ~{now} g)',
+      gramsText: 'About {grams} g a day of the food you entered',
+      meals: 'Meals', mealsPuppy: '3–4 small meals a day', mealsAdult: '2 set meals a day', treatsCounted: ', treats counted in',
+      protein: 'Protein', fat: 'Fat', gramsRange: '{min}–{max} g a day',
+      carbs: 'Carbs', carbsText: 'As low as practical. Dogs evolved on very little.',
+      fibre: 'Fibre', fibreText: 'A little (about 2–5% of the dry food) supports digestion.',
+      weight: 'Weight', keepWeight: 'Keep {name} around {kg} kg', aimWeight: 'Aim for about {kg} kg, slowly',
+      activity: 'Activity',
+      note: 'A starting point, not a prescription. Adjust by watching {poss} body shape every couple of weeks.',
+      // Email-only lines (Klaviyo profile)
+      emailFood: '{food}: about {grams} g a day', emailFoodJoin: ' · ',
+      emailNoAmount: 'Weigh a normal day’s food for a week, then match it to the energy target.',
+    },
+    vet: {
+      signs: 'You mentioned {signs}. {vetLine}',
+      body: '{poss} body shape is worth a check-in with your vet before changing portions a lot.',
+    },
+    // Values for the {breed} and {signs} placeholders in subCopy and bands
+    vars: { breedMixed: 'Dogs like {name}', noSigns: 'a fussy appetite' },
+    result: {
+      scoreTitle: '{POSS} BOWL SCORE',
+      firstTitle: 'WHAT WE’D DO FIRST', keepGoing: 'Keep doing what you’re doing!',
+      breakdown: 'THE BREAKDOWN',
+      inboxTitle: 'CHECK YOUR INBOX',
+      inboxText: 'We’ve sent {poss} plan and your free feeding guide to {email}.',
+      share: 'SHARE THE CHECK', linkCopied: 'LINK COPIED', shareTitle: 'Is your dog eating properly?',
+      restart: 'Start again',
+      demoSent: 'Prototype: data sent to Klaviyo', demoUnsent: 'Prototype: data that would go to Klaviyo',
+      sendError: 'We couldn’t send the email just now. Your plan is all here, so take a screenshot to keep it.',
     },
   },
 };

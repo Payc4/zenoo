@@ -13,6 +13,10 @@ return [
         'path' => './assets/chat.js',
         'entrypoint' => true,
     ],
+    'dashboard' => [
+        'path' => './assets/dashboard.js',
+        'entrypoint' => true,
+    ],
     'courses' => [
         'path' => './assets/courses.js',
         'entrypoint' => true,

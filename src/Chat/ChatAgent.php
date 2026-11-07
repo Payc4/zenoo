@@ -17,6 +17,8 @@ use Symfony\Component\Yaml\Yaml;
  *   {{today}}             today's date
  *   {{course_knowledge}}  the course lessons (CourseKnowledge::knowledge(), from the database)
  *   {{course_progress}}   this pet parent's finished lessons and written answers
+ *   {{dog_profile}}       their dog's profile from the Bowl Score quiz
+ *   {{language}}          a note to reply in Lithuanian when that's their site language
  *
  * Everything above the "## This conversation" heading is the same for every pet parent, so it
  * is sent as a separate block marked for prompt caching: repeat requests read the long course
@@ -43,14 +45,22 @@ class ChatAgent
     ) {
     }
 
-    /** The starting questions for an empty chat, or null when there are none. */
-    public function introQuestions(): ?array
+    /**
+     * The starting questions for an empty chat, or null when there are none.
+     * Lithuanian pages use intro_questions.lt.yaml next to the English file, if it exists.
+     */
+    public function introQuestions(string $locale = 'en'): ?array
     {
-        if (!is_file($this->introFile)) {
+        $file = $this->introFile;
+        $localised = preg_replace('/\.yaml$/', '.' . $locale . '.yaml', $file);
+        if ($locale !== 'en' && is_file($localised)) {
+            $file = $localised;
+        }
+        if (!is_file($file)) {
             return null;
         }
         try {
-            $data = Yaml::parseFile($this->introFile);
+            $data = Yaml::parseFile($file);
         } catch (\Throwable) {
             return null;
         }
@@ -115,6 +125,12 @@ class ChatAgent
         }
         if (str_contains($template, '{{course_progress}}')) {
             $vars['{{course_progress}}'] = $this->course->progress($user);
+        }
+        if (str_contains($template, '{{dog_profile}}')) {
+            $vars['{{dog_profile}}'] = $this->course->dog($user);
+        }
+        if (str_contains($template, '{{language}}')) {
+            $vars['{{language}}'] = $this->course->language($user);
         }
 
         $blocks = [['type' => 'text', 'text' => strtr($shared, $vars), 'cache_control' => ['type' => 'ephemeral']]];

@@ -1,30 +1,30 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Order #{{ purchase.id }} · ZENOO{% endblock %}
+{% block title %}{{ 'Order #%id%'|trans({'%id%': purchase.id}) }} · ZENOO{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
 
 {% block body %}
 <section class="section">
     <div class="wrap">
         <div class="receipt">
-            <p class="small"><a href="{{ path('app_account') }}#orders">← My orders</a></p>
+            <p class="small"><a href="{{ path('app_account') }}#orders">{{ '← My orders'|trans }}</a></p>
             <div class="card">
                 {% if purchase.completed %}<div class="check-badge" aria-hidden="true">✓</div>{% endif %}
-                <p class="kicker">Order #{{ purchase.id }}</p>
+                <p class="kicker">{{ 'Order #%id%'|trans({'%id%': purchase.id}) }}</p>
                 <h1 style="font-size:clamp(28px,4vw,40px)">{{ purchase.product.name }}</h1>
                 {% if purchase.testMode %}
-                    <p><span class="tag tag-test">Test order</span> <span class="small muted">Paid in Stripe test mode. No real money was taken.</span></p>
+                    <p><span class="tag tag-test">{{ 'Test order'|trans }}</span> <span class="small muted">{{ 'Paid in Stripe test mode. No real money was taken.'|trans }}</span></p>
                 {% endif %}
                 <dl>
-                    <dt>Date</dt><dd>{{ purchase.createdAt|date('j F Y, H:i') }}</dd>
-                    <dt>Status</dt><dd>{{ purchase.completed ? 'Paid' : 'Refunded' }}</dd>
-                    {% if purchase.discountAmount %}<dt>Discount</dt><dd>−€{{ purchase.discountAmount|number_format(2, '.', ',') }}</dd>{% endif %}
-                    <dt>Total</dt><dd>€{{ purchase.amount|number_format(2, '.', ',') }}</dd>
-                    <dt>Payment reference</dt><dd>{{ purchase.stripePaymentIntentId ?: purchase.stripeSessionId }}</dd>
+                    <dt>{{ 'Date'|trans }}</dt><dd>{{ purchase.createdAt|local_date('datetime') }}</dd>
+                    <dt>{{ 'Status'|trans }}</dt><dd>{{ purchase.completed ? 'Paid'|trans : 'Refunded'|trans }}</dd>
+                    {% if purchase.discountAmount %}<dt>{{ 'Discount'|trans }}</dt><dd>−€{{ purchase.discountAmount|number_format(2, '.', ',') }}</dd>{% endif %}
+                    <dt>{{ 'Total'|trans }}</dt><dd>€{{ purchase.amount|number_format(2, '.', ',') }}</dd>
+                    <dt>{{ 'Payment reference'|trans }}</dt><dd>{{ purchase.stripePaymentIntentId ?: purchase.stripeSessionId }}</dd>
                 </dl>
                 <div class="btn-row" style="margin-top:24px">
-                    <a class="btn" href="{{ path('app_shop') }}">Back to the shop</a>
-                    <a class="btn btn-outline" href="{{ path('app_quiz') }}">Take the Bowl Score quiz</a>
+                    <a class="btn" href="{{ path('app_shop') }}">{{ 'Back to the shop'|trans }}</a>
+                    <a class="btn btn-outline" href="{{ path('app_quiz') }}">{{ 'Take the Bowl Score quiz'|trans }}</a>
                 </div>
             </div>
         </div>

@@ -30,6 +30,7 @@ needs no manual steps.
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | From Cloudflare Turnstile. Empty switches the sign-up captcha off. |
 | `QUIZ_SEND_TO_KLAVIYO` | Defaults to `true`: finished quizzes go to the **live** Klaviyo flow and email the pet parent. Set `false` for a staging copy. |
 | `KLAVIYO_COMPANY_ID`, `KLAVIYO_LIST_ID` | Default to the EN account (`SVCcfJ`, list `Xubzza`). |
+| `KLAVIYO_LT_COMPANY_ID`, `KLAVIYO_LT_LIST_ID` | Optional: the zenoo.lt Klaviyo account and list for the Lithuanian quiz. Empty means Lithuanian quiz results aren't sent to Klaviyo. |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First deploy only: creates the admin account. Remove them afterwards. |
 | `SESSION_DSN` | Optional, e.g. `redis://...`. The default keeps sessions in files inside the container, so a redeploy logs everyone out. |
 

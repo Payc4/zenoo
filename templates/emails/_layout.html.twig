@@ -1,6 +1,6 @@
 {# Shared email layout: table-based with inline styles so it renders in every mail client. #}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app.locale }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,11 +15,11 @@
     </td></tr>
     <tr><td style="background:#ffffff;border-radius:0 0 24px 24px;padding:32px 28px;font-size:16px;line-height:1.5;color:#445942;">
       {% block content %}{% endblock %}
-      <p style="margin:28px 0 0;">Warm regards,<br>ZENOO team</p>
+      <p style="margin:28px 0 0;">{{ 'Warm regards,'|trans }}<br>{{ 'ZENOO team'|trans }}</p>
     </td></tr>
     <tr><td align="center" style="padding:18px 12px;font-size:12px;line-height:1.5;color:#7c8a7b;">
-      <strong style="color:#f7a223;letter-spacing:.04em;">REAL FOOD. HEALTHY PET.</strong><br>
-      You’re getting this email because of your ZENOO account at <a href="{{ appUrl }}" style="color:#7c8a7b;">{{ appUrl|replace({'https://': '', 'http://': ''}) }}</a>.
+      <strong style="color:#f7a223;letter-spacing:.04em;">{{ 'REAL FOOD. HEALTHY PET.'|trans }}</strong><br>
+      {{ 'You’re getting this email because of your ZENOO account at'|trans }} <a href="{{ appUrl }}" style="color:#7c8a7b;">{{ appUrl|replace({'https://': '', 'http://': ''}) }}</a>.
     </td></tr>
   </table>
 </td></tr>

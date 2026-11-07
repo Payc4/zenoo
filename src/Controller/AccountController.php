@@ -6,7 +6,9 @@ use App\Entity\Purchase;
 use App\Entity\User;
 use App\Form\RegistrationFormType;
 use App\Repository\ChatConversationRepository;
+use App\Repository\DogProfileRepository;
 use App\Repository\LessonProgressRepository;
+use App\Repository\QuizSubmissionRepository;
 use App\Service\AvatarUploader;
 use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /** Everything a signed-in pet parent can see and change about their own account. */
@@ -24,7 +27,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class AccountController extends AbstractController
 {
-    public function __construct(private readonly EntityManagerInterface $em)
+    public function __construct(private readonly EntityManagerInterface $em, private readonly TranslatorInterface $translator)
     {
     }
 
@@ -94,22 +97,27 @@ class AccountController extends AbstractController
         $current = (string) $request->request->get('currentPassword', '');
         $new = (string) $request->request->get('newPassword', '');
 
-        if (!$hasher->isPasswordValid($user, $current)) {
+        // Accounts made from the quiz have no password of their own yet: nothing to check.
+        if ($user->hasPassword() && !$hasher->isPasswordValid($user, $current)) {
             return $this->back('error', 'Your current password isn’t right.', 'password');
         }
         if (strlen($new) < RegistrationFormType::MIN_PASSWORD) {
-            return $this->back('error', sprintf('Your new password needs at least %d characters.', RegistrationFormType::MIN_PASSWORD), 'password');
+            return $this->back('error', $this->translator->trans('Your new password needs at least %n% characters.', ['%n%' => RegistrationFormType::MIN_PASSWORD]), 'password');
         }
         if ($new !== (string) $request->request->get('confirmPassword', '')) {
             return $this->back('error', 'The two new passwords don’t match.', 'password');
         }
 
-        $user->setPassword($hasher->hashPassword($user, $new));
+        $firstPassword = !$user->hasPassword();
+        $user->setPassword($hasher->hashPassword($user, $new))->setHasPassword(true);
         $this->em->flush();
         // Remember-me cookies are signed with the password hash, so other devices are now logged out.
         // Log this browser in again with a fresh session.
         $security->login($user, 'App\Security\LoginFormAuthenticator', 'main');
 
+        if ($firstPassword) {
+            return $this->back('success', 'Your password is set. You can now log in with it.', 'password');
+        }
         try {
             $emails->sendPasswordChangedNotice($user);
         } catch (\Throwable $e) {
@@ -131,7 +139,7 @@ class AccountController extends AbstractController
     }
 
     #[Route('/delete', name: 'app_account_delete', methods: ['POST'])]
-    public function delete(Request $request, UserPasswordHasherInterface $hasher, Security $security, AvatarUploader $avatars, ChatConversationRepository $chats, LessonProgressRepository $lessonProgress): Response
+    public function delete(Request $request, UserPasswordHasherInterface $hasher, Security $security, AvatarUploader $avatars, ChatConversationRepository $chats, LessonProgressRepository $lessonProgress, DogProfileRepository $dogs, QuizSubmissionRepository $quizSubmissions): Response
     {
         if (!$this->isCsrfTokenValid('account-delete', (string) $request->request->get('_csrf_token'))) {
             return $this->back('error', 'Your session expired. Please try again.', 'delete');
@@ -141,13 +149,19 @@ class AccountController extends AbstractController
         if ($user->isAdmin()) {
             return $this->back('error', 'Admin accounts can’t be deleted here.', 'delete');
         }
-        if (!$hasher->isPasswordValid($user, (string) $request->request->get('password', ''))) {
+        // Quiz-made accounts without a password confirm by typing DELETE instead.
+        $confirmed = $user->hasPassword()
+            ? $hasher->isPasswordValid($user, (string) $request->request->get('password', ''))
+            : mb_strtoupper(trim((string) $request->request->get('password', ''))) === 'DELETE';
+        if (!$confirmed) {
             return $this->back('error', 'That password isn’t right, so nothing was deleted.', 'delete');
         }
 
         $avatars->remove($user->getProfileImage());
         $chats->deleteAllForUser($user);
         $lessonProgress->deleteAllForUser($user);
+        $dogs->deleteForUser($user);
+        $quizSubmissions->deleteForEmail($user->getEmail());
         $security->logout(false);
         foreach ($user->getPurchases() as $purchase) {
             $this->em->remove($purchase);

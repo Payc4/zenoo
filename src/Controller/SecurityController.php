@@ -25,7 +25,7 @@ class SecurityController extends AbstractController
     public function login(Request $request, AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_account');
+            return $this->redirectToRoute('app_dashboard');
         }
 
         // ?next=/shop/test-product sends the pet parent back to that page after logging in.

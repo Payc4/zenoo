@@ -18,7 +18,7 @@ class AccountTest extends AppTestCase
             'registration_form[agreeTerms]' => '1',
         ]));
 
-        $this->assertResponseRedirects('/account');
+        $this->assertResponseRedirects('/dashboard');
         $this->assertEmailCount(1);
         $this->assertEmailHeaderSame($this->getMailerMessage(), 'Subject', 'Welcome to ZENOO');
         $user = static::getContainer()->get(UserRepository::class)->findOneByEmail('maria@example.com');
@@ -26,7 +26,8 @@ class AccountTest extends AppTestCase
         $this->assertNotSame('Password123', $user->getPassword(), 'password is hashed');
 
         $this->client->followRedirect();
-        $this->assertSelectorTextContains('h1', 'Hi, Maria');
+        $this->assertSelectorTextContains('.dash-head .kicker', 'Hi, Maria');
+        $this->assertSelectorTextContains('.dash-empty', 'Take the free 3-minute Bowl Score quiz');
     }
 
     public function testRegisterValidation(): void
@@ -53,7 +54,7 @@ class AccountTest extends AppTestCase
     {
         $this->createUser();
         $this->loginViaForm('MARIA@example.com', 'Password123');
-        $this->assertResponseRedirects('/account');
+        $this->assertResponseRedirects('/dashboard');
         $this->client->request('GET', '/account');
         $this->assertResponseIsSuccessful();
 
@@ -81,7 +82,7 @@ class AccountTest extends AppTestCase
         $this->createUser();
         $this->client->request('GET', '/login?next=//evil.example.com');
         $this->loginViaForm('maria@example.com', 'Password123');
-        $this->assertResponseRedirects('/account');
+        $this->assertResponseRedirects('/dashboard');
 
         $this->client->request('GET', '/logout');
         $this->client->request('GET', '/login?next=/shop/test-product');
@@ -109,7 +110,7 @@ class AccountTest extends AppTestCase
         preg_match('#href="(http[^"]+/login/check\?[^"]+)"#', $html, $m);
         $url = html_entity_decode($m[1]);
         $this->client->request('GET', $url);
-        $this->assertResponseRedirects('/account');
+        $this->assertResponseRedirects('/dashboard');
 
         $this->client->request('GET', '/logout');
         $this->client->request('GET', $url);
@@ -140,7 +141,7 @@ class AccountTest extends AppTestCase
         $this->assertResponseRedirects('/forgot-password', null, 'token is single-use');
 
         $this->loginViaForm('maria@example.com', 'NewPassword456');
-        $this->assertResponseRedirects('/account');
+        $this->assertResponseRedirects('/dashboard');
     }
 
     public function testExpiredResetTokenIsRefused(): void

@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Thank you · ZENOO{% endblock %}
+{% block title %}{{ 'Thank you'|trans }} · ZENOO{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
 
 {% block body %}
@@ -9,15 +9,15 @@
         <div class="auth-card" style="text-align:center">
             {% if paid %}
                 <div class="check-badge" style="margin:0 auto 18px">✓</div>
-                <h1>Thank you!</h1>
-                <p class="lead" style="margin:0 auto 24px">Your payment went through. We’ve emailed your receipt, and the order is in your account.</p>
-                <a class="btn" href="{{ path('app_account') }}#orders">See my orders</a>
+                <h1>{{ 'Thank you!'|trans }}</h1>
+                <p class="lead" style="margin:0 auto 24px">{{ 'Your payment went through. We’ve emailed your receipt, and the order is in your account.'|trans }}</p>
+                <a class="btn" href="{{ path('app_account') }}#orders">{{ 'See my orders'|trans }}</a>
             {% else %}
-                <h1>Almost there</h1>
-                <p class="lead" style="margin:0 auto 24px">We haven’t received the payment confirmation yet. If you paid, your order will show in your account within a minute or two.</p>
+                <h1>{{ 'Almost there'|trans }}</h1>
+                <p class="lead" style="margin:0 auto 24px">{{ 'We haven’t received the payment confirmation yet. If you paid, your order will show in your account within a minute or two.'|trans }}</p>
                 <div class="btn-row" style="justify-content:center">
-                    <a class="btn" href="{{ path('app_account') }}#orders">My orders</a>
-                    <a class="btn btn-outline" href="{{ path('app_shop') }}">Back to the shop</a>
+                    <a class="btn" href="{{ path('app_account') }}#orders">{{ 'My orders'|trans }}</a>
+                    <a class="btn btn-outline" href="{{ path('app_shop') }}">{{ 'Back to the shop'|trans }}</a>
                 </div>
             {% endif %}
         </div>

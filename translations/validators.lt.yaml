@@ -1,0 +1,10 @@
+# Lithuanian translations. Keys are the English text used in templates and PHP code.
+# Keep %placeholders% and HTML tags exactly as in the key.
+'An account with this email already exists.': 'Paskyra su šiuo el. paštu jau yra.'
+'Please agree to the privacy policy to continue.': 'Norėdami tęsti, sutikite su privatumo politika.'
+'Please choose a password.': 'Pasirinkite slaptažodį.'
+'Please enter a valid email address.': 'Įveskite tinkamą el. pašto adresą.'
+'Please enter your email address.': 'Įveskite el. pašto adresą.'
+'Please enter your first name.': 'Įveskite vardą.'
+'The two passwords don’t match.': 'Slaptažodžiai nesutampa.'
+'Your password needs at least {{ limit }} characters.': 'Slaptažodį turi sudaryti bent {{ limit }} simbolių.'

@@ -11,6 +11,10 @@ import './styles/chat.css';
 
 const app = document.getElementById('chat');
 if (app) {
+  // Words shown by this script, translated by the page (data-i18n on #chat).
+  let T = {};
+  try { T = JSON.parse(app.dataset.i18n || '{}'); } catch (e) { /* keep English below */ }
+  const t = (key, fallback, vars = {}) => (T[key] || fallback).replace(/%(\w+)%/g, (m, k) => (k in vars ? vars[k] : m));
   const $ = (id) => document.getElementById(id);
   const thread = $('chat-thread');
   const scroller = $('chat-scroll');
@@ -42,7 +46,7 @@ if (app) {
     if (n <= 0) {
       input.disabled = true;
       sendBtn.disabled = true;
-      limitNote.textContent = `You’ve used all ${app.dataset.limit} messages for today. You can chat again after ${app.dataset.resetLabel}.`;
+      limitNote.textContent = t('limitAll', `You’ve used all ${app.dataset.limit} messages for today. You can chat again after ${app.dataset.resetLabel}.`);
     }
   };
 
@@ -122,7 +126,7 @@ if (app) {
       });
       const type = res.headers.get('content-type') || '';
       if (!res.ok || !type.includes('text/event-stream')) {
-        let message = 'Something went wrong. Please try again.';
+        let message = t('error', 'Something went wrong. Please try again.');
         let remaining;
         try { const j = await res.json(); message = j.error || message; remaining = j.remaining; } catch (e) { /* not JSON */ }
         if (remaining === 0) {
@@ -142,14 +146,14 @@ if (app) {
           throw new Error(d.message);
         },
       });
-      if (!raw.trim() && !cards) throw new Error('No reply came back. Please try again.');
+      if (!raw.trim() && !cards) throw new Error(t('noReply', 'No reply came back. Please try again.'));
       if (cards) {
         if (frame) cancelAnimationFrame(frame);
         reply.answer.innerHTML = (raw.trim() ? render(raw) : '<p>I have a few quick questions for you.</p>') + askedList(cards);
         const again = document.createElement('button');
         again.type = 'button';
         again.className = 'btn btn-small chat-reopen';
-        again.textContent = 'Answer the questions';
+        again.textContent = t('answerQuestions', 'Answer the questions');
         again.hidden = true;
         again.dataset.reopen = '';
         reply.answer.appendChild(again);
@@ -159,7 +163,7 @@ if (app) {
     } catch (e) {
       if (frame) cancelAnimationFrame(frame);
       reply.el.classList.add('is-error');
-      reply.answer.textContent = e.message || 'Something went wrong. Please try again.';
+      reply.answer.textContent = e.message || t('error', 'Something went wrong. Please try again.');
       // Give the text back so it can be sent again.
       if (!input.value && !input.disabled) { input.value = text; resize(); }
     } finally {
@@ -207,7 +211,7 @@ if (app) {
     if (wasIntro) {
       $('chat-suggest')?.removeAttribute('hidden');
       const note = $('chat-intro-note');
-      if (note) note.textContent = 'Ask anything about feeding your dog or using ZENOO.';
+      if (note) note.textContent = t('askAnything', 'Ask anything about feeding your dog or using ZENOO.');
     } else {
       // Claude's questions stay answerable from its last message.
       const last = [...thread.querySelectorAll('[data-reopen]')].pop();
@@ -228,10 +232,10 @@ if (app) {
 
     card.innerHTML = `
       <div class="qcard__head">
-        <button type="button" class="qcard__nav" data-q="prev" aria-label="Previous question" ${index === 0 ? 'disabled' : ''}>‹</button>
-        <span class="qcard__count">${index + 1} of ${questions.length}</span>
-        <button type="button" class="qcard__nav" data-q="next-nav" aria-label="Next question" ${last || !answered(a) ? 'disabled' : ''}>›</button>
-        <button type="button" class="qcard__close" data-q="close" aria-label="Close the questions">×</button>
+        <button type="button" class="qcard__nav" data-q="prev" aria-label="${t('prevQ', 'Previous question')}" ${index === 0 ? 'disabled' : ''}>‹</button>
+        <span class="qcard__count">${t('count', '%n% of %total%', { n: index + 1, total: questions.length })}</span>
+        <button type="button" class="qcard__nav" data-q="next-nav" aria-label="${t('nextQ', 'Next question')}" ${last || !answered(a) ? 'disabled' : ''}>›</button>
+        <button type="button" class="qcard__close" data-q="close" aria-label="${t('closeQ', 'Close the questions')}">×</button>
       </div>
       <h2 class="qcard__question" id="qcard-question">${escapeHtml(x.question)}</h2>
       ${x.options.length ? `<div class="qcard__options" role="radiogroup" aria-labelledby="qcard-question">${x.options.map((o, i) => `
@@ -239,12 +243,12 @@ if (app) {
           <span class="qcard__label">${escapeHtml(o.label)}</span>
           ${o.description ? `<span class="qcard__desc">${escapeHtml(o.description)}</span>` : ''}
         </button>`).join('')}</div>` : ''}
-      <label class="visually-hidden" for="qcard-text">Your own answer</label>
+      <label class="visually-hidden" for="qcard-text">${t('ownAnswer', 'Your own answer')}</label>
       <input type="text" id="qcard-text" class="qcard__text" maxlength="300" autocomplete="off"
-             placeholder="${x.options.length ? 'Type your answer…' : 'Type your answer'}" value="${escapeHtml(a.text)}">
+             placeholder="${t('typeAnswer', 'Type your answer…')}" value="${escapeHtml(a.text)}">
       <div class="qcard__actions">
-        <button type="button" class="btn btn-outline btn-small" data-q="skip">Skip</button>
-        <button type="button" class="btn btn-small" data-q="next" ${canNext ? '' : 'disabled'}>${last ? 'Send answers' : 'Next →'}</button>
+        <button type="button" class="btn btn-outline btn-small" data-q="skip">${t('skip', 'Skip')}</button>
+        <button type="button" class="btn btn-small" data-q="next" ${canNext ? '' : 'disabled'}>${last ? t('sendAnswers', 'Send answers') : t('next', 'Next →')}</button>
       </div>`;
 
     const text = card.querySelector('#qcard-text');
@@ -278,8 +282,8 @@ if (app) {
       closeCards(false); // everything skipped: nothing to send
       return;
     }
-    const lines = questions.map((x, i) => `${x.question} — ${answerText(x, answers[i]) ?? 'skipped'}`);
-    const message = (intro ? 'A bit about my dog:\n' : '') + lines.join('\n');
+    const lines = questions.map((x, i) => `${x.question} — ${answerText(x, answers[i]) ?? t('skipped', 'skipped')}`);
+    const message = (intro ? t('aboutDog', 'A bit about my dog:') + '\n' : '') + lines.join('\n');
     closeCards(true);
     send(message);
   }

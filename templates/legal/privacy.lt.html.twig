@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+{# Lithuanian version of legal/privacy.html.twig: keep the two in step. #}
+
+{% block title %}Privatumo politika · ZENOO{% endblock %}
+
+{% block body %}
+<section class="section">
+    <div class="wrap prose">
+        <p class="kicker">Teisinė informacija</p>
+        <h1>Privatumo politika</h1>
+        <p class="lead">Kaip ši svetainė naudoja jūsų duomenis, paprastais žodžiais.</p>
+
+        <h2>Ką saugome</h2>
+        <ul>
+            <li><strong>Jūsų paskyrą:</strong> vardą, el. pašto adresą, slaptažodį (saugomas tik kaip saugi maišos reikšmė, jo perskaityti neįmanoma), profilio nuotrauką, jei ją įkeliate, ir svetainės kalbą.</li>
+            <li><strong>Jūsų užsakymus:</strong> ką pirkote, kada ir kiek sumokėjote. Kortelės duomenys keliauja tiesiai į Stripe ir mūsų nepasiekia.</li>
+            <li><strong>Dubenėlio balo testą:</strong> jūsų atsakymai lieka naršyklėje iki testo pabaigos. Kai nurodote vardą ir el. paštą, jūsų šuns duomenys ir rezultatas siunčiami šiai svetainei, kad galėtume atsiųsti nuorodą adresui patvirtinti. Jei ja pasinaudojate, sukuriame jūsų paskyrą (arba naudojame esamą) ir išsaugome jūsų šuns profilį jūsų suvestinei. Jei ne, nepatvirtintas rezultatas ištrinamas po 7 dienų. Anglų kalbos teste jūsų šuns duomenys ir planas taip pat perduodami mūsų el. laiškų paslaugų teikėjui Klaviyo, kad galėtume atsiųsti planą ir šėrimo gidą.</li>
+            <li><strong>Pokalbį:</strong> jūsų žinutės ir atsakymai išsaugomi paskyroje, kad galėtumėte prie jų sugrįžti. Kad būtų parašytas kiekvienas atsakymas, jūsų žinutės ir vardas siunčiami bendrovei Anthropic, sukūrusiai dirbtinio intelekto modelį Claude, kartu su jūsų šuns testo profiliu, baigtomis kurso pamokomis ir tuo, ką jose parašėte, kad atsakymai tiktų būtent jūsų šuniui. Pokalbį galite išvalyti bet kada.</li>
+            <li><strong>Kursus:</strong> jūsų pažanga, atsakymai į klausimus ir tai, ką rašote pamokose, išsaugomi jūsų paskyroje.</li>
+        </ul>
+        <p>Ištrynus paskyrą, ištrinama viskas, ką iš to saugome šioje svetainėje.</p>
+
+        <h2>Kas mums padeda</h2>
+        <ul>
+            <li><strong>Stripe</strong> apdoroja mokėjimus.</li>
+            <li><strong>Amazon Web Services (SES)</strong> siunčia paskyros laiškus: kvitus, prisijungimo nuorodas ir testo patvirtinimus.</li>
+            <li><strong>Anthropic</strong> teikia dirbtinio intelekto modelį (Claude), kuris rašo pokalbio atsakymus.</li>
+            <li><strong>Klaviyo</strong> siunčia testo planą ir mūsų laiškus, jei užsiregistruojate per testą.</li>
+            <li><strong>Cloudflare Turnstile</strong> patikrina, kad registruojasi žmonės, o ne robotai.</li>
+        </ul>
+
+        <h2>Slapukai</h2>
+        <p>Naudojame tik tuos slapukus, be kurių svetainė neveiktų: vieną, kuris išlaiko jus prisijungusius apsilankymo metu, kitą, kuris jus prisimena dvi savaites, jei pažymite „Likti prisijungus“, ir trečią, kuris metus prisimena jūsų kalbą (anglų arba lietuvių). Reklamos ar sekimo slapukų šioje svetainėje nenaudojame.</p>
+
+        <h2>Jūsų pasirinkimai</h2>
+        <p>Savo duomenis pakeisti ar paskyrą ištrinti galite bet kada skiltyje <a href="{{ path('app_account') }}">Mano paskyra</a>. Ištrynus paskyrą, čia ištrinami jūsų duomenys, šuns profilis ir užsakymų istorija. Stripe mokėjimų įrašus saugo tiek, kiek reikalauja įstatymai.</p>
+
+        <h2>Kontaktai</h2>
+        <p>Klausimų apie savo duomenis? Rašykite <a href="mailto:support@myzenoo.com">support@myzenoo.com</a>.</p>
+
+        <p class="small muted">Atnaujinta 2026 m. lapkričio 7 d.</p>
+    </div>
+</section>
+{% endblock %}

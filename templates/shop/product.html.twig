@@ -6,43 +6,43 @@
 {% block body %}
 <section class="section">
     <div class="wrap">
-        <p class="small"><a href="{{ path('app_shop') }}">← Shop</a></p>
+        <p class="small"><a href="{{ path('app_shop') }}">{{ '← Shop'|trans }}</a></p>
         <div class="product-layout">
             {% if product.image %}
                 <img class="product-photo" src="/images/{{ product.image|url_encode }}" alt="" width="1000" height="750">
             {% endif %}
             <div class="card">
-                {% if testMode %}<span class="tag tag-test">Test mode</span>{% endif %}
+                {% if testMode %}<span class="tag tag-test">{{ 'Test mode'|trans }}</span>{% endif %}
                 <h1 style="font-size:clamp(30px,4vw,44px);margin-top:12px">{{ product.name }}</h1>
                 {% if product.tagline %}<p class="lead">{{ product.tagline }}</p>{% endif %}
                 <p class="price">€{{ product.price|number_format(2, '.', ',') }}</p>
 
                 {% if cancelled %}
-                    <div class="flash flash-info">No payment was taken. You can try again whenever you’re ready.</div>
+                    <div class="flash flash-info">{{ 'No payment was taken. You can try again whenever you’re ready.'|trans }}</div>
                 {% endif %}
 
                 {% if owned %}
-                    <div class="flash flash-success">You’ve bought this already. You’ll find it under <a href="{{ path('app_account') }}#orders">My orders</a>.</div>
+                    <div class="flash flash-success">{{ 'You’ve bought this already. You’ll find it under'|trans }} <a href="{{ path('app_account') }}#orders">{{ 'My orders'|trans }}</a>.</div>
                 {% endif %}
 
                 {% if not checkoutReady %}
-                    <p class="flash flash-info">Payments are switched off at the moment.</p>
+                    <p class="flash flash-info">{{ 'Payments are switched off at the moment.'|trans }}</p>
                 {% elseif app.user %}
                     <form method="post" action="{{ path('app_checkout', {slug: product.slug}) }}">
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token('checkout-' ~ product.slug) }}">
-                        <button class="btn btn-block" type="submit">{{ owned ? 'Buy again' : 'Buy now' }}</button>
+                        <button class="btn btn-block" type="submit">{{ owned ? 'Buy again'|trans : 'Buy now'|trans }}</button>
                     </form>
-                    <p class="small muted" style="margin-top:12px">You’ll pay on Stripe’s secure page, then come straight back here.</p>
+                    <p class="small muted" style="margin-top:12px">{{ 'You’ll pay on Stripe’s secure page, then come straight back here.'|trans }}</p>
                 {% else %}
                     <div class="btn-row">
-                        <a class="btn btn-block" href="{{ path('app_login', {next: path('app_product', {slug: product.slug})}) }}">Log in to buy</a>
+                        <a class="btn btn-block" href="{{ path('app_login', {next: path('app_product', {slug: product.slug})}) }}">{{ 'Log in to buy'|trans }}</a>
                     </div>
-                    <p class="small muted" style="margin-top:12px">New to ZENOO? <a href="{{ path('app_register') }}">Create an account</a> first. It takes a minute.</p>
+                    <p class="small muted" style="margin-top:12px">{{ 'New to ZENOO?'|trans }} <a href="{{ path('app_register') }}">{{ 'Create an account'|trans }}</a> {{ 'first. It takes a minute.'|trans }}</p>
                 {% endif %}
 
                 {% if testMode %}
                     <div class="test-card">
-                        <strong>Testing?</strong> Pay with card <code>4242 4242 4242 4242</code>, any future expiry date and any CVC.
+                        <strong>{{ 'Testing?'|trans }}</strong> {{ 'Pay with card'|trans }} <code>4242 4242 4242 4242</code>{{ ', any future expiry date and any CVC.'|trans }}
                     </div>
                 {% endif %}
 

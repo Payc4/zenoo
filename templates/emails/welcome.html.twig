@@ -1,9 +1,9 @@
 {% extends 'emails/_layout.html.twig' %}
-{% block title %}Welcome to ZENOO{% endblock %}
+{% block title %}{{ 'Welcome to ZENOO'|trans }}{% endblock %}
 {% block content %}
-<h1 style="font-family:'Inter Tight',Inter,Helvetica,Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">Welcome, {{ user.displayName }}!</h1>
-<p style="margin:0 0 12px;">Your ZENOO account is ready. From now on you can see your orders and update your details in one place.</p>
-<p style="margin:0 0 12px;">Not sure if your dog’s bowl is on track? The free Bowl Score quiz takes about three minutes.</p>
-{{ include('emails/_button.html.twig', {url: appUrl ~ '/quiz/', label: 'Take the Bowl Score quiz'}) }}
-<p style="margin:0;">Log in any time at <a href="{{ appUrl }}/login" style="color:#445942;">{{ appUrl|replace({'https://': '', 'http://': ''}) }}/login</a> with {{ user.email }}.</p>
+<h1 style="font-family:'Inter Tight',Inter,Helvetica,Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">{{ 'Welcome, %name%!'|trans({'%name%': user.displayName}) }}</h1>
+<p style="margin:0 0 12px;">{{ 'Your ZENOO account is ready. From now on you can see your orders and update your details in one place.'|trans }}</p>
+<p style="margin:0 0 12px;">{{ 'Not sure if your dog’s bowl is on track? The free Bowl Score quiz takes about three minutes.'|trans }}</p>
+{{ include('emails/_button.html.twig', {url: appUrl ~ '/quiz/', label: 'Take the Bowl Score quiz'|trans}) }}
+<p style="margin:0;">{{ 'Log in any time at %link% with %email%.'|trans({'%link%': '<a href="' ~ appUrl ~ '/login" style="color:#445942;">' ~ (appUrl|replace({'https://': '', 'http://': ''})|e) ~ '/login</a>', '%email%': user.email|e})|raw }}</p>
 {% endblock %}

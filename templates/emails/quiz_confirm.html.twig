@@ -1,0 +1,10 @@
+{% extends 'emails/_layout.html.twig' %}
+{% block title %}{{ 'Confirm your email'|trans }}{% endblock %}
+{% block content %}
+<h1 style="font-family:'Inter Tight',Inter,Helvetica,Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">{{ '%dog%’s Bowl Score: %score%/100'|trans({'%dog%': dogName, '%score%': score}) }}</h1>
+<p style="margin:0 0 12px;">{{ firstName ? 'Hi %name%,'|trans({'%name%': firstName}) : 'Hi,'|trans }}</p>
+<p style="margin:0 0 12px;">{{ 'Thanks for taking the ZENOO quiz. Confirm your email and we’ll create your free ZENOO account with %dog%’s profile, so you can come back to the score, the daily plan and lessons picked for %dog% any time.'|trans({'%dog%': dogName}) }}</p>
+{{ include('emails/_button.html.twig', {url: confirmUrl, label: 'Confirm and open %dog%’s dashboard'|trans({'%dog%': dogName})}) }}
+<p style="margin:0 0 12px;font-size:14px;">{{ 'The link works for 7 days. If you didn’t take the quiz, you can ignore this email and nothing will be created.'|trans }}</p>
+<p style="margin:0;font-size:12px;color:#7c8a7b;word-break:break-all;">{{ 'Button not working? Copy this link:'|trans }} {{ confirmUrl }}</p>
+{% endblock %}

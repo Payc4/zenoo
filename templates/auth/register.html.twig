@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Create an account · ZENOO{% endblock %}
+{% block title %}{{ 'Create an account'|trans }} · ZENOO{% endblock %}
 
 {% block body %}
 <section class="auth-page">
     <div class="wrap">
         <div class="auth-card">
-            <h1>Create your account</h1>
-            <p class="lead">One login for your orders and details.</p>
+            <h1>{{ 'Create your account'|trans }}</h1>
+            <p class="lead">{{ 'One login for your orders and details.'|trans }}</p>
 
             {{ form_start(registrationForm, {attr: {novalidate: 'novalidate'}}) }}
                 {{ form_errors(registrationForm) }}
@@ -17,15 +17,15 @@
                 </div>
                 {{ form_row(registrationForm.email) }}
                 {{ form_row(registrationForm.plainPassword) }}
-                {{ form_row(registrationForm.agreeTerms, {label: 'I agree to the <a href="' ~ path('app_privacy_policy') ~ '" target="_blank">privacy policy</a>', label_html: true}) }}
+                {{ form_row(registrationForm.agreeTerms, {label: 'I agree to the <a href="%url%" target="_blank">privacy policy</a>'|trans({'%url%': path('app_privacy_policy')}), label_html: true}) }}
                 {% if registrationForm.vars.turnstile_site_key %}
                     <div class="cf-turnstile" data-sitekey="{{ registrationForm.vars.turnstile_site_key }}" data-theme="light"></div>
                     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
                 {% endif %}
-                <button class="btn btn-block" type="submit">Create account</button>
+                <button class="btn btn-block" type="submit">{{ 'Create account'|trans }}</button>
             {{ form_end(registrationForm) }}
 
-            <p class="auth-alt">Already have an account? <a href="{{ path('app_login') }}">Log in</a></p>
+            <p class="auth-alt">{{ 'Already have an account?'|trans }} <a href="{{ path('app_login') }}">{{ 'Log in'|trans }}</a></p>
         </div>
     </div>
 </section>

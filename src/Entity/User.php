@@ -60,6 +60,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $lastMagicLinkRequestedAt = null;
 
+    /** Site language for this pet parent ("en" or "lt"): pages after login and every email. */
+    #[ORM\Column(length: 5, options: ['default' => 'en'])]
+    private string $locale = 'en';
+
+    /** False for accounts created from the quiz until the pet parent chooses a password. */
+    #[ORM\Column(options: ['default' => true])]
+    private bool $hasPassword = true;
+
     /** @var Collection<int, Purchase> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Purchase::class)]
     #[ORM\OrderBy(['createdAt' => 'DESC'])]
@@ -293,5 +301,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function __toString(): string
     {
         return (string) $this->email;
+    }
+
+    public function getLocale(): string
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(string $locale): static
+    {
+        $this->locale = \in_array($locale, ['en', 'lt'], true) ? $locale : 'en';
+        return $this;
+    }
+
+    public function hasPassword(): bool
+    {
+        return $this->hasPassword;
+    }
+
+    public function setHasPassword(bool $hasPassword): static
+    {
+        $this->hasPassword = $hasPassword;
+        return $this;
     }
 }

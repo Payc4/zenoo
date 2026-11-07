@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Shop · ZENOO{% endblock %}
+{% block title %}{{ 'Shop'|trans }} · ZENOO{% endblock %}
 
 {% block body %}
 <section class="section">
     <div class="wrap">
-        <p class="kicker">Shop</p>
-        <h1>Shop</h1>
-        {% if testMode %}<p><span class="tag tag-test">Test mode</span> <span class="muted small">No real money is taken.</span></p>{% endif %}
+        <p class="kicker">{{ 'Shop'|trans }}</p>
+        <h1>{{ 'Shop'|trans }}</h1>
+        {% if testMode %}<p><span class="tag tag-test">{{ 'Test mode'|trans }}</span> <span class="muted small">{{ 'No real money is taken.'|trans }}</span></p>{% endif %}
         {% if products|length %}
             <div class="grid grid-3" style="margin-top:24px">
                 {% for product in products %}
@@ -15,7 +15,7 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="empty">There’s nothing in the shop right now. Please check back soon.</div>
+            <div class="empty">{{ 'There’s nothing in the shop right now. Please check back soon.'|trans }}</div>
         {% endif %}
     </div>
 </section>
