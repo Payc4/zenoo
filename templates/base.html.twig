@@ -21,8 +21,14 @@
             <a class="brand" href="{{ path('app_homepage') }}"><img src="/images/logo-white.png" alt="{{ 'ZENOO home'|trans }}" width="94" height="26"></a>
             {% set lang = app.locale %}
             <div class="lang-switch" role="group" aria-label="{{ 'Language'|trans }}">
-                <a href="{{ path('app_language', {locale: 'en'}) }}" lang="en" hreflang="en" {{ lang == 'en' ? 'aria-current="true"' }}>EN</a>
-                <a href="{{ path('app_language', {locale: 'lt'}) }}" lang="lt" hreflang="lt" {{ lang == 'lt' ? 'aria-current="true"' }}>LT</a>
+                <a href="{{ path('app_language', {locale: 'en'}) }}" lang="en" hreflang="en" title="English" {{ lang == 'en' ? 'aria-current="true"' }}>
+                    <svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><clipPath id="flag-uk-t"><path d="M30,15h30v15zv15h-30zh-30v-15zv-15h30z"/></clipPath><path d="M0,0v30h60v-30z" fill="#012169"/><path d="M0,0 60,30M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30M60,0 0,30" clip-path="url(#flag-uk-t)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></svg>
+                    <span class="visually-hidden">English</span>
+                </a>
+                <a href="{{ path('app_language', {locale: 'lt'}) }}" lang="lt" hreflang="lt" title="Lietuvių" {{ lang == 'lt' ? 'aria-current="true"' }}>
+                    <svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M0,0h60v10H0z" fill="#FDB913"/><path d="M0,10h60v10H0z" fill="#006A44"/><path d="M0,20h60v10H0z" fill="#C1272D"/></svg>
+                    <span class="visually-hidden">Lietuvių</span>
+                </a>
             </div>
             <button class="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false">
                 <span class="visually-hidden">{{ 'Menu'|trans }}</span>

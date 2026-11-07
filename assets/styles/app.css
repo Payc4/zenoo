@@ -72,9 +72,10 @@ h3 { font-size: 20px; line-height: 1.2; }
 /* EN / LT selector, top right (before the menu button on phones) */
 .nav { order: 1; }
 .lang-switch { order: 2; display: inline-flex; gap: 2px; margin-left: 12px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.12); }
-.lang-switch a { color: var(--white); text-decoration: none; font-size: .8rem; font-weight: 700; letter-spacing: .04em; padding: 4px 9px; border-radius: 999px; opacity: .75; }
-.lang-switch a:hover { opacity: 1; }
-.lang-switch a[aria-current] { background: var(--white); color: var(--forest); opacity: 1; }
+.lang-switch a { display: inline-flex; align-items: center; justify-content: center; padding: 5px 7px; border-radius: 999px; opacity: .55; transition: opacity .15s, background .15s; }
+.lang-switch a:hover, .lang-switch a:focus-visible { opacity: 1; }
+.lang-switch a[aria-current] { background: var(--white); opacity: 1; }
+.lang-switch .flag { display: block; width: 24px; height: 16px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
 .nav-toggle { order: 3; display: none; margin-left: auto; background: none; border: 0; color: var(--white); padding: 8px; cursor: pointer; }
 .nav-toggle svg { width: 28px; height: 28px; }
 @media (max-width: 760px) {
