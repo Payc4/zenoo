@@ -15,6 +15,9 @@ parameters:
     # results are not sent to Klaviyo; the site's own confirmation email still goes out.
     app.quiz.klaviyo_lt_company_id: '%env(default::KLAVIYO_LT_COMPANY_ID)%'
     app.quiz.klaviyo_lt_list_id: '%env(default::KLAVIYO_LT_LIST_ID)%'
+    # QUIZ_SITE_CONFIRM_EMAIL=false: the quiz confirmation link goes only through the Klaviyo flow
+    # (KLAVIYO_PRIVATE_KEY); the site's own email is then just the fallback.
+    app.quiz.site_confirm_default: true
     # Chatbot (/chat). ANTHROPIC_API_KEY switches it on; the prompt is config/chatbot/system_prompt.md.
     chat.default_model: 'claude-haiku-5-5'
     chat.default_base_url: 'https://api.anthropic.com'

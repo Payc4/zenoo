@@ -16,18 +16,27 @@ final class FakeStripe
     /** @var array<string, array> Checkout Sessions returned by GET checkout/sessions/{id} */
     public static array $sessions = [];
     public static bool $down = false;
+    /** @var list<array{url: string, headers: array, body: string}> requests to Klaviyo's server API */
+    public static array $klaviyo = [];
+    public static bool $klaviyoDown = false;
 
     public static function reset(): void
     {
         self::$requests = [];
         self::$sessions = [];
         self::$down = false;
+        self::$klaviyo = [];
+        self::$klaviyoDown = false;
     }
 
     public function __invoke(string $method, string $url, array $options = []): MockResponse
     {
         if (str_ends_with($url, '/v1/messages')) {
             return FakeClaude::respond($options);
+        }
+        if (str_contains($url, 'a.klaviyo.com/')) {
+            self::$klaviyo[] = ['url' => $url, 'headers' => $options['headers'] ?? [], 'body' => (string) ($options['body'] ?? '')];
+            return new MockResponse(self::$klaviyoDown ? '{"errors":[]}' : '{"data":{}}', ['http_code' => self::$klaviyoDown ? 500 : 202]);
         }
         $body = (string) ($options['body'] ?? '');
         $key = null;

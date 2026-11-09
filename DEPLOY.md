@@ -31,6 +31,8 @@ needs no manual steps.
 | `QUIZ_SEND_TO_KLAVIYO` | Defaults to `true`: finished quizzes go to the **live** Klaviyo flow and email the pet parent. Set `false` for a staging copy. |
 | `KLAVIYO_COMPANY_ID`, `KLAVIYO_LIST_ID` | Default to the EN account (`SVCcfJ`, list `Xubzza`). |
 | `KLAVIYO_LT_COMPANY_ID`, `KLAVIYO_LT_LIST_ID` | Optional: the zenoo.lt Klaviyo account and list for the Lithuanian quiz. Empty means Lithuanian quiz results aren't sent to Klaviyo. |
+| `KLAVIYO_PRIVATE_KEY` | Optional, secret (untick Buildtime). A Klaviyo private key with only "Profiles: Full access". When set, each quiz-taker's personal dashboard link is written to their Klaviyo profile as `dashboard_link`, for a button in the quiz flow's email: `{{ person\|lookup:'dashboard_link' }}`. `KLAVIYO_LT_PRIVATE_KEY` is the same for a separate Lithuanian account. |
+| `QUIZ_SITE_CONFIRM_EMAIL` | Default `true`: the site also sends its own confirmation email. Set `false` once the Klaviyo email has the button, so people get one email instead of two (the site email is then only sent if Klaviyo can't be reached). |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First deploy only: creates the admin account. Remove them afterwards. |
 | `SESSION_DSN` | Optional, e.g. `redis://...`. The default keeps sessions in files inside the container, so a redeploy logs everyone out. |
 

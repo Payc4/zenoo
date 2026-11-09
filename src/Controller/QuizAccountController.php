@@ -10,6 +10,7 @@ use App\Repository\QuizSubmissionRepository;
 use App\Repository\UserRepository;
 use App\Security\LoginFormAuthenticator;
 use App\Service\EmailService;
+use App\Service\KlaviyoProfiles;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,7 +28,11 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *
  * 1. When the quiz finishes, public/quiz/app.js posts the result here (POST /quiz/submit).
  *    - Logged in: the dog profile is saved to their account straight away.
- *    - Not logged in: the result waits in a QuizSubmission and we email a confirmation link.
+ *    - Not logged in: the result waits in a QuizSubmission and the visitor gets a personal
+ *      confirmation link: in the site's own email, and/or (when KLAVIYO_PRIVATE_KEY is set) written
+ *      to their Klaviyo profile as "dashboard_link" for the Klaviyo quiz flow's email button.
+ *      QUIZ_SITE_CONFIRM_EMAIL=false leaves it to Klaviyo alone (the site email is then only a
+ *      fallback for when Klaviyo can't be reached).
  * 2. The link (GET /quiz/confirm/{token}) creates the account (or finds the existing one for
  *    that email), saves the dog profile, logs them in and opens the dog dashboard. Accounts
  *    created this way have no password yet; the dashboard asks them to choose one.
@@ -45,7 +50,9 @@ final class QuizAccountController extends AbstractController
         private readonly EmailService $emails,
         private readonly TranslatorInterface $translator,
         private readonly LoggerInterface $logger,
+        private readonly KlaviyoProfiles $klaviyo,
         #[Autowire('%kernel.secret%')] private readonly string $secret,
+        #[Autowire('%env(bool:default:app.quiz.site_confirm_default:QUIZ_SITE_CONFIRM_EMAIL)%')] private readonly bool $siteConfirmEmail = true,
     ) {
     }
 
@@ -92,11 +99,17 @@ final class QuizAccountController extends AbstractController
         $this->em->persist($submission);
         $this->em->flush();
 
-        try {
-            $this->emails->sendQuizConfirmation($submission, $this->generateUrl('app_quiz_confirm', ['token' => $token], 0));
-        } catch (\Throwable $e) {
-            $this->logger->error('Quiz confirmation email failed: {message}', ['message' => $e->getMessage()]);
-            return $this->json(['error' => $this->translator->trans('We could not send the email.')], 503);
+        $link = $this->generateUrl('app_quiz_confirm', ['token' => $token], 0);
+        $inKlaviyo = $this->klaviyo->setProperties($email, $locale, ['dashboard_link' => $link]);
+        if ($this->siteConfirmEmail || !$inKlaviyo) {
+            try {
+                $this->emails->sendQuizConfirmation($submission, $link);
+            } catch (\Throwable $e) {
+                $this->logger->error('Quiz confirmation email failed: {message}', ['message' => $e->getMessage()]);
+                if (!$inKlaviyo) {
+                    return $this->json(['error' => $this->translator->trans('We could not send the email.')], 503);
+                }
+            }
         }
         return $this->json(['status' => 'sent']);
     }

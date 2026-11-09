@@ -98,6 +98,12 @@ If you update the quiz from the handoff, copy the files over and update the hash
   creates the account or uses the existing one for that email, saves the `DogProfile`, logs them in
   and opens `/dashboard`. Unconfirmed submissions are only kept for the link's 7 days.
   Limits: 3 submissions per email and 10 per IP address per hour.
+- With `KLAVIYO_PRIVATE_KEY` set, the same personal link is also written (server-side,
+  `src/Service/KlaviyoProfiles.php`) to the person's Klaviyo profile as `dashboard_link`, so the
+  Klaviyo quiz flow's email can carry it as a button: `{{ person|lookup:'dashboard_link' }}`
+  (the flow needs a short time delay before that email). `QUIZ_SITE_CONFIRM_EMAIL=false` then
+  stops the site's own email, except as a fallback when Klaviyo can't be reached. The link must
+  never be sent from the browser: it logs its holder into that email's account.
 - Accounts made this way have no password (`hasPassword = false`). The dashboard asks them to choose
   one (no current password needed); until then they can use the email login link. They delete their
   account by typing DELETE.
@@ -110,8 +116,10 @@ If you update the quiz from the handoff, copy the files over and update the hash
 
 ## Languages (English / Lithuanian)
 
-- `LocaleSubscriber` picks the language: the `zenoo_lang` cookie (set by the EN/LT selector,
-  `/language/{en|lt}`), else the browser's language, else English. No language prefix in URLs.
+- `LocaleSubscriber` picks the language: a `?lang=en|lt` link parameter (remembered afterwards),
+  the `zenoo_lang` cookie (set by the EN/LT flags, `/language/{en|lt}`), a `.lt` address
+  (app.zenoo.lt opens in Lithuanian), else the browser's language, else English. No language
+  prefix in URLs.
   The choice is saved on the account (`User::locale`), and emails go out in it.
 - Text in templates and PHP is the English sentence itself, wrapped in `|trans` / `trans()`.
   Lithuanian lives in `translations/messages.lt.yaml` (and `validators.lt.yaml` for form errors).

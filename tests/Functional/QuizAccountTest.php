@@ -7,6 +7,7 @@ use App\Entity\QuizSubmission;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Tests\Support\FakeClaude;
+use App\Tests\Support\FakeStripe;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -86,6 +87,42 @@ final class QuizAccountTest extends AppTestCase
         $this->submit(['email' => 'a@example.com', 'properties' => ['quiz_dog_name' => 'X']], $token);
         $this->assertResponseStatusCodeSame(400, 'a result needs a score');
         $this->assertSame(0, $this->em->getRepository(QuizSubmission::class)->count([]));
+    }
+
+    public function testTheConfirmationLinkIsWrittenToTheKlaviyoProfile(): void
+    {
+        $data = $this->submit(['email' => 'Ona@Example.com', 'first_name' => 'Ona', 'locale' => 'en', 'properties' => self::result()]);
+        $this->assertSame(['status' => 'sent'], $data);
+        $this->assertCount(1, FakeStripe::$klaviyo);
+        $call = FakeStripe::$klaviyo[0];
+        $this->assertSame('https://a.klaviyo.com/api/profile-import/', $call['url']);
+        $this->assertContains('Authorization: Klaviyo-API-Key pk_test_dummy', $call['headers']);
+        $body = json_decode($call['body'], true)['data'];
+        $this->assertSame('ona@example.com', $body['attributes']['email']);
+        // Same personal link as in the site's own email (which still goes out by default).
+        $this->assertSame($this->confirmUrl(), $body['attributes']['properties']['dashboard_link']);
+
+        // Lithuanian quiz: no LT key, so nothing goes to Klaviyo; the site email still does.
+        FakeStripe::$klaviyo = [];
+        $this->submit(['email' => 'jonas@example.com', 'locale' => 'lt', 'properties' => self::result()]);
+        $this->assertCount(0, FakeStripe::$klaviyo);
+        $this->assertEmailCount(1);
+    }
+
+    public function testKlaviyoOnlyModeSkipsTheSiteEmailUnlessKlaviyoFails(): void
+    {
+        $_SERVER['QUIZ_SITE_CONFIRM_EMAIL'] = $_ENV['QUIZ_SITE_CONFIRM_EMAIL'] = 'false';
+        try {
+            $this->assertSame(['status' => 'sent'], $this->submit(['email' => 'a@example.com', 'locale' => 'en', 'properties' => self::result()]));
+            $this->assertCount(1, FakeStripe::$klaviyo);
+            $this->assertEmailCount(0);
+
+            FakeStripe::$klaviyoDown = true;
+            $this->assertSame(['status' => 'sent'], $this->submit(['email' => 'b@example.com', 'locale' => 'en', 'properties' => self::result()]));
+            $this->assertEmailCount(1);
+        } finally {
+            unset($_SERVER['QUIZ_SITE_CONFIRM_EMAIL'], $_ENV['QUIZ_SITE_CONFIRM_EMAIL']);
+        }
     }
 
     public function testConfirmingTheEmailCreatesTheAccountAndDashboard(): void
