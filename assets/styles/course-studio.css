@@ -193,3 +193,18 @@ textarea.cs-input { resize: vertical; line-height: 1.5; }
   .cs-layouts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cs-actions { flex-wrap: wrap; }
 }
+
+/* Coach conversations (templates/admin/conversations/*). Prefix: cv- */
+.cv-table { width: 100%; border-collapse: collapse; margin-top: 1.25rem; background: #fff; border-radius: 12px; overflow: hidden; }
+.cv-table th, .cv-table td { text-align: left; padding: 0.7rem 0.9rem; border-bottom: 1px solid #e6ebe5; vertical-align: top; }
+.cv-table th { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); background: #f5f7f3; }
+.cv-empty { margin-top: 1.5rem; }
+.cv-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.5rem; align-items: start; margin-top: 1rem; }
+.cv-msg { background: #fff; border-radius: 12px; padding: 0.8rem 1rem; margin-bottom: 0.75rem; border-left: 4px solid #c9d3c8; }
+.cv-msg--user { border-left-color: var(--sun, #f7a223); }
+.cv-msg--bot { border-left-color: var(--forest); }
+.cv-body { margin-top: 0.35rem; line-height: 1.5; }
+.cv-cards { margin: 0.6rem 0 0; padding-left: 1.1rem; font-size: 0.9rem; }
+.cv-side { position: sticky; top: 4rem; background: #fff; border-radius: 12px; padding: 1rem; }
+.cv-pre { white-space: pre-wrap; font: inherit; font-size: 0.82rem; margin: 0; }
+@media (max-width: 860px) { .cv-grid { grid-template-columns: 1fr; } .cv-side { position: static; } }

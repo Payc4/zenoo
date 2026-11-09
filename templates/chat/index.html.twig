@@ -9,6 +9,7 @@
 {% block body %}
 <div class="chat-app" id="chat"
      data-send-url="{{ path('app_chat_send') }}"
+     data-checkin-url="{{ path('app_chat_checkin') }}"
      data-csrf="{{ csrf_token('chat') }}"
      data-max-chars="{{ maxChars }}"
      data-configured="{{ configured ? 'true' : 'false' }}"
@@ -31,6 +32,8 @@
         next: 'Next →'|trans,
         skipped: 'skipped'|trans,
         aboutDog: 'A bit about my dog:'|trans,
+        checkin: 'Quick check-in'|trans,
+        saveAnswers: 'Save'|trans,
      }|json_encode }}">
 
     <section class="chat-main">
@@ -105,6 +108,9 @@
         <div class="qcard" id="chat-qcard" role="dialog" aria-modal="false" aria-labelledby="qcard-question" hidden></div>
         {% if cards and configured %}
             <script type="application/json" id="chat-cards">{{ {questions: cards, intro: cardsAreIntro}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
+        {% endif %}
+        {% if checkin %}
+            <script type="application/json" id="chat-checkin">{{ checkin|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
         {% endif %}
 
         <form class="chat-composer" id="chat-form">

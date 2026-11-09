@@ -1,0 +1,47 @@
+{% extends 'admin/course_studio/_layout.html.twig' %}
+{% block title %}Conversation #{{ conversation.id }}{% endblock %}
+{% block brand %}<a class="cs-top__brand" href="{{ path('admin_conversations') }}">Coach conversations</a>{% endblock %}
+
+{% block body %}
+{% set user = conversation.user %}
+<main class="cs-wrap cv-show">
+  <p><a href="{{ path('admin_conversations') }}">← All conversations</a></p>
+  <h1 class="cs-h1">{{ user.firstName ?: user.email }}</h1>
+  <p class="cs-muted">{{ user.email }} · language {{ user.locale|upper }} · started {{ conversation.createdAt|date('Y-m-d H:i') }} ·
+    <a href="{{ path('admin_conversation_text', {id: conversation.id}) }}">Download as text</a></p>
+
+  <div class="cv-grid">
+    <section class="cv-thread">
+      {% for m in conversation.messages %}
+        <article class="cv-msg {{ m.fromUser ? 'cv-msg--user' : 'cv-msg--bot' }}">
+          <header class="cs-small cs-muted">{{ m.fromUser ? 'Pet parent' : 'Coach' }} · {{ m.createdAt|date('Y-m-d H:i') }}{% if m.outputTokens %} · {{ m.inputTokens }} / {{ m.outputTokens }} tokens{% endif %}</header>
+          <div class="cv-body">{{ m.fromUser ? m.content|nl2br : m.content|chat_markdown }}</div>
+          {% if m.questions %}
+            <ul class="cv-cards">{% for q in m.questions %}<li><strong>{{ q.question }}</strong>{% if q.options %} — {{ q.options|map(o => o.label)|join(' / ') }}{% endif %}</li>{% endfor %}</ul>
+          {% endif %}
+        </article>
+      {% else %}
+        <p class="cs-muted">No messages.</p>
+      {% endfor %}
+    </section>
+
+    <aside class="cv-side">
+      <h2 class="cs-label">Their dog</h2>
+      {% if dog %}
+        <p><strong>{{ dog.name }}</strong> · Bowl Score {{ dog.bowlScore }}/100<br>
+        <span class="cs-muted cs-small">Quiz taken {{ dog.updatedAt|date('Y-m-d') }}</span></p>
+        <p class="cs-small">
+          {% for k, label in {breed: 'Breed', age_years: 'Age (years)', weight_kg: 'Weight (kg)', food_main: 'Main food'} %}
+            {% if dog.get(k) %}{{ label }}: {{ dog.get(k) }}<br>{% endif %}
+          {% endfor %}
+          {% if dog.get('signs') %}Signs: {{ dog.get('signs') is iterable ? dog.get('signs')|join(', ') : dog.get('signs') }}{% endif %}
+        </p>
+        <h2 class="cs-label">Check-in answers</h2>
+        {% if checkins %}<pre class="cv-pre">{{ checkins }}</pre>{% else %}<p class="cs-muted cs-small">None yet.</p>{% endif %}
+      {% else %}
+        <p class="cs-muted cs-small">No quiz profile.</p>
+      {% endif %}
+    </aside>
+  </div>
+</main>
+{% endblock %}

@@ -78,6 +78,7 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToUrl('View courses', 'fas fa-graduation-cap', '/courses');
         yield MenuItem::section('Chat');
         yield MenuItem::linkToUrl('Open the chat', 'fas fa-comments', '/chat');
+        yield MenuItem::linkToRoute('Coach conversations', 'fas fa-comment-dots', 'admin_conversations');
         yield MenuItem::section();
         yield MenuItem::linkToUrl('View the site', 'fas fa-arrow-up-right-from-square', '/');
         yield MenuItem::linkToLogout('Log out', 'fas fa-sign-out-alt');

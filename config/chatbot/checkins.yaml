@@ -1,0 +1,113 @@
+# Check-in questions: short multiple-choice cards that pop up in the chat every few days for
+# pet parents whose dog has a profile (from the quiz). Answers are saved to the dog's profile
+# and shown to the coach in its instructions, so its advice keeps up with the dog.
+# They never call the AI: showing and saving a check-in costs no API usage.
+#
+# every_days  At most one check-in this often (days).
+# per_visit   How many questions one check-in asks.
+# Questions are asked in this order of importance. Each one comes back after its repeat_days
+# (counted from the last answer). %dog% = the dog's name.
+# "topic" and the option labels in THIS file are what the coach sees, in English, whatever the
+# pet parent's language. checkins.lt.yaml has the Lithuanian wording for the same ids and values.
+
+every_days: 3
+per_visit: 2
+
+questions:
+  - id: goal
+    repeat_days: 60
+    topic: "Main thing the pet parent wants help with"
+    question: "What would you most like help with for %dog%?"
+    options:
+      - { value: digestion, label: "Better digestion" }
+      - { value: weight, label: "A healthy weight" }
+      - { value: skin, label: "Skin and coat" }
+      - { value: energy, label: "More energy" }
+      - { value: food_switch, label: "Switching food" }
+
+  - id: stools
+    repeat_days: 7
+    topic: "Stools this week"
+    question: "How have %dog%’s stools been this week?"
+    options:
+      - { value: firm, label: "Firm and easy to pick up" }
+      - { value: soft, label: "A bit soft" }
+      - { value: loose, label: "Loose or runny" }
+      - { value: hard, label: "Hard or dry" }
+
+  - id: appetite
+    repeat_days: 14
+    topic: "Appetite lately"
+    question: "How is %dog%’s appetite lately?"
+    options:
+      - { value: eager, label: "Eats everything quickly" }
+      - { value: normal, label: "Normal" }
+      - { value: picky, label: "Picky" }
+      - { value: low, label: "Not eating much" }
+
+  - id: energy
+    repeat_days: 14
+    topic: "Energy this week"
+    question: "How is %dog%’s energy this week?"
+    options:
+      - { value: high, label: "Full of energy" }
+      - { value: normal, label: "Normal" }
+      - { value: lower, label: "Lower than usual" }
+      - { value: very_low, label: "Very low" }
+
+  - id: itching
+    repeat_days: 21
+    topic: "Itching, paw licking or skin problems lately"
+    question: "Any itching, paw licking or skin problems lately?"
+    options:
+      - { value: none, label: "None" }
+      - { value: little, label: "A little" }
+      - { value: lot, label: "Quite a lot" }
+
+  - id: food_change
+    repeat_days: 30
+    topic: "Food changes since the quiz"
+    question: "Have you changed %dog%’s food since the quiz?"
+    options:
+      - { value: "no", label: "No" }
+      - { value: switched, label: "Yes, switched food" }
+      - { value: added, label: "Added toppers or supplements" }
+
+  - id: weight_change
+    repeat_days: 30
+    topic: "Recent weight change"
+    question: "Has %dog%’s weight changed recently?"
+    options:
+      - { value: same, label: "About the same" }
+      - { value: gained, label: "Gained weight" }
+      - { value: lost, label: "Lost weight" }
+      - { value: unsure, label: "Not sure" }
+
+  - id: exercise
+    repeat_days: 60
+    topic: "Exercise on a typical day"
+    question: "How much exercise does %dog% get on a typical day?"
+    options:
+      - { value: under_30, label: "Under 30 minutes" }
+      - { value: "30_60", label: "30–60 minutes" }
+      - { value: 1_2h, label: "1–2 hours" }
+      - { value: over_2h, label: "More than 2 hours" }
+
+  - id: treats
+    repeat_days: 60
+    topic: "Treats and table scraps a day"
+    question: "How many treats or table scraps does %dog% get a day?"
+    options:
+      - { value: none, label: "None" }
+      - { value: few, label: "A few" }
+      - { value: lots, label: "Quite a lot" }
+
+  - id: vet
+    repeat_days: 60
+    topic: "Seeing a vet for anything right now"
+    question: "Is %dog% seeing a vet for anything right now?"
+    options:
+      - { value: "no", label: "No" }
+      - { value: digestion, label: "Yes, for digestion" }
+      - { value: skin, label: "Yes, for skin or allergies" }
+      - { value: other, label: "Yes, something else" }

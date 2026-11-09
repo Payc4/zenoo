@@ -114,6 +114,19 @@ If you update the quiz from the handoff, copy the files over and update the hash
 - The chat coach gets the dog profile in its prompt (`{{dog_profile}}`), and skips the starting
   question cards when it already knows the dog. Dashboard starter questions open `/chat?ask=…`.
 
+## Chat check-ins and coach conversations
+
+- **Check-ins** (`src/Chat/CheckIns.php`, questions in `config/chatbot/checkins.yaml` and
+  `checkins.lt.yaml`): every few days (`every_days`) the chat shows 1–2 multiple-choice cards about
+  the dog to pet parents who have a quiz profile, most important due question first; each question
+  comes back after its `repeat_days`. Answers go to `POST /chat/checkin` and are stored on the
+  `DogProfile` (last 5 per question). They are **not** chat messages and cost **no AI call**: the
+  coach sees them as a few lines in the dog profile part of its instructions. Claude's own question
+  cards take priority over a check-in.
+- **Coach conversations** (`/admin/conversations`, admin only): every chat with the AI coach, with
+  the dog's profile and check-in answers beside it, and "Download as text" for reviewing tester
+  feedback and improving `config/chatbot/system_prompt.md`.
+
 ## Languages (English / Lithuanian)
 
 - `LocaleSubscriber` picks the language: a `?lang=en|lt` link parameter (remembered afterwards),

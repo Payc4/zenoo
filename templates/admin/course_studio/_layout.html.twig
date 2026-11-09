@@ -10,7 +10,7 @@
 </head>
 <body class="cs-page {% block body_class %}{% endblock %}">
   <header class="cs-top">
-    <a class="cs-top__brand" href="{{ path('admin_course_studio') }}">Course studio</a>
+    {% block brand %}<a class="cs-top__brand" href="{{ path('admin_course_studio') }}">Course studio</a>{% endblock %}
     {% block topbar %}{% endblock %}
     <nav class="cs-top__nav">
       <a href="{{ path('app_courses') }}" target="_blank" rel="noopener">View as learner ↗</a>

@@ -6,6 +6,9 @@
  * Question cards: the starting questions (empty chat) and the ones Claude asks with its
  * ask_questions tool are shown one at a time above the message box ("2 of 4", options,
  * "Type your answer…", Skip / Next). All answers go back as one chat message.
+ *
+ * Check-ins (#chat-checkin, every few days): the same cards, but the answers are saved to the
+ * dog's profile (POST /chat/checkin) instead of being sent as a message, so they cost no AI call.
  */
 import './styles/chat.css';
 
@@ -190,9 +193,9 @@ if (app) {
     return '<ol class="chat-asked">' + questions.map((x) => `<li>${escapeHtml(x.question)}</li>`).join('') + '</ol>';
   }
 
-  function openCards(questions, intro) {
-    if (!questions || !questions.length || input.disabled) return;
-    q = { questions, intro, index: 0, answers: questions.map(() => ({ choice: null, text: '', skipped: false })) };
+  function openCards(questions, intro, checkin = false) {
+    if (!questions || !questions.length || (input.disabled && !checkin)) return;
+    q = { questions, intro, checkin, index: 0, answers: questions.map(() => ({ choice: null, text: '', skipped: false })) };
     document.querySelectorAll('[data-reopen]').forEach((b) => { b.hidden = true; });
     form.hidden = true;
     card.hidden = false;
@@ -207,6 +210,7 @@ if (app) {
     card.hidden = true;
     card.innerHTML = '';
     form.hidden = false;
+    resize();
     if (sent) return;
     if (wasIntro) {
       $('chat-suggest')?.removeAttribute('hidden');
@@ -233,7 +237,7 @@ if (app) {
     card.innerHTML = `
       <div class="qcard__head">
         <button type="button" class="qcard__nav" data-q="prev" aria-label="${t('prevQ', 'Previous question')}" ${index === 0 ? 'disabled' : ''}>‹</button>
-        <span class="qcard__count">${t('count', '%n% of %total%', { n: index + 1, total: questions.length })}</span>
+        <span class="qcard__count">${q.checkin ? `<span class="qcard__kind">${t('checkin', 'Quick check-in')}</span> · ` : ''}${t('count', '%n% of %total%', { n: index + 1, total: questions.length })}</span>
         <button type="button" class="qcard__nav" data-q="next-nav" aria-label="${t('nextQ', 'Next question')}" ${last || !answered(a) ? 'disabled' : ''}>›</button>
         <button type="button" class="qcard__close" data-q="close" aria-label="${t('closeQ', 'Close the questions')}">×</button>
       </div>
@@ -248,7 +252,7 @@ if (app) {
              placeholder="${t('typeAnswer', 'Type your answer…')}" value="${escapeHtml(a.text)}">
       <div class="qcard__actions">
         <button type="button" class="btn btn-outline btn-small" data-q="skip">${t('skip', 'Skip')}</button>
-        <button type="button" class="btn btn-small" data-q="next" ${canNext ? '' : 'disabled'}>${last ? t('sendAnswers', 'Send answers') : t('next', 'Next →')}</button>
+        <button type="button" class="btn btn-small" data-q="next" ${canNext ? '' : 'disabled'}>${last ? (q.checkin ? t('saveAnswers', 'Save') : t('sendAnswers', 'Send answers')) : t('next', 'Next →')}</button>
       </div>`;
 
     const text = card.querySelector('#qcard-text');
@@ -277,15 +281,45 @@ if (app) {
   }
 
   function submitCards() {
-    const { questions, answers, intro } = q;
+    const { questions, answers, intro, checkin } = q;
     if (answers.every((a) => a.choice === null && a.text.trim() === '')) {
-      closeCards(false); // everything skipped: nothing to send
+      closeCards(checkin); // everything skipped: nothing to send
+      return;
+    }
+    if (checkin) {
+      saveCheckin(questions.map((x, i) => ({
+        id: x.id,
+        value: answers[i].choice !== null ? x.options[answers[i].choice].value : '',
+        text: answers[i].text.trim(),
+      })));
+      closeCards(true);
       return;
     }
     const lines = questions.map((x, i) => `${x.question} — ${answerText(x, answers[i]) ?? t('skipped', 'skipped')}`);
     const message = (intro ? t('aboutDog', 'A bit about my dog:') + '\n' : '') + lines.join('\n');
     closeCards(true);
     send(message);
+  }
+
+  // Check-in answers go to the dog's profile, not to the chat (no AI call).
+  async function saveCheckin(answers) {
+    const note = document.createElement('p');
+    note.className = 'chat-note';
+    thread.appendChild(note);
+    try {
+      const res = await fetch(app.dataset.checkinUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': app.dataset.csrf },
+        body: JSON.stringify({ answers }),
+      });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || '');
+      if (j.message) note.textContent = '✓ ' + j.message; else note.remove();
+    } catch (e) {
+      note.textContent = e.message || t('error', 'Something went wrong. Please try again.');
+      note.classList.add('is-error');
+    }
+    scrollToBottom(true);
   }
 
   card.addEventListener('click', (e) => {
@@ -314,6 +348,8 @@ if (app) {
   const pending = $('chat-cards') ? JSON.parse($('chat-cards').textContent) : null;
   document.querySelectorAll('[data-reopen]').forEach((b) => b.addEventListener('click', () => pending && openCards(pending.questions, false)));
   if (pending) openCards(pending.questions, pending.intro);
+  const checkinCards = $('chat-checkin') ? JSON.parse($('chat-checkin').textContent) : null;
+  if (!pending && checkinCards) openCards(checkinCards, false, true);
 
   scrollToBottom(true);
   window.addEventListener('load', () => scrollToBottom(true), { once: true });

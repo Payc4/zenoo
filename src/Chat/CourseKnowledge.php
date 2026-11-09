@@ -28,6 +28,7 @@ class CourseKnowledge
         private readonly CourseRepository $courses,
         private readonly LessonProgressRepository $progress,
         private readonly DogProfileRepository $dogs,
+        private readonly CheckIns $checkIns,
     ) {
     }
 
@@ -146,6 +147,10 @@ class CourseKnowledge
             }
         }
         $lines[] = 'This is what they told the quiz; it is not a vet assessment. Their dog may have changed since.';
+        $checkIns = $this->checkIns->forCoach($dog);
+        if ($checkIns !== '') {
+            $lines[] = $checkIns;
+        }
         return implode("\n", $lines);
     }
 

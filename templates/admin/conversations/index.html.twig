@@ -1,0 +1,32 @@
+{% extends 'admin/course_studio/_layout.html.twig' %}
+{% block title %}Coach conversations{% endblock %}
+{% block brand %}<a class="cs-top__brand" href="{{ path('admin_conversations') }}">Coach conversations</a>{% endblock %}
+
+{% block body %}
+<main class="cs-wrap">
+  <h1 class="cs-h1">Coach conversations</h1>
+  <p class="cs-muted">Every pet parent’s chat with the AI coach, newest first. Open one to read it with their dog’s profile and check-in answers, or download it as text to improve the coach’s instructions.</p>
+
+  {% if rows is empty %}
+    <p class="cv-empty">No conversations yet.</p>
+  {% else %}
+  <table class="cv-table">
+    <thead><tr><th>Pet parent</th><th>Dog</th><th>Questions asked</th><th>Last message</th><th>Tokens (in / out)</th><th></th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      {% set c = r.conversation %}
+      {% set dog = dogs[c.user.id] ?? null %}
+      <tr>
+        <td><strong>{{ r.firstName ?: '—' }}</strong><br><span class="cs-muted cs-small">{{ r.email }} · {{ c.user.locale|upper }}</span></td>
+        <td>{{ dog ? dog.name ~ ' (' ~ dog.bowlScore ~ '/100)' : '—' }}</td>
+        <td>{{ r.questions }}</td>
+        <td>{{ c.updatedAt|date('Y-m-d H:i') }}</td>
+        <td class="cs-small">{{ r.inputTokens|number_format(0, '.', ' ') }} / {{ r.outputTokens|number_format(0, '.', ' ') }}</td>
+        <td><a href="{{ path('admin_conversation', {id: c.id}) }}">Read →</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</main>
+{% endblock %}

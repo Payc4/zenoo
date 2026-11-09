@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Chat\ChatAgent;
+use App\Chat\CheckIns;
 use App\Chat\ChatQuota;
 use App\Chat\ClaudeClient;
 use App\Chat\ClaudeException;
@@ -45,7 +46,7 @@ class ChatController extends AbstractController
     }
 
     #[Route('', name: 'app_chat', methods: ['GET'])]
-    public function index(Request $request, ClaudeClient $claude, ChatAgent $agent, DogProfileRepository $dogs): Response
+    public function index(Request $request, ClaudeClient $claude, ChatAgent $agent, DogProfileRepository $dogs, CheckIns $checkIns): Response
     {
         $user = $this->currentUser();
         $conversation = $this->conversations->findForUser($user);
@@ -56,6 +57,17 @@ class ChatController extends AbstractController
         // already told us about the dog), or the ones in Claude's last reply.
         $last = end($messages) ?: null;
         $cards = !$messages ? ($dog ? null : $agent->introQuestions($request->getLocale())) : ($last && !$last->isFromUser() ? $last->getQuestions() : null);
+
+        // Otherwise, every few days: a check-in about the dog (no AI call, see CheckIns).
+        $checkin = null;
+        if ($cards === null && $dog) {
+            $now = new \DateTimeImmutable();
+            $checkin = $checkIns->cardsFor($dog, $request->getLocale(), $now);
+            if ($checkin !== null) {
+                $dog->markCheckinAsked($now);
+                $this->em->flush();
+            }
+        }
 
         return $this->render('chat/index.html.twig', [
             'messages' => $messages,
@@ -68,6 +80,7 @@ class ChatController extends AbstractController
             'resetLabel' => $this->quota->resetLabel(),
             'maxChars' => self::MAX_MESSAGE_CHARS,
             'dog' => $dog,
+            'checkin' => $checkin,
             // Starter question from the dashboard (/chat?ask=…), put in the message box.
             'ask' => mb_substr(trim((string) $request->query->get('ask', '')), 0, 300),
         ]);
@@ -185,6 +198,31 @@ class ChatController extends AbstractController
         $response->headers->set('X-Accel-Buffering', 'no');
 
         return $response;
+    }
+
+    /**
+     * Saves check-in answers to the dog profile. No chat message and no AI call: the answers
+     * reach the coach through the dog profile in its instructions.
+     */
+    #[Route('/checkin', name: 'app_chat_checkin', methods: ['POST'])]
+    public function checkin(Request $request, DogProfileRepository $dogs, CheckIns $checkIns): JsonResponse
+    {
+        $user = $this->currentUser();
+        if (!$this->isCsrfTokenValid('chat', (string) $request->headers->get('X-CSRF-Token'))) {
+            return new JsonResponse(['error' => $this->translator->trans('Your session expired. Please reload the page.')], 403);
+        }
+        $dog = $dogs->findForUser($user);
+        if (!$dog) {
+            return new JsonResponse(['error' => $this->translator->trans('Take the quiz first, so we know your dog.')], 400);
+        }
+        $data = json_decode($request->getContent(), true) ?: [];
+        $saved = $checkIns->save($dog, $data['answers'] ?? null, new \DateTimeImmutable());
+        $this->em->flush();
+
+        return new JsonResponse([
+            'saved' => $saved,
+            'message' => $saved ? $this->translator->trans('Thanks! Saved to %dog%’s profile, so the coach knows.', ['%dog%' => $dog->getName()]) : null,
+        ]);
     }
 
     /** Empties the chat. The day's message count stays as it is. */
