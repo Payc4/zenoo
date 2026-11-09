@@ -28,6 +28,24 @@ final class LanguageTest extends AppTestCase
         $this->assertSelectorTextContains('.nav', 'Parduotuvė');
     }
 
+    public function testLangLinkOpensThePageInThatLanguageAndIsRemembered(): void
+    {
+        $this->client->followRedirects();
+        $this->client->request('GET', '/quiz?lang=lt', [], [], ['HTTP_ACCEPT_LANGUAGE' => 'en']);
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorExists('html[lang=lt]');
+        $this->assertStringContainsString('content.lt.js', $this->client->getResponse()->getContent());
+        $this->assertSame('lt', $this->client->getCookieJar()->get('zenoo_lang')?->getValue());
+
+        // Later visits without the parameter stay Lithuanian; ?lang=en switches back.
+        $this->client->request('GET', '/');
+        $this->assertSelectorExists('html[lang=lt]');
+        $this->client->request('GET', '/?lang=en');
+        $this->assertSelectorExists('html[lang=en]');
+        $this->client->request('GET', '/?lang=xx');
+        $this->assertSelectorExists('html[lang=en]');
+    }
+
     public function testSelectorRemembersTheChoiceAndGoesBack(): void
     {
         $this->client->request('GET', '/language/lt', [], [], ['HTTP_REFERER' => 'http://localhost/shop?x=1']);

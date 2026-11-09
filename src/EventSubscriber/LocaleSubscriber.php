@@ -4,6 +4,7 @@ namespace App\EventSubscriber;
 
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,8 +16,9 @@ use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 /**
  * Site language (English or Lithuanian), without language prefixes in the URLs.
  *
- * The language comes from, in order: the "zenoo_lang" cookie (set by the EN/LT selector,
- * LanguageController), then the browser's preferred language, then English.
+ * The language comes from, in order: a "?lang=lt" / "?lang=en" link parameter (so a shared link
+ * opens in that language; it is then remembered like a selector click), the "zenoo_lang" cookie
+ * (set by the EN/LT selector, LanguageController), then the browser's preferred language, then English.
  * On login: if this browser has a language cookie, that latest choice is saved to the account;
  * otherwise (a new browser) the account's language is used and written to the cookie.
  */
@@ -26,8 +28,9 @@ final class LocaleSubscriber implements EventSubscriberInterface
     public const LOCALES = ['en', 'lt'];
 
     private ?string $loginLocale = null;
+    private ?string $linkLocale = null;
 
-    public function __construct(private readonly EntityManagerInterface $em)
+    public function __construct(private readonly EntityManagerInterface $em, private readonly Security $security)
     {
     }
 
@@ -57,7 +60,16 @@ final class LocaleSubscriber implements EventSubscriberInterface
 
     public function onRequest(RequestEvent $event): void
     {
-        $event->getRequest()->setLocale(self::fromRequest($event->getRequest()));
+        $request = $event->getRequest();
+        $link = $request->query->get('lang');
+        if ($event->isMainRequest() && \in_array($link, self::LOCALES, true)) {
+            // Remembered from now on, exactly as if the visitor had clicked the flag.
+            $this->linkLocale = $link;
+            $request->cookies->set(self::COOKIE, $link);
+            $request->setLocale($link);
+            return;
+        }
+        $request->setLocale(self::fromRequest($request));
     }
 
     public function onLogin(LoginSuccessEvent $event): void
@@ -80,6 +92,15 @@ final class LocaleSubscriber implements EventSubscriberInterface
 
     public function onResponse(ResponseEvent $event): void
     {
+        if ($this->linkLocale !== null && $event->isMainRequest()) {
+            $event->getResponse()->headers->setCookie(self::cookie($this->linkLocale));
+            $user = $this->security->getUser();
+            if ($user instanceof User && $user->getLocale() !== $this->linkLocale) {
+                $user->setLocale($this->linkLocale);
+                $this->em->flush();
+            }
+            $this->linkLocale = null;
+        }
         if ($this->loginLocale !== null && $event->isMainRequest()) {
             $event->getResponse()->headers->setCookie(self::cookie($this->loginLocale));
             $this->loginLocale = null;
