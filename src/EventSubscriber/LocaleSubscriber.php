@@ -18,7 +18,8 @@ use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
  *
  * The language comes from, in order: a "?lang=lt" / "?lang=en" link parameter (so a shared link
  * opens in that language; it is then remembered like a selector click), the "zenoo_lang" cookie
- * (set by the EN/LT selector, LanguageController), then the browser's preferred language, then English.
+ * (set by the EN/LT selector, LanguageController), then the address (a .lt host such as app.zenoo.lt
+ * means Lithuanian), then the browser's preferred language, then English.
  * On login: if this browser has a language cookie, that latest choice is saved to the account;
  * otherwise (a new browser) the account's language is used and written to the cookie.
  */
@@ -49,6 +50,10 @@ final class LocaleSubscriber implements EventSubscriberInterface
         $cookie = $request->cookies->get(self::COOKIE);
         if (\in_array($cookie, self::LOCALES, true)) {
             return $cookie;
+        }
+        // A Lithuanian address (app.zenoo.lt) opens in Lithuanian; the UK flag still switches.
+        if (str_ends_with(strtolower($request->getHost()), '.lt')) {
+            return 'lt';
         }
         return $request->getPreferredLanguage(self::LOCALES) ?? 'en';
     }

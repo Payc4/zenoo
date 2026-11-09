@@ -46,6 +46,17 @@ final class LanguageTest extends AppTestCase
         $this->assertSelectorExists('html[lang=en]');
     }
 
+    public function testLithuanianAddressDefaultsToLithuanian(): void
+    {
+        $this->client->request('GET', '/', [], [], ['HTTP_HOST' => 'app.zenoo.lt', 'HTTP_ACCEPT_LANGUAGE' => 'en-GB,en']);
+        $this->assertSelectorExists('html[lang=lt]');
+
+        $this->client->request('GET', '/?lang=en', [], [], ['HTTP_HOST' => 'app.zenoo.lt']);
+        $this->assertSelectorExists('html[lang=en]');
+        $this->client->request('GET', '/', [], [], ['HTTP_HOST' => 'app.zenoo.lt']);
+        $this->assertSelectorExists('html[lang=en]');
+    }
+
     public function testSelectorRemembersTheChoiceAndGoesBack(): void
     {
         $this->client->request('GET', '/language/lt', [], [], ['HTTP_REFERER' => 'http://localhost/shop?x=1']);
