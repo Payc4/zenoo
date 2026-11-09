@@ -33,6 +33,7 @@ needs no manual steps.
 | `KLAVIYO_LT_COMPANY_ID`, `KLAVIYO_LT_LIST_ID` | Optional: the zenoo.lt Klaviyo account and list for the Lithuanian quiz. Empty means Lithuanian quiz results aren't sent to Klaviyo. |
 | `KLAVIYO_PRIVATE_KEY` | Optional, secret (untick Buildtime). A Klaviyo private key with only "Profiles: Full access". When set, each quiz-taker's personal dashboard link is written to their Klaviyo profile as `dashboard_link`, for a button in the quiz flow's email: `{{ person\|lookup:'dashboard_link' }}`. `KLAVIYO_LT_PRIVATE_KEY` is the same for a separate Lithuanian account. |
 | `QUIZ_SITE_CONFIRM_EMAIL` | Default `true`: the site also sends its own confirmation email. Set `false` once the Klaviyo email has the button, so people get one email instead of two (the site email is then only sent if Klaviyo can't be reached). |
+| `EMAIL_DELIVERY` | `auto` (default): site emails go through Klaviyo flows when `MAILER_DSN` isn't set and `KLAVIYO_PRIVATE_KEY` is (the key then also needs **Events: Full access**), otherwise through `MAILER_DSN`. Force with `smtp` or `klaviyo`. See "Site emails through Klaviyo" below. |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First deploy only: creates the admin account. Remove them afterwards. |
 | `SESSION_DSN` | Optional, e.g. `redis://...`. The default keeps sessions in files inside the container, so a redeploy logs everyone out. |
 
@@ -70,3 +71,26 @@ production access before real pet parents sign up.
 - **Emails don't arrive:** check `MAILER_DSN`, then the worker (`supervisorctl status messenger-consume`)
   and failed messages (`php bin/console messenger:failed:show`).
 - **Buy now says payments are switched off:** one of the two Stripe variables is empty.
+
+
+## Site emails through Klaviyo
+
+With `EMAIL_DELIVERY=klaviyo` (or `auto` and no `MAILER_DSN`), the site sends no email itself. Each
+email becomes a Klaviyo event on the person's profile, and one Klaviyo flow per event sends it.
+Build each flow as: trigger = the metric below, **mark it Transactional** (and get it approved, so
+it reaches people who aren't subscribed to marketing), **Smart Sending off**, no delay. Every event
+also has `subject` (already translated), `first_name`, `locale` (`en` / `lt`, use a conditional
+split for two languages) and `site_url`.
+
+| Metric (flow trigger) | When | Properties for the email (`{{ event.name }}`) |
+|---|---|---|
+| ZENOO Welcome | Account created on the site | `dashboard_url`, `quiz_url`, `courses_url` |
+| ZENOO Password Reset | "Forgot password" | `reset_link` (button; valid 1 hour) |
+| ZENOO Login Link | "Email me a login link" | `login_link` (button), `expires_in_minutes` |
+| ZENOO Password Changed | Password changed | `account_url`, `forgot_password_url` |
+| ZENOO Order Confirmation | Payment received | `order_id`, `product_name`, `amount`, `discount`, `currency`, `order_date`, `order_url`, `test_order` |
+| ZENOO Quiz Confirmation | Quiz finished, when the link isn't already in the quiz flow (Lithuanian quiz, or `QUIZ_SITE_CONFIRM_EMAIL=true`) | `confirm_link` (button), `dog_name`, `bowl_score` |
+
+The English quiz's link is on the profile instead (`{{ person|lookup:'dashboard_link' }}` in the
+"Dog Quiz Flow", after a 5-minute delay). Set `QUIZ_SITE_CONFIRM_EMAIL=false` once that button is
+in, so English quiz-takers don't also get "ZENOO Quiz Confirmation".

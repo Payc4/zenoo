@@ -4,6 +4,8 @@ parameters:
     app.turnstile.secret_key: '%env(default::TURNSTILE_SECRET_KEY)%'
     app.mail.from_email: '%env(MAIL_FROM_EMAIL)%'
     app.mail.from_name: 'ZENOO'
+    # EMAIL_DELIVERY: auto (Klaviyo flows when MAILER_DSN isn't set and KLAVIYO_PRIVATE_KEY is), smtp or klaviyo.
+    app.mail.delivery_default: 'auto'
     # Bowl Score quiz → Klaviyo. QUIZ_SEND_TO_KLAVIYO is true in .env, so finished quizzes go to the
     # LIVE "Dog Quiz – EN" flow and email a real address. The fallback below only applies if the
     # variable is missing entirely.
@@ -40,6 +42,8 @@ services:
         arguments:
             $fromEmail: '%app.mail.from_email%'
             $fromName: '%app.mail.from_name%'
+            $mailerDsn: '%env(default::MAILER_DSN)%'
+            $delivery: '%env(default:app.mail.delivery_default:EMAIL_DELIVERY)%'
 
     App\Form\Extension\TurnstileExtension:
         arguments:

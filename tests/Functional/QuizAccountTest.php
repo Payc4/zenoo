@@ -111,6 +111,7 @@ final class QuizAccountTest extends AppTestCase
 
     public function testKlaviyoOnlyModeSkipsTheSiteEmailUnlessKlaviyoFails(): void
     {
+        $saved = [$_SERVER['QUIZ_SITE_CONFIRM_EMAIL'] ?? null, $_ENV['QUIZ_SITE_CONFIRM_EMAIL'] ?? null];
         $_SERVER['QUIZ_SITE_CONFIRM_EMAIL'] = $_ENV['QUIZ_SITE_CONFIRM_EMAIL'] = 'false';
         try {
             $this->assertSame(['status' => 'sent'], $this->submit(['email' => 'a@example.com', 'locale' => 'en', 'properties' => self::result()]));
@@ -121,7 +122,7 @@ final class QuizAccountTest extends AppTestCase
             $this->assertSame(['status' => 'sent'], $this->submit(['email' => 'b@example.com', 'locale' => 'en', 'properties' => self::result()]));
             $this->assertEmailCount(1);
         } finally {
-            unset($_SERVER['QUIZ_SITE_CONFIRM_EMAIL'], $_ENV['QUIZ_SITE_CONFIRM_EMAIL']);
+            [$_SERVER['QUIZ_SITE_CONFIRM_EMAIL'], $_ENV['QUIZ_SITE_CONFIRM_EMAIL']] = $saved;
         }
     }
 
