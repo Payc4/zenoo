@@ -131,4 +131,15 @@ final class KlaviyoEmailTest extends AppTestCase
         $this->assertSame('smtp', $make('smtp://u:p@smtp.gmail.com:587', 'pk_x')->deliveryFor('en'));
         $this->assertSame('smtp', $make('null://null', null)->deliveryFor('en'));
     }
+
+    public function testSampleEventsCommandSendsOneOfEach(): void
+    {
+        $tester = new \Symfony\Component\Console\Tester\CommandTester((new \Symfony\Bundle\FrameworkBundle\Console\Application(static::$kernel))->find('app:klaviyo:sample-events'));
+        $this->assertSame(0, $tester->execute(['email' => 'owner@example.com', '--lang' => 'lt']));
+        $metrics = array_map(fn ($c) => json_decode($c['body'], true)['data']['attributes']['metric']['data']['attributes']['name'], FakeStripe::$klaviyo);
+        $this->assertSame(array_values(EmailService::EVENTS), $metrics);
+        $order = json_decode(FakeStripe::$klaviyo[1]['body'], true)['data']['attributes']['properties'];
+        $this->assertSame(1000, $order['order_id']);
+        $this->assertSame('lt', $order['locale']);
+    }
 }

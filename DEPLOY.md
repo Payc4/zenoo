@@ -91,6 +91,10 @@ split for two languages) and `site_url`.
 | ZENOO Order Confirmation | Payment received | `order_id`, `product_name`, `amount`, `discount`, `currency`, `order_date`, `order_url`, `test_order` |
 | ZENOO Quiz Confirmation | Quiz finished, when the link isn't already in the quiz flow (Lithuanian quiz, or `QUIZ_SITE_CONFIRM_EMAIL=true`) | `confirm_link` (button), `dog_name`, `bowl_score` |
 
+To make every metric appear in Klaviyo before building its flow (a metric only exists after its
+first event), run in Coolify's terminal: `php bin/console app:klaviyo:sample-events you@example.com`
+(add `--lang=lt` for Lithuanian samples). The links in sample events only open the site.
+
 The English quiz's link is on the profile instead (`{{ person|lookup:'dashboard_link' }}` in the
 "Dog Quiz Flow", after a 5-minute delay). Set `QUIZ_SITE_CONFIRM_EMAIL=false` once that button is
 in, so English quiz-takers don't also get "ZENOO Quiz Confirmation".
