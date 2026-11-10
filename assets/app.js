@@ -14,6 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Language menu: close it on a click elsewhere or Escape.
+  const langMenu = document.querySelector('.lang-switch');
+  if (langMenu) {
+    document.addEventListener('click', (e) => { if (langMenu.open && !langMenu.contains(e.target)) langMenu.open = false; });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && langMenu.open) { langMenu.open = false; langMenu.querySelector('summary').focus(); }
+    });
+  }
+
   // Show / hide password
   document.querySelectorAll('input[type=password]').forEach((input) => {
     const wrap = document.createElement('div');

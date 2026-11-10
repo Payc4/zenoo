@@ -20,24 +20,20 @@
         <div class="wrap">
             <a class="brand" href="{{ path('app_homepage') }}"><img src="/images/logo-white.png" alt="{{ 'ZENOO home'|trans }}" width="94" height="26"></a>
             {% set lang = app.locale %}
-            <div class="lang-switch" role="group" aria-label="{{ 'Language'|trans }}">
-                <a href="{{ path('app_language', {locale: 'en'}) }}" lang="en" hreflang="en" title="English" {{ lang == 'en' ? 'aria-current="true"' }}>
-                    <svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><clipPath id="flag-uk-t"><path d="M30,15h30v15zv15h-30zh-30v-15zv-15h30z"/></clipPath><path d="M0,0v30h60v-30z" fill="#012169"/><path d="M0,0 60,30M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30M60,0 0,30" clip-path="url(#flag-uk-t)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></svg>
-                    <span class="visually-hidden">English</span>
-                </a>
-                <a href="{{ path('app_language', {locale: 'lt'}) }}" lang="lt" hreflang="lt" title="Lietuvių" {{ lang == 'lt' ? 'aria-current="true"' }}>
-                    <svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M0,0h60v10H0z" fill="#FDB913"/><path d="M0,10h60v10H0z" fill="#006A44"/><path d="M0,20h60v10H0z" fill="#C1272D"/></svg>
-                    <span class="visually-hidden">Lietuvių</span>
-                </a>
-                <a href="{{ path('app_language', {locale: 'uk'}) }}" lang="uk" hreflang="uk" title="Українська" {{ lang == 'uk' ? 'aria-current="true"' }}>
-                    <svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M0,0h60v15H0z" fill="#0057B7"/><path d="M0,15h60v15H0z" fill="#FFD700"/></svg>
-                    <span class="visually-hidden">Українська</span>
-                </a>
-                <a href="{{ path('app_language', {locale: 'pl'}) }}" lang="pl" hreflang="pl" title="Polski" {{ lang == 'pl' ? 'aria-current="true"' }}>
-                    <svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M0,0h60v15H0z" fill="#fff"/><path d="M0,15h60v15H0z" fill="#DC143C"/></svg>
-                    <span class="visually-hidden">Polski</span>
-                </a>
-            </div>
+            {# Language menu: the current flag opens a list of the four languages (works without JavaScript). #}
+            <details class="lang-switch">
+                <summary aria-label="{{ 'Language'|trans }}: {{ locale_name(lang) }}" title="{{ locale_name(lang) }}">
+                    {{ include('_flag.html.twig', {code: lang, id: 'cur'}) }}
+                    <svg class="lang-switch__chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </summary>
+                <ul class="lang-switch__menu" aria-label="{{ 'Language'|trans }}">
+                    {% for code, name in site_locales() %}
+                        <li><a href="{{ path('app_language', {locale: code}) }}" lang="{{ code }}" hreflang="{{ code }}" {{ lang == code ? 'aria-current="true"' }}>
+                            {{ include('_flag.html.twig', {code: code, id: 'menu'}) }}<span>{{ name }}</span>
+                        </a></li>
+                    {% endfor %}
+                </ul>
+            </details>
             <button class="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false">
                 <span class="visually-hidden">{{ 'Menu'|trans }}</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>

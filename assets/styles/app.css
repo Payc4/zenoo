@@ -76,11 +76,18 @@ h3 { font-size: 20px; line-height: 1.2; }
 }
 /* EN / LT selector, top right (before the menu button on phones) */
 .nav { order: 1; }
-.lang-switch { order: 2; flex: none; display: inline-flex; gap: 2px; margin-left: 12px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.12); }
-.lang-switch a { display: inline-flex; align-items: center; justify-content: center; padding: 5px 7px; border-radius: 999px; opacity: .55; transition: opacity .15s, background .15s; }
-.lang-switch a:hover, .lang-switch a:focus-visible { opacity: 1; }
-.lang-switch a[aria-current] { background: var(--white); opacity: 1; }
-.lang-switch .flag { display: block; width: 24px; height: 16px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+.lang-switch { order: 2; flex: none; position: relative; margin-left: 12px; }
+.lang-switch summary { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px 7px 9px; border-radius: 999px; background: rgba(255,255,255,.12); color: var(--white); cursor: pointer; list-style: none; transition: background .15s; }
+.lang-switch summary::-webkit-details-marker { display: none; }
+.lang-switch summary:hover, .lang-switch summary:focus-visible, .lang-switch[open] summary { background: rgba(255,255,255,.22); }
+.lang-switch__chevron { width: 12px; height: 12px; transition: transform .15s; }
+.lang-switch[open] .lang-switch__chevron { transform: rotate(180deg); }
+.lang-switch .flag { display: block; width: 24px; height: 16px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.15); flex: none; }
+.lang-switch__menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; min-width: 190px; margin: 0; padding: 6px; list-style: none; background: var(--white); border-radius: 16px; box-shadow: 0 12px 32px rgba(0,0,0,.18); }
+.lang-switch__menu a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: var(--forest); text-decoration: none; font-weight: 600; font-size: 15px; }
+.lang-switch__menu a:hover, .lang-switch__menu a:focus-visible { background: var(--cream); }
+.lang-switch__menu a[aria-current] { background: var(--cream); font-weight: 800; }
+.lang-switch__menu a[aria-current]::after { content: "✓"; margin-left: auto; color: var(--sun); }
 .nav-toggle { order: 3; display: none; margin-left: auto; background: none; border: 0; color: var(--white); padding: 8px; cursor: pointer; }
 .nav-toggle svg { width: 28px; height: 28px; }
 /* Four languages make the menu longer (Ukrainian and Lithuanian words are long): tighten it a little
@@ -92,7 +99,6 @@ html[lang=lt] .nav a, html[lang=uk] .nav a { font-size: 14px; padding: 8px 9px; 
   .site-header .wrap { gap: 14px; }
   .nav { gap: 2px; }
   .nav a { font-size: 14px; padding: 8px 9px; }
-  .lang-switch { margin-left: 4px; }
 }
 @media (max-width: 1100px) {
   .nav-toggle { display: block; margin-left: 4px; }
@@ -101,12 +107,6 @@ html[lang=lt] .nav a, html[lang=uk] .nav a { font-size: 14px; padding: 8px 9px; 
   .nav.open { display: flex; }
   .nav a { padding: 12px 14px; }
   .nav .btn { margin: 8px 0 0; text-align: center; }
-}
-@media (max-width: 400px) {
-  /* Four flags next to the logo and the menu button on a small phone. */
-  .lang-switch { gap: 0; margin-left: 8px; }
-  .lang-switch a { padding: 4px; }
-  .lang-switch .flag { width: 21px; height: 14px; }
 }
 
 /* ---------- Buttons ---------- */

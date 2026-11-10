@@ -51,8 +51,8 @@ final class UkrainianPolishTest extends AppTestCase
         $this->client->request('GET', '/', [], [], ['HTTP_ACCEPT_LANGUAGE' => 'uk-UA,uk;q=0.9,en;q=0.5']);
         $this->assertSelectorExists('html[lang=uk]');
         $this->assertSelectorTextContains('.nav', $this->t('Shop', 'uk'));
-        $this->assertSelectorExists('.lang-switch a[aria-current][lang=uk]');
-        $this->assertCount(4, $this->client->getCrawler()->filter('.lang-switch a'));
+        $this->assertSelectorExists('.lang-switch__menu a[aria-current][lang=uk]');
+        $this->assertCount(4, $this->client->getCrawler()->filter('.lang-switch__menu a'));
 
         $this->client->request('GET', '/', [], [], ['HTTP_ACCEPT_LANGUAGE' => 'pl-PL,pl;q=0.9']);
         $this->assertSelectorExists('html[lang=pl]');

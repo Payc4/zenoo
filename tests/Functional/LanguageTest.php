@@ -21,7 +21,7 @@ final class LanguageTest extends AppTestCase
         $this->client->request('GET', '/');
         $this->assertSelectorExists('html[lang=en]');
         $this->assertSelectorTextContains('.nav', 'Shop');
-        $this->assertSelectorExists('.lang-switch a[aria-current][lang=en]');
+        $this->assertSelectorExists('.lang-switch__menu a[aria-current][lang=en]');
 
         $this->client->request('GET', '/', [], [], ['HTTP_ACCEPT_LANGUAGE' => 'lt-LT,lt;q=0.9,en;q=0.5']);
         $this->assertSelectorExists('html[lang=lt]');
@@ -65,6 +65,8 @@ final class LanguageTest extends AppTestCase
         $this->client->followRedirect();
         $this->assertSelectorExists('html[lang=lt]');
 
+        $this->client->request('GET', '/language/pl', [], [], ['HTTP_REFERER' => 'http://localhost/quiz/?lang=uk&x=1']);
+        $this->assertResponseRedirects('/quiz/?x=1', null, 'a ?lang= on the previous page is dropped');
         $this->client->request('GET', '/language/en', [], [], ['HTTP_REFERER' => 'https://evil.example/phish']);
         $this->assertResponseRedirects('/', null, 'only back to this site');
         $this->client->request('GET', '/language/de');

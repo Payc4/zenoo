@@ -1,0 +1,6 @@
+{# A flag for a site language: include('_flag.html.twig', {code: 'lt', id: 'menu'}). id keeps the UK flag's clip path unique when it appears twice. #}
+{% if code == 'en' %}<svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><clipPath id="flag-uk-{{ id }}"><path d="M30,15h30v15zv15h-30zh-30v-15zv-15h30z"/></clipPath><path d="M0,0v30h60v-30z" fill="#012169"/><path d="M0,0 60,30M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30M60,0 0,30" clip-path="url(#flag-uk-{{ id }})" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></svg>
+{%- elseif code == 'lt' %}<svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M0,0h60v10H0z" fill="#FDB913"/><path d="M0,10h60v10H0z" fill="#006A44"/><path d="M0,20h60v10H0z" fill="#C1272D"/></svg>
+{%- elseif code == 'uk' %}<svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M0,0h60v15H0z" fill="#0057B7"/><path d="M0,15h60v15H0z" fill="#FFD700"/></svg>
+{%- elseif code == 'pl' %}<svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M0,0h60v15H0z" fill="#fff"/><path d="M0,15h60v15H0z" fill="#DC143C"/></svg>
+{%- endif %}

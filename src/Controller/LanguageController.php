@@ -32,7 +32,10 @@ final class LanguageController extends AbstractController
             $path = (string) parse_url($back, PHP_URL_PATH);
             $query = parse_url($back, PHP_URL_QUERY);
             if (str_starts_with($path, '/') && !str_starts_with($path, '//') && !str_starts_with($path, '/language/')) {
-                $target = $path . ($query ? '?' . $query : '');
+                // Drop a ?lang= from the page we came from, or it would switch straight back.
+                parse_str((string) $query, $params);
+                unset($params['lang']);
+                $target = $path . ($params ? '?' . http_build_query($params) : '');
             }
         }
 
