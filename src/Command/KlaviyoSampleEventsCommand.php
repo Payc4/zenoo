@@ -38,7 +38,7 @@ final class KlaviyoSampleEventsCommand extends Command
     {
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'Where the sample events go (a Klaviyo profile)')
-            ->addOption('lang', null, InputOption::VALUE_REQUIRED, 'en or lt', 'en')
+            ->addOption('lang', null, InputOption::VALUE_REQUIRED, 'en, lt, uk or pl', 'en')
             ->addOption('only', null, InputOption::VALUE_REQUIRED, 'Comma-separated: welcome,order,reset,login,changed,quiz');
     }
 
@@ -46,7 +46,7 @@ final class KlaviyoSampleEventsCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $email = (string) $input->getArgument('email');
-        $locale = $input->getOption('lang') === 'lt' ? 'lt' : 'en';
+        $locale = \App\Locale::normalize($input->getOption('lang'));
         if ($this->emails->deliveryFor($locale) !== 'klaviyo') {
             $io->error('Site emails go out by SMTP here, not Klaviyo (EMAIL_DELIVERY / MAILER_DSN / KLAVIYO_PRIVATE_KEY).');
             return Command::FAILURE;

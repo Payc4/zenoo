@@ -29,6 +29,14 @@
                     <svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M0,0h60v10H0z" fill="#FDB913"/><path d="M0,10h60v10H0z" fill="#006A44"/><path d="M0,20h60v10H0z" fill="#C1272D"/></svg>
                     <span class="visually-hidden">Lietuvių</span>
                 </a>
+                <a href="{{ path('app_language', {locale: 'uk'}) }}" lang="uk" hreflang="uk" title="Українська" {{ lang == 'uk' ? 'aria-current="true"' }}>
+                    <svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M0,0h60v15H0z" fill="#0057B7"/><path d="M0,15h60v15H0z" fill="#FFD700"/></svg>
+                    <span class="visually-hidden">Українська</span>
+                </a>
+                <a href="{{ path('app_language', {locale: 'pl'}) }}" lang="pl" hreflang="pl" title="Polski" {{ lang == 'pl' ? 'aria-current="true"' }}>
+                    <svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M0,0h60v15H0z" fill="#fff"/><path d="M0,15h60v15H0z" fill="#DC143C"/></svg>
+                    <span class="visually-hidden">Polski</span>
+                </a>
             </div>
             <button class="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false">
                 <span class="visually-hidden">{{ 'Menu'|trans }}</span>
@@ -42,8 +50,8 @@
                 {% if app.user %}
                     <a href="{{ path('app_dashboard') }}" {{ route == 'app_dashboard' ? 'aria-current="page"' }}>{{ 'My dog'|trans }}</a>
                     {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin') }}">{{ 'Admin'|trans }}</a>{% endif %}
-                    <a class="nav-avatar" href="{{ path('app_account') }}" {{ route starts with 'app_account' ? 'aria-current="page"' }}>
-                        {{ include('account/_avatar.html.twig', {user: app.user, size: 'sm'}) }} {{ 'My account'|trans }}
+                    <a class="nav-avatar" href="{{ path('app_account') }}" title="{{ 'My account'|trans }}" {{ route starts with 'app_account' ? 'aria-current="page"' }}>
+                        {{ include('account/_avatar.html.twig', {user: app.user, size: 'sm'}) }} <span class="nav-avatar__label">{{ 'My account'|trans }}</span>
                     </a>
                     <a href="{{ path('app_logout') }}">{{ 'Log out'|trans }}</a>
                 {% else %}

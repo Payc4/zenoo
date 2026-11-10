@@ -31,7 +31,7 @@ final class CourseTest extends AppTestCase
         $this->em->flush();
     }
 
-    public function testImportCreatesBothLanguagesAsDraftsAndNeverOverwritesByDefault(): void
+    public function testImportCreatesEveryLanguageAsDraftsAndNeverOverwritesByDefault(): void
     {
         $out = $this->import()->getDisplay();
         $this->assertStringContainsString('30 lessons created', $out);
@@ -45,6 +45,19 @@ final class CourseTest extends AppTestCase
         $this->assertCount(30, $en->getLessons());
         $this->assertSame('The Poop Review', $en->getLessons()->first()->getTitle());
         $this->assertSame('Išmatų apžvalga', $lt->getLessons()->first()->getTitle());
+        $uk = $this->course('kurs-zdorovia-sobak');
+        $pl = $this->course('kurs-zdrowia-psa');
+        $this->assertSame(['uk', 'pl'], [$uk->getLocale(), $pl->getLocale()]);
+        $this->assertCount(30, $uk->getLessons());
+        $this->assertCount(30, $pl->getLessons());
+        $this->assertFalse($uk->isPublished());
+        // Same nine screens as the English lesson, with their own ids.
+        $enSlides = $en->getLessons()->first()->getSlides();
+        $ukSlides = $uk->getLessons()->first()->getSlides();
+        $this->assertSame(array_column($enSlides, 'layout'), array_column($ukSlides, 'layout'));
+        $this->assertEmpty(array_intersect(array_column($enSlides, 'id'), array_column($ukSlides, 'id')));
+        $this->assertMatchesRegularExpression('/\p{Cyrillic}/u', $uk->getLessons()->first()->getTitle());
+        $this->assertNotSame('The Poop Review', $pl->getLessons()->first()->getTitle());
 
         // A studio edit survives a plain re-run; --force restores the document text.
         $first = $en->getLessons()->first()->setTitle('Edited in the studio');
@@ -52,6 +65,14 @@ final class CourseTest extends AppTestCase
         $this->assertStringContainsString('30 left as they were', $this->import()->getDisplay());
         $this->assertSame('Edited in the studio', $this->em->find(Lesson::class, $first->getId())->getTitle());
         $this->assertStringContainsString('Courses already exist', $this->import(['--if-empty' => true])->getDisplay());
+        $this->assertStringContainsString('nothing imported', $this->import(['--missing' => true])->getDisplay());
+        // --missing (what each deploy runs) adds only a language that has no course yet.
+        $this->em->clear();
+        $this->em->remove($this->course('kurs-zdrowia-psa'));
+        $this->em->flush();
+        $out = $this->import(['--missing' => true])->getDisplay();
+        $this->assertStringContainsString('Kurs zdrowia psa ZENOO: 30 lessons created', $out);
+        $this->assertStringNotContainsString('ZENOO Dog Wellness Course:', $out);
         $this->import(['--force' => true, '--publish' => true]);
         $this->assertSame('The Poop Review', $this->em->find(Lesson::class, $first->getId())->getTitle());
         $this->assertTrue($this->course()->isPublished());
@@ -189,7 +210,7 @@ final class CourseTest extends AppTestCase
         $this->loginViaForm('admin@example.com', 'Password123');
         $crawler = $this->client->request('GET', '/admin/course-studio');
         $this->assertResponseIsSuccessful();
-        $this->assertSame(60, $crawler->filter('.cs-lesson-link')->count());
+        $this->assertSame(120, $crawler->filter('.cs-lesson-link')->count(), '30 lessons in each of the four languages');
 
         $crawler = $this->client->request('GET', '/admin/course-studio/lesson/' . $lesson->getId());
         $this->assertResponseIsSuccessful();

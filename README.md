@@ -21,8 +21,8 @@ in capitals, Inter body copy, 24px corners and no shadows.
 | **Bowl Score quiz** | The quiz from the ZENOO handoff at `/quiz/`. Answers are sent to Klaviyo (`QUIZ_SEND_TO_KLAVIYO=true`, see below). |
 | **Quiz → account** | At the end of the Bowl Score quiz the result is posted to the site, which emails a “confirm your email” link. Clicking it creates the account (no password yet) or finds the existing one, saves the dog profile and opens the dashboard. Logged-in pet parents get the profile saved straight away. See below. |
 | **My dog** (`/dashboard`) | The dog profile from the quiz: Bowl Score with the 7-part breakdown, the first tips, the daily plan, 3 lessons picked for the dog, course progress and the AI coach with starter questions. It's where pet parents land after logging in. |
-| **EN / LT** | Language selector top right. The whole site, emails, quiz, course and chat coach work in English and Lithuanian. See below. |
-| **Courses** (`/courses`) | The ZENOO Dog Wellness Course: 30 lessons in English and 30 in Lithuanian, 9 screens each, played one screen at a time. Logged-in pet parents only. Progress, quiz answers and written answers are saved; finished lessons and a day streak show on the course list. See below. |
+| **Flags** | Language selector top right: English, Lithuanian, Ukrainian, Polish. The whole site, emails, quiz, course and chat coach work in all four. See below. |
+| **Courses** (`/courses`) | The ZENOO Dog Wellness Course: 30 lessons in each of the four languages, 9 screens each, played one screen at a time. Logged-in pet parents only. Progress, quiz answers and written answers are saved; finished lessons and a day streak show on the course list. See below. |
 | **Course studio** (`/admin/course-studio`) | Admins edit courses and lessons screen by screen with a live phone preview, publish them, and upload Agota's audio. |
 | **Chat** (`/chat`) | A Claude-powered chatbot in its own tab. Logged-in pet parents only, **one chat per person**, **60 messages per day** (admins unlimited). Replies stream in as they're written, the chat is saved, and "Clear chat" empties it. See below. |
 | **Admin** (`/admin`) | Overview, products, purchases (read-only) and pet parents (create, edit, set passwords, grant Admin). |
@@ -116,8 +116,8 @@ If you update the quiz from the handoff, copy the files over and update the hash
 
 ## Chat check-ins and coach conversations
 
-- **Check-ins** (`src/Chat/CheckIns.php`, questions in `config/chatbot/checkins.yaml` and
-  `checkins.lt.yaml`): every few days (`every_days`) the chat shows 1–2 multiple-choice cards about
+- **Check-ins** (`src/Chat/CheckIns.php`, questions in `config/chatbot/checkins.yaml`, wording
+  for other languages in `checkins.lt.yaml`, `checkins.uk.yaml`, `checkins.pl.yaml`): every few days (`every_days`) the chat shows 1–2 multiple-choice cards about
   the dog to pet parents who have a quiz profile, most important due question first; each question
   comes back after its `repeat_days`. Answers go to `POST /chat/checkin` and are stored on the
   `DogProfile` (last 5 per question). They are **not** chat messages and cost **no AI call**: the
@@ -127,31 +127,43 @@ If you update the quiz from the handoff, copy the files over and update the hash
   the dog's profile and check-in answers beside it, and "Download as text" for reviewing tester
   feedback and improving `config/chatbot/system_prompt.md`.
 
-## Languages (English / Lithuanian)
+## Languages (English, Lithuanian, Ukrainian, Polish)
 
-- `LocaleSubscriber` picks the language: a `?lang=en|lt` link parameter (remembered afterwards),
-  the `zenoo_lang` cookie (set by the EN/LT flags, `/language/{en|lt}`), a `.lt` address
-  (app.zenoo.lt opens in Lithuanian), else the browser's language, else English. No language
-  prefix in URLs.
+- The list is `src/Locale.php` (codes `en`, `lt`, `uk`, `pl`); its comment lists every file a new
+  language needs.
+- `LocaleSubscriber` picks the language: a `?lang=en|lt|uk|pl` link parameter (remembered
+  afterwards), the `zenoo_lang` cookie (set by the flags, `/language/{code}`), then on a `.lt`
+  address (app.zenoo.lt) Lithuanian unless the browser prefers Ukrainian or Polish, elsewhere the
+  browser's language, else English. No language prefix in URLs.
   The choice is saved on the account (`User::locale`), and emails go out in it.
 - Text in templates and PHP is the English sentence itself, wrapped in `|trans` / `trans()`.
-  Lithuanian lives in `translations/messages.lt.yaml` (and `validators.lt.yaml` for form errors).
-  To add text: write it in English with `|trans`, then add the same English line with its
-  Lithuanian translation to `messages.lt.yaml`. `php bin/console debug:translation lt --only-missing --domain=messages`
+  The other languages live in `translations/messages.{lt,uk,pl}.yaml` (and `validators.*.yaml` for
+  form errors). To add text: write it in English with `|trans`, then add the same English line with
+  its translation to each `messages.*.yaml`. `php bin/console debug:translation uk --only-missing --domain=messages`
   lists anything untranslated.
-- Dates use `|local_date('long')` etc. (`src/Twig/LocaleExtension.php`).
-- Separate Lithuanian files: `templates/legal/privacy.lt.html.twig`,
-  `config/chatbot/intro_questions.lt.yaml`, `public/quiz/content.lt.js`.
+- Dates use `|local_date('long')` etc. (`src/Twig/LocaleExtension.php`); `decimal_sep()` gives 1,5 vs 1.5.
+- Separate files per language: `templates/legal/privacy.<code>.html.twig`,
+  `config/chatbot/intro_questions.<code>.yaml`, `config/chatbot/checkins.<code>.yaml`,
+  `public/quiz/content.<code>.js`.
 - The quiz uses `KLAVIYO_LT_COMPANY_ID` / `KLAVIYO_LT_LIST_ID` in Lithuanian. Until they're set,
   the Lithuanian quiz doesn't send to Klaviyo (the site's own confirmation email still goes out).
-- Pet parents see the course in their language; admins see both. The admin area stays in English.
+  Ukrainian and Polish quiz results aren't added to a Klaviyo list (the "Dog Quiz Flow" emails are
+  English); they always get the site's own, translated confirmation email instead. To collect them
+  in Klaviyo, give `uk`/`pl` a list in `HomeController::quiz()` once there are translated flows.
+- The coach replies in the pet parent's site language (`CourseKnowledge::language()`).
+- The Ukrainian and Polish texts (site, quiz, course) were machine-translated from English and
+  should be read by a native speaker before launch, as the vet review covers the content.
+- Pet parents see the course in their language; admins see all of them. The admin area stays in English.
 
 ## The course
 
 - **Source:** `content/courses/zenoo-dog-wellness.md`, the course document converted from Word with
-  `pandoc -t gfm --wrap=none`. English lessons first, then the Lithuanian version.
+  `pandoc -t gfm --wrap=none`. English lessons first, then the Lithuanian version. The Ukrainian and
+  Polish courses are `zenoo-dog-wellness.uk.json` / `.pl.json`: the English lessons' slides with
+  every text translated (same screens, their own screen ids).
 - **Loading it:** `php bin/console app:course:import`. On deploy the container runs it with
-  `--if-empty`, so a new database gets both courses automatically. Both start as **drafts**: only
+  `--missing`, so any language without its course gets it automatically (a new database gets all
+  four). New courses start as **drafts**: only
   admins see them until "Published" is ticked in the Course studio (or the command runs with
   `--publish`). Lessons already in the database are never overwritten unless you pass `--force`;
   learners keep their progress either way, because screen ids stay the same.
@@ -163,7 +175,7 @@ If you update the quiz from the handoff, copy the files over and update the hash
   streak). Tables in the text (`| a | b |`) show as tables, and as cards on phones.
 - **Audio:** there is no recording yet, so the Listen screen shows the transcript. Upload an MP3 per
   lesson in the Course studio.
-- **Language:** a course's language (English or Lietuvių) sets the player's buttons and labels.
+- **Language:** a course's language (English, Lietuvių, Українська, Polski) sets the player's buttons and labels.
 - **Access:** courses marked "Free" (both are) are open to every logged-in pet parent; otherwise only
   to people with a paid order.
 
@@ -209,7 +221,7 @@ src/
   Entity/            User, Product, Purchase, ChatConversation, ChatMessage, ChatUsage,
                      Course, Lesson, LessonProgress, DogProfile, QuizSubmission
   Dog/               QuizResult (cleans quiz results), LessonRecommender
-  EventSubscriber/   LocaleSubscriber (EN/LT)
+  EventSubscriber/   LocaleSubscriber (language per visitor)
   Payment/           StripeClient (no SDK), StripeCheckout (session + fulfilment)
   Security/          LoginFormAuthenticator, LoginAttemptLimiter, LoginSuccessHandler
   Service/           EmailService, AvatarUploader
@@ -217,7 +229,7 @@ templates/           Twig pages and emails (emails/_layout.html.twig)
 assets/              app.css (design tokens), app.js, chat.js, lesson.js (player), studio.js (editor),
                      controllers/ (Stimulus), lib/stimulus.js, fonts (served by AssetMapper)
 content/courses/     The course document
-translations/        Lithuanian text (messages.lt.yaml, validators.lt.yaml)
+translations/        Lithuanian, Ukrainian, Polish text (messages.*.yaml, validators.*.yaml)
 public/images/       Logos and photos; public/quiz/ is the Bowl Score quiz
 migrations/          Schema migrations (MySQL and SQLite statements in each)
 docker/, Dockerfile  Single-container image for Coolify (nginx, PHP-FPM, email worker)

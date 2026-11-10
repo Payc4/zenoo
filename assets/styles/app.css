@@ -63,28 +63,50 @@ h3 { font-size: 20px; line-height: 1.2; }
 /* ---------- Header ---------- */
 .site-header { background: var(--forest); color: var(--white); position: sticky; top: 0; z-index: 50; }
 .site-header .wrap { display: flex; align-items: center; gap: 24px; min-height: 68px; }
+.brand { flex: none; }
 .brand img { height: 26px; width: auto; }
 .nav { display: flex; align-items: center; gap: 6px; margin-left: auto; }
-.nav a { color: var(--white); text-decoration: none; font-weight: 600; font-size: 15px; padding: 8px 12px; border-radius: var(--radius-pill); }
+.nav a { color: var(--white); text-decoration: none; font-weight: 600; font-size: 15px; padding: 8px 12px; border-radius: var(--radius-pill); white-space: nowrap; }
 .nav a:hover, .nav a[aria-current="page"] { background: rgba(255, 255, 255, .12); color: var(--white); }
 .nav .btn { margin-left: 6px; }
 .nav-avatar { display: inline-flex; align-items: center; gap: 8px; }
+/* Admins have one more menu item: on a desktop their avatar stands alone (the label is still read out). */
+@media (min-width: 1101px) {
+  .nav:has(a[href="/admin"]) .nav-avatar__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
 /* EN / LT selector, top right (before the menu button on phones) */
 .nav { order: 1; }
-.lang-switch { order: 2; display: inline-flex; gap: 2px; margin-left: 12px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.12); }
+.lang-switch { order: 2; flex: none; display: inline-flex; gap: 2px; margin-left: 12px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.12); }
 .lang-switch a { display: inline-flex; align-items: center; justify-content: center; padding: 5px 7px; border-radius: 999px; opacity: .55; transition: opacity .15s, background .15s; }
 .lang-switch a:hover, .lang-switch a:focus-visible { opacity: 1; }
 .lang-switch a[aria-current] { background: var(--white); opacity: 1; }
 .lang-switch .flag { display: block; width: 24px; height: 16px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
 .nav-toggle { order: 3; display: none; margin-left: auto; background: none; border: 0; color: var(--white); padding: 8px; cursor: pointer; }
 .nav-toggle svg { width: 28px; height: 28px; }
-@media (max-width: 760px) {
+/* Four languages make the menu longer (Ukrainian and Lithuanian words are long): tighten it a little
+   in those languages and on mid-size screens, and switch to the menu button below 1100px. */
+html[lang=lt] .site-header .wrap, html[lang=uk] .site-header .wrap { gap: 14px; }
+html[lang=lt] .nav, html[lang=uk] .nav { gap: 2px; }
+html[lang=lt] .nav a, html[lang=uk] .nav a { font-size: 14px; padding: 8px 9px; }
+@media (max-width: 1240px) {
+  .site-header .wrap { gap: 14px; }
+  .nav { gap: 2px; }
+  .nav a { font-size: 14px; padding: 8px 9px; }
+  .lang-switch { margin-left: 4px; }
+}
+@media (max-width: 1100px) {
   .nav-toggle { display: block; margin-left: 4px; }
   .lang-switch { margin-left: auto; }
   .nav { display: none; position: absolute; top: 68px; left: 0; right: 0; flex-direction: column; align-items: stretch; background: var(--forest); padding: 8px 20px 20px; gap: 2px; }
   .nav.open { display: flex; }
   .nav a { padding: 12px 14px; }
   .nav .btn { margin: 8px 0 0; text-align: center; }
+}
+@media (max-width: 400px) {
+  /* Four flags next to the logo and the menu button on a small phone. */
+  .lang-switch { gap: 0; margin-left: 8px; }
+  .lang-switch a { padding: 4px; }
+  .lang-switch .flag { width: 21px; height: 14px; }
 }
 
 /* ---------- Buttons ---------- */

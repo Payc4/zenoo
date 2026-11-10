@@ -60,7 +60,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $lastMagicLinkRequestedAt = null;
 
-    /** Site language for this pet parent ("en" or "lt"): pages after login and every email. */
+    /** Site language for this pet parent (en, lt, uk or pl, see App\Locale): pages after login and every email. */
     #[ORM\Column(length: 5, options: ['default' => 'en'])]
     private string $locale = 'en';
 
@@ -310,7 +310,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setLocale(string $locale): static
     {
-        $this->locale = \in_array($locale, ['en', 'lt'], true) ? $locale : 'en';
+        $this->locale = \App\Locale::normalize($locale);
         return $this;
     }
 

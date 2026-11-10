@@ -29,8 +29,7 @@
         <label class="cs-check"><input type="checkbox" name="free" value="1" {{ course.free ? 'checked' }}> Free for every logged-in user <span class="cs-muted">(otherwise only people with a paid order)</span></label>
         <label class="cs-check">Language
           <select class="cs-input cs-select" name="locale">
-            <option value="en" {{ course.locale == 'en' ? 'selected' }}>English</option>
-            <option value="lt" {{ course.locale == 'lt' ? 'selected' }}>Lietuvių</option>
+            {% for code, name in site_locales() %}<option value="{{ code }}" {{ course.locale == code ? 'selected' }}>{{ name }}</option>{% endfor %}
           </select>
         </label>
         <button class="cs-btn cs-btn--ghost">Save course</button>

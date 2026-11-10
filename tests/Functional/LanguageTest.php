@@ -140,7 +140,7 @@ final class LanguageTest extends AppTestCase
         $this->lt();
 
         $crawler = $this->client->request('GET', '/courses');
-        $this->assertSame(['ZENOO šunų sveikatos kursas'], $crawler->filter('.cl-course__title')->each(fn ($n) => trim(preg_replace('/\s+(Draft|Juodraštis|LT)\b.*/u', '', $n->text()))));
+        $this->assertSame(['ZENOO šunų sveikatos kursas'], $crawler->filter('.cl-course__title')->each(fn ($n) => trim(preg_replace('/\s+(Draft|Juodraštis|Lietuvių).*/u', '', $n->text()))));
 
         $this->client->request('GET', '/quiz/');
         $this->assertStringContainsString('/quiz/content.lt.js', $this->client->getResponse()->getContent());

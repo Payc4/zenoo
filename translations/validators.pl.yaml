@@ -1,0 +1,10 @@
+# Polish translations. Keys are the English text used in templates and PHP code.
+# Keep %placeholders% and HTML tags exactly as in the key.
+'An account with this email already exists.': 'Konto z tym adresem e-mail już istnieje.'
+'Please agree to the privacy policy to continue.': 'Żeby kontynuować, zaakceptuj politykę prywatności.'
+'Please choose a password.': 'Ustaw hasło.'
+'Please enter a valid email address.': 'Wpisz prawidłowy adres e-mail.'
+'Please enter your email address.': 'Wpisz swój adres e-mail.'
+'Please enter your first name.': 'Wpisz swoje imię.'
+'The two passwords don’t match.': 'Hasła nie są takie same.'
+'Your password needs at least {{ limit }} characters.': 'Hasło musi mieć co najmniej {{ limit }} znaków.'

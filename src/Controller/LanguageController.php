@@ -11,12 +11,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * The EN / LT selector in the header. Remembers the choice in a cookie (and on the account,
+ * The language flags in the header. Remembers the choice in a cookie (and on the account,
  * so emails are written in it too) and goes back to the page the visitor was on.
  */
 final class LanguageController extends AbstractController
 {
-    #[Route('/language/{locale}', name: 'app_language', requirements: ['locale' => 'en|lt'], methods: ['GET'])]
+    #[Route('/language/{locale}', name: 'app_language', requirements: ['locale' => 'en|lt|uk|pl'], methods: ['GET'])]
     public function switch(string $locale, Request $request, EntityManagerInterface $em): RedirectResponse
     {
         $user = $this->getUser();

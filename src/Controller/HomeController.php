@@ -26,12 +26,15 @@ class HomeController extends AbstractController
     #[Route('/privacy-policy', name: 'app_privacy_policy', methods: ['GET'])]
     public function privacy(Request $request): Response
     {
-        return $this->render($request->getLocale() === 'lt' ? 'legal/privacy.lt.html.twig' : 'legal/privacy.html.twig');
+        $locale = $request->getLocale();
+        $localised = "legal/privacy.$locale.html.twig";
+        return $this->render($locale !== 'en' && $this->container->get('twig')->getLoader()->exists($localised) ? $localised : 'legal/privacy.html.twig');
     }
 
     /**
      * The Bowl Score quiz from the ZENOO handoff, served from public/quiz/ in the page's language
-     * (content.en.js or content.lt.js). Each language has its own Klaviyo account and list.
+     * (content.<locale>.js). English quiz-takers join the main Klaviyo account's list, Lithuanian ones
+     * the Lithuanian account's list (if set). Ukrainian and Polish ones join no list; the site emails them.
      */
     #[Route('/quiz/', name: 'app_quiz', methods: ['GET'])]
     public function quiz(
@@ -44,8 +47,16 @@ class HomeController extends AbstractController
         CsrfTokenManagerInterface $csrf,
     ): Response {
         $user = $this->getUser();
-        $locale = $request->getLocale() === 'lt' ? 'lt' : 'en';
-        [$company, $list] = $locale === 'lt' ? [(string) $klaviyoLtCompanyId, (string) $klaviyoLtListId] : [$klaviyoCompanyId, $klaviyoListId];
+        $locale = \App\Locale::normalize($request->getLocale());
+        if (!is_file($this->getParameter('kernel.project_dir') . "/public/quiz/content.$locale.js")) {
+            $locale = 'en';
+        }
+        // Ukrainian and Polish results aren't added to a Klaviyo list: the quiz flow's emails are English.
+        [$company, $list] = match ($locale) {
+            'en' => [$klaviyoCompanyId, $klaviyoListId],
+            'lt' => [(string) $klaviyoLtCompanyId, (string) $klaviyoLtListId],
+            default => ['', ''],
+        };
 
         return $this->render('quiz/index.html.twig', [
             'locale' => $locale,

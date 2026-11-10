@@ -8,7 +8,7 @@ use Symfony\Component\Yaml\Yaml;
 
 /**
  * Chat check-ins: every few days the chat shows one or two short multiple-choice questions about
- * the dog (config/chatbot/checkins.yaml, Lithuanian wording in checkins.lt.yaml). Answers are
+ * the dog (config/chatbot/checkins.yaml, wording for other languages in checkins.<locale>.yaml). Answers are
  * saved to the DogProfile and listed in the coach's instructions (forCoach()).
  *
  * Deliberately no AI here: which questions to ask is decided by the rules in the YAML file

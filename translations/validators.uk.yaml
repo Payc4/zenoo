@@ -1,0 +1,10 @@
+# Ukrainian translations. Keys are the English text used in templates and PHP code.
+# Keep %placeholders% and HTML tags exactly as in the key.
+'An account with this email already exists.': 'Обліковий запис із цією електронною поштою вже існує.'
+'Please agree to the privacy policy to continue.': 'Щоб продовжити, погодьтеся з політикою конфіденційності.'
+'Please choose a password.': 'Виберіть пароль.'
+'Please enter a valid email address.': 'Введіть дійсну адресу електронної пошти.'
+'Please enter your email address.': 'Введіть адресу електронної пошти.'
+'Please enter your first name.': 'Введіть своє ім''я.'
+'The two passwords don’t match.': 'Паролі не збігаються.'
+'Your password needs at least {{ limit }} characters.': 'Пароль має містити щонайменше {{ limit }} символів.'

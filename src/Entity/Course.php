@@ -37,7 +37,7 @@ class Course
     #[ORM\Column]
     private bool $isFree = false;
 
-    /** Language of the lessons and of the player's buttons: "en" or "lt". */
+    /** Language of the lessons and of the player's buttons (en, lt, uk or pl, see App\Locale). */
     #[ORM\Column(length: 5, options: ['default' => 'en'])]
     private string $locale = 'en';
 
@@ -85,7 +85,7 @@ class Course
     public function isFree(): bool { return $this->isFree; }
     public function setIsFree(bool $isFree): static { $this->isFree = $isFree; return $this; }
     public function getLocale(): string { return $this->locale; }
-    public function setLocale(string $locale): static { $this->locale = \in_array($locale, ['en', 'lt'], true) ? $locale : 'en'; return $this; }
+    public function setLocale(string $locale): static { $this->locale = \App\Locale::normalize($locale); return $this; }
 
     public function getPosition(): int { return $this->position; }
     public function setPosition(int $position): static { $this->position = $position; return $this; }

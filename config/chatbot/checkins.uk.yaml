@@ -1,0 +1,82 @@
+# Ukrainian wording for the check-in questions in checkins.yaml (same ids and values).
+# Timing (every_days, per_visit, repeat_days) and what the coach sees come from checkins.yaml.
+# %dog% = the dog's name, always in the nominative, so it stands in brackets or after a colon.
+
+questions:
+  - id: goal
+    question: "З чим вам найбільше хотілося б допомогти вашому собаці (%dog%)?"
+    options:
+      - { value: digestion, label: "Краще травлення" }
+      - { value: weight, label: "Здорова вага" }
+      - { value: skin, label: "Шкіра й шерсть" }
+      - { value: energy, label: "Більше енергії" }
+      - { value: food_switch, label: "Перехід на інший корм" }
+
+  - id: stools
+    question: "Яким був кал вашого собаки (%dog%) цього тижня?"
+    options:
+      - { value: firm, label: "Щільний, легко прибрати" }
+      - { value: soft, label: "Трохи м'який" }
+      - { value: loose, label: "Рідкий або водянистий" }
+      - { value: hard, label: "Твердий або сухий" }
+
+  - id: appetite
+    question: "Який останнім часом апетит у вашого собаки (%dog%)?"
+    options:
+      - { value: eager, label: "Швидко з'їдає все" }
+      - { value: normal, label: "Звичайний" }
+      - { value: picky, label: "Перебірливий" }
+      - { value: low, label: "Їсть мало" }
+
+  - id: energy
+    question: "Скільки енергії цього тижня у вашого собаки (%dog%)?"
+    options:
+      - { value: high, label: "Повно енергії" }
+      - { value: normal, label: "Як завжди" }
+      - { value: lower, label: "Менше, ніж зазвичай" }
+      - { value: very_low, label: "Дуже мало" }
+
+  - id: itching
+    question: "Чи були останнім часом свербіж, вилизування лап або проблеми зі шкірою?"
+    options:
+      - { value: none, label: "Не було" }
+      - { value: little, label: "Трохи" }
+      - { value: lot, label: "Досить багато" }
+
+  - id: food_change
+    question: "Чи змінювали ви корм вашого собаки (%dog%) після тесту?"
+    options:
+      - { value: "no", label: "Ні" }
+      - { value: switched, label: "Так, перейшли на інший корм" }
+      - { value: added, label: "Додали топери або добавки" }
+
+  - id: weight_change
+    question: "Чи змінилася останнім часом вага вашого собаки (%dog%)?"
+    options:
+      - { value: same, label: "Приблизно така сама" }
+      - { value: gained, label: "Набрав вагу" }
+      - { value: lost, label: "Схуд" }
+      - { value: unsure, label: "Не знаю" }
+
+  - id: exercise
+    question: "Скільки рухається ваш собака (%dog%) у звичайний день?"
+    options:
+      - { value: under_30, label: "Менше 30 хвилин" }
+      - { value: "30_60", label: "30–60 хвилин" }
+      - { value: 1_2h, label: "1–2 години" }
+      - { value: over_2h, label: "Понад 2 години" }
+
+  - id: treats
+    question: "Скільки ласощів або їжі зі столу ваш собака (%dog%) отримує за день?"
+    options:
+      - { value: none, label: "Зовсім не отримує" }
+      - { value: few, label: "Трохи" }
+      - { value: lots, label: "Досить багато" }
+
+  - id: vet
+    question: "Чи ходить зараз ваш собака (%dog%) до ветеринара з якоїсь причини?"
+    options:
+      - { value: "no", label: "Ні" }
+      - { value: digestion, label: "Так, через травлення" }
+      - { value: skin, label: "Так, через шкіру або алергію" }
+      - { value: other, label: "Так, через щось інше" }

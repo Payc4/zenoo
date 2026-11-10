@@ -199,7 +199,27 @@ final class LessonLayouts
             'needAnswer' => 'Pirmiausia atsakykite į klausimą.', 'needTask' => 'Parašykite atsakymą ir paspauskite „Tikrinti atsakymą“.',
             'needWords' => 'Parašykite bent kelis žodžius.', 'previewEnd' => 'Peržiūra: pamoka čia baigiasi.',
         ];
-        return $locale === 'lt' ? $lt : $en;
+        $uk = [
+            'read' => 'Читати', 'listen' => 'Слухати', 'write' => 'Писати', 'do' => 'Зробіть разом із собакою',
+            'deeper' => 'Глибше', 'quiz' => 'Швидка перевірка', 'vet' => 'Коли до ветеринара', 'continue' => 'Продовжити',
+            'finish' => 'Завершити урок', 'readAlong' => 'Читати разом', 'audioSoon' => 'Запис Аготи з\'явиться незабаром. А поки прочитайте текст нижче.', 'correct' => 'Правильно!',
+            'incorrect' => 'Не зовсім.', 'weak' => 'Слабкий приклад', 'model' => 'Зразкова відповідь', 'check' => 'Перевірити відповідь',
+            'placeholder' => 'Напишіть свою відповідь…', 'part' => 'Частина', 'badge' => 'Отримано значок', 'lessonOf' => 'Урок %n% з %total% пройдено',
+            'streak' => 'Серія: день %n%', 'close' => 'Закрити урок', 'back' => 'Попередній екран', 'done' => 'Виконано разом із собакою',
+            'savedNote' => 'Збережено у вашому обліковому записі. Ваш помічник ZENOO у чаті теж це бачить.', 'needAnswer' => 'Спершу дайте відповідь на запитання.', 'needTask' => 'Спершу напишіть відповідь і натисніть «Перевірити відповідь».', 'needWords' => 'Спершу напишіть кілька слів.',
+            'previewEnd' => 'Попередній перегляд: на цьому урок закінчується.',
+        ];
+        $pl = [
+            'read' => 'Czytaj', 'listen' => 'Słuchaj', 'write' => 'Pisz', 'do' => 'Zrób to ze swoim psem',
+            'deeper' => 'Dowiedz się więcej', 'quiz' => 'Szybki test', 'vet' => 'Kiedy do weterynarza', 'continue' => 'Dalej',
+            'finish' => 'Zakończ lekcję', 'readAlong' => 'Czytaj razem z nagraniem', 'audioSoon' => 'Nagranie Agoty pojawi się wkrótce. Na razie przeczytaj tekst poniżej.', 'correct' => 'Dobrze!',
+            'incorrect' => 'Nie do końca.', 'weak' => 'Słaby przykład', 'model' => 'Wzorcowa odpowiedź', 'check' => 'Sprawdź moją odpowiedź',
+            'placeholder' => 'Wpisz swoją odpowiedź…', 'part' => 'Część', 'badge' => 'Zdobyta odznaka', 'lessonOf' => 'Ukończona lekcja %n% z %total%',
+            'streak' => 'Seria: dzień %n%', 'close' => 'Zamknij lekcję', 'back' => 'Poprzedni ekran', 'done' => 'Zrobione z moim psem',
+            'savedNote' => 'Zapisano na twoim koncie. Twój asystent ZENOO na czacie też to widzi.', 'needAnswer' => 'Najpierw odpowiedz na pytanie.', 'needTask' => 'Najpierw wpisz odpowiedź i kliknij „Sprawdź moją odpowiedź”.', 'needWords' => 'Najpierw napisz kilka słów.',
+            'previewEnd' => 'Podgląd: tu kończy się lekcja.',
+        ];
+        return ['lt' => $lt, 'uk' => $uk, 'pl' => $pl][$locale] ?? $en;
     }
 
     /** Four empty answer buttons, the first marked correct, for new questions. */

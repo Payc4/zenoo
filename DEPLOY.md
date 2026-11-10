@@ -59,8 +59,9 @@ production access before real pet parents sign up.
 
 - Log in at `/login` with `ADMIN_EMAIL`, then remove `ADMIN_EMAIL` and `ADMIN_PASSWORD` from Coolify.
 - Check `/health` returns `{"status":"ok"}`.
-- The 30-lesson course (English and Lithuanian) is loaded automatically as drafts. Publish each
-  course in Admin → Course studio once the vet review is done.
+- The 30-lesson course (English, Lithuanian, Ukrainian, Polish) is loaded automatically as drafts;
+  a language added later is loaded on the next deploy. Publish each course in Admin → Course studio
+  once the vet review (and, for Ukrainian and Polish, a native speaker's read) is done.
 - `docker exec <container> check-messenger.sh` shows whether the email worker is running.
 
 ## Troubleshooting
@@ -79,8 +80,12 @@ With `EMAIL_DELIVERY=klaviyo` (or `auto` and no `MAILER_DSN`), the site sends no
 email becomes a Klaviyo event on the person's profile, and one Klaviyo flow per event sends it.
 Build each flow as: trigger = the metric below, **mark it Transactional** (and get it approved, so
 it reaches people who aren't subscribed to marketing), **Smart Sending off**, no delay. Every event
-also has `subject` (already translated), `first_name`, `locale` (`en` / `lt`, use a conditional
-split for two languages) and `site_url`.
+also has `subject` (already translated), `first_name`, `locale` (`en`, `lt`, `uk`, `pl`) and
+`site_url`, plus the **whole text of the email, already translated**, as `copy_*` properties
+(`copy_heading`, `copy_intro`, `copy_button`, `copy_note`, …). So one template per flow works in
+every language, with no conditional splits: paste the matching file from `docs/klaviyo/` into an
+HTML block (`quiz.html`, `welcome.html`, `reset.html`, `login.html`, `changed.html`, `order.html`),
+and set the subject line to `{{ event.subject }}`.
 
 | Metric (flow trigger) | When | Properties for the email (`{{ event.name }}`) |
 |---|---|---|
@@ -89,11 +94,11 @@ split for two languages) and `site_url`.
 | ZENOO Login Link | "Email me a login link" | `login_link` (button), `expires_in_minutes` |
 | ZENOO Password Changed | Password changed | `account_url`, `forgot_password_url` |
 | ZENOO Order Confirmation | Payment received | `order_id`, `product_name`, `amount`, `discount`, `currency`, `order_date`, `order_url`, `test_order` |
-| ZENOO Quiz Confirmation | Quiz finished, when the link isn't already in the quiz flow (Lithuanian quiz, or `QUIZ_SITE_CONFIRM_EMAIL=true`) | `confirm_link` (button), `dog_name`, `bowl_score` |
+| ZENOO Quiz Confirmation | Quiz finished, when the link isn't already in the quiz flow (Lithuanian, Ukrainian or Polish quiz, or `QUIZ_SITE_CONFIRM_EMAIL=true`) | `confirm_link` (button), `dog_name`, `bowl_score` |
 
 To make every metric appear in Klaviyo before building its flow (a metric only exists after its
 first event), run in Coolify's terminal: `php bin/console app:klaviyo:sample-events you@example.com`
-(add `--lang=lt` for Lithuanian samples). The links in sample events only open the site.
+(add `--lang=lt`, `--lang=uk` or `--lang=pl` for samples in that language). The links in sample events only open the site.
 
 The English quiz's link is on the profile instead (`{{ person|lookup:'dashboard_link' }}` in the
 "Dog Quiz Flow", after a 5-minute delay). Set `QUIZ_SITE_CONFIRM_EMAIL=false` once that button is

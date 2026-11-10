@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Purchase;
 use App\Entity\QuizSubmission;
 use App\Entity\User;
+use App\Twig\LocaleExtension;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
@@ -20,9 +21,11 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * - "auto" (default): Klaviyo when MAILER_DSN isn't set (null://) and KLAVIYO_PRIVATE_KEY is,
  *   otherwise SMTP.
  *
- * Each email is in the recipient's language (User::getLocale(), "en" or "lt"): the subject is
- * translated here, the template rendered in that locale, and Klaviyo events carry "locale" so a
- * flow can split on it.
+ * Each email is in the recipient's language (User::getLocale(): en, lt, uk or pl): the subject is
+ * translated here and the template rendered in that locale. Klaviyo events also carry the email's
+ * whole text, already translated, as copy_* properties (copy_heading, copy_intro, copy_button, …;
+ * see copy()), so one Klaviyo template per flow works in every language: {{ event.copy_heading }}.
+ * The ready-made templates are in docs/klaviyo/. They also carry "locale" for flows that split on it.
  */
 class EmailService
 {
@@ -43,6 +46,7 @@ class EmailService
         private readonly string $fromName,
         private readonly TranslatorInterface $translator,
         private readonly KlaviyoProfiles $klaviyo,
+        private readonly LocaleExtension $dates,
         private readonly string $mailerDsn = 'null://null',
         private readonly string $delivery = 'auto',
     ) {
@@ -61,21 +65,29 @@ class EmailService
 
     public function sendWelcomeEmail(User $user): void
     {
-        $this->send($user->getEmail(), 'Welcome to ZENOO', [], 'emails/welcome.html.twig', ['user' => $user], $user->getLocale(), 'welcome', [
+        $l = $user->getLocale();
+        $this->send($user->getEmail(), 'Welcome to ZENOO', [], 'emails/welcome.html.twig', ['user' => $user], $l, 'welcome', [
             'dashboard_url' => $this->url('/dashboard'),
             'quiz_url' => $this->url('/quiz/'),
             'courses_url' => $this->url('/courses'),
-        ], $user);
+        ] + $this->copy($l, [
+            'heading' => ['Welcome, %name%!', ['%name%' => $user->getDisplayName()]],
+            'intro' => 'Your ZENOO account is ready. From now on you can see your orders and update your details in one place.',
+            'text' => 'Not sure if your dog’s bowl is on track? The free Bowl Score quiz takes about three minutes.',
+            'button' => 'Take the Bowl Score quiz',
+            'note' => ['Log in any time at %link% with %email%.', ['%link%' => $this->host() . '/login', '%email%' => $user->getEmail()]],
+        ]), $user);
     }
 
     public function sendPurchaseConfirmation(Purchase $purchase): void
     {
         $user = $purchase->getUser();
+        $l = $user->getLocale();
         $this->send($user->getEmail(), 'Your ZENOO order #%id%', ['%id%' => $purchase->getId()], 'emails/purchase_confirmation.html.twig', [
             'user' => $user,
             'purchase' => $purchase,
             'product' => $purchase->getProduct(),
-        ], $user->getLocale(), 'order', [
+        ], $l, 'order', [
             'order_id' => $purchase->getId(),
             'product_name' => $purchase->getProduct()?->getName(),
             'amount' => (float) $purchase->getAmount(),
@@ -84,7 +96,19 @@ class EmailService
             'order_date' => $purchase->getCreatedAt()->format('Y-m-d'),
             'order_url' => $this->url('/account/orders/' . $purchase->getId()),
             'test_order' => $purchase->isTestMode(),
-        ], $user);
+        ] + $this->copy($l, [
+            'heading' => ['Thank you, %name%!', ['%name%' => $user->getDisplayName()]],
+            'intro' => 'Your order is confirmed. Here’s your receipt.',
+            'test_label' => 'Test order:',
+            'test_text' => 'paid in Stripe test mode, so no real money was taken.',
+            'order_label' => 'Order',
+            'product_label' => 'Product',
+            'date_label' => 'Date',
+            'discount_label' => 'Discount',
+            'total_label' => 'Total paid',
+            'button' => 'View my order',
+            'note' => 'Questions about your order? Write to support@myzenoo.com.',
+        ]) + ['copy_date' => $this->dates->format($purchase->getCreatedAt(), 'long', $l)], $user);
     }
 
     public function sendPasswordResetEmail(User $user, string $resetUrl): void
@@ -92,7 +116,12 @@ class EmailService
         $this->send($user->getEmail(), 'Reset your ZENOO password', [], 'emails/password_reset.html.twig', [
             'user' => $user,
             'resetUrl' => $resetUrl,
-        ], $user->getLocale(), 'reset', ['reset_link' => $resetUrl], $user);
+        ], $user->getLocale(), 'reset', ['reset_link' => $resetUrl] + $this->copy($user->getLocale(), [
+            'heading' => 'Reset your password',
+            'intro' => ['Hi %name%, someone asked to reset the password for your ZENOO account. If it was you, choose a new one here:', ['%name%' => $user->getDisplayName()]],
+            'button' => 'Choose a new password',
+            'note' => 'The link works for one hour. If you didn’t ask for this, you can ignore this email: your password stays the same.',
+        ]), $user);
     }
 
     public function sendMagicLoginLink(User $user, string $loginUrl, \DateTimeInterface $expiresAt): void
@@ -104,7 +133,12 @@ class EmailService
         ], $user->getLocale(), 'login', [
             'login_link' => $loginUrl,
             'expires_in_minutes' => max(1, (int) round(($expiresAt->getTimestamp() - time()) / 60)),
-        ], $user);
+        ] + $this->copy($user->getLocale(), [
+            'heading' => 'Your login link',
+            'intro' => ['Hi %name%, tap the button to log in to ZENOO. No password needed.', ['%name%' => $user->getDisplayName()]],
+            'button' => 'Log me in',
+            'note' => 'The link works once, for 10 minutes. If you didn’t ask for it, you can ignore this email.',
+        ]), $user);
     }
 
     public function sendPasswordChangedNotice(User $user): void
@@ -112,7 +146,12 @@ class EmailService
         $this->send($user->getEmail(), 'Your ZENOO password was changed', [], 'emails/password_changed.html.twig', ['user' => $user], $user->getLocale(), 'changed', [
             'account_url' => $this->url('/account'),
             'forgot_password_url' => $this->url('/forgot-password'),
-        ], $user);
+        ] + $this->copy($user->getLocale(), [
+            'heading' => 'Password changed',
+            'intro' => ['Hi %name%, the password for your ZENOO account was just changed.', ['%name%' => $user->getDisplayName()]],
+            'text' => 'If that was you, there’s nothing else to do. If it wasn’t, reset it now and write to support@myzenoo.com.',
+            'button' => 'Reset my password',
+        ]), $user);
     }
 
     /** After the quiz: "confirm your email" with the link that creates the account. */
@@ -127,7 +166,13 @@ class EmailService
             'confirm_link' => $confirmUrl,
             'dog_name' => $submission->getDogName(),
             'bowl_score' => (int) ($submission->getData()['quiz_bowl_score'] ?? 0),
-        ], null, $submission->getFirstName());
+        ] + $this->copy($submission->getLocale(), [
+            'heading' => ['%dog%’s Bowl Score: %score%/100', ['%dog%' => $submission->getDogName(), '%score%' => (int) ($submission->getData()['quiz_bowl_score'] ?? 0)]],
+            'greeting' => $submission->getFirstName() ? ['Hi %name%,', ['%name%' => $submission->getFirstName()]] : 'Hi,',
+            'intro' => ['Thanks for taking the ZENOO quiz. Confirm your email and we’ll create your free ZENOO account with %dog%’s profile, so you can come back to the score, the daily plan and lessons picked for %dog% any time.', ['%dog%' => $submission->getDogName()]],
+            'button' => ['Confirm and open %dog%’s dashboard', ['%dog%' => $submission->getDogName()]],
+            'note' => 'The link works for 7 days. If you didn’t take the quiz, you can ignore this email and nothing will be created.',
+        ]), null, $submission->getFirstName());
     }
 
     /**
@@ -162,6 +207,37 @@ class EmailService
             ->context($context + ['appUrl' => rtrim($this->appUrl, '/')]);
 
         $this->mailer->send($email);
+    }
+
+    /**
+     * The email's text in the recipient's language, as copy_* event properties: the same message
+     * keys as the site's own templates (templates/emails/), plus the shared lines of the layout.
+     *
+     * @param array<string, string|array{string, array<string, string|int>}> $lines key => message, or [message, parameters]
+     * @return array<string, string>
+     */
+    private function copy(string $locale, array $lines): array
+    {
+        $lines += [
+            'link_hint' => 'Button not working? Copy this link:',
+            'regards' => 'Warm regards,',
+            'team' => 'ZENOO team',
+            'tagline' => 'REAL FOOD. HEALTHY PET.',
+            'footer' => 'You’re getting this email because of your ZENOO account at',
+        ];
+        $out = [];
+        foreach ($lines as $key => $line) {
+            [$message, $params] = \is_array($line) ? $line : [$line, []];
+            $out['copy_' . $key] = $this->translator->trans($message, $params, null, $locale);
+        }
+        $out['copy_site'] = $this->host();
+        return $out;
+    }
+
+    /** The site's address without https://, as the emails show it. */
+    private function host(): string
+    {
+        return preg_replace('#^https?://#', '', rtrim($this->appUrl, '/'));
     }
 
     private function url(string $path): string

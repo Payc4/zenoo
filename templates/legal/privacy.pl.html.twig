@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+{# Polish version of legal/privacy.html.twig: keep the two in step. #}
+
+{% block title %}Polityka prywatności · ZENOO{% endblock %}
+
+{% block body %}
+<section class="section">
+    <div class="wrap prose">
+        <p class="kicker">Informacje prawne</p>
+        <h1>Polityka prywatności</h1>
+        <p class="lead">Jak ta strona korzysta z twoich danych – w prostych słowach.</p>
+
+        <h2>Co przechowujemy</h2>
+        <ul>
+            <li><strong>Twoje konto:</strong> imię, adres e-mail, hasło (przechowywane wyłącznie jako bezpieczny skrót, którego nie da się odczytać), zdjęcie profilowe, jeśli je dodasz, oraz język strony.</li>
+            <li><strong>Twoje zamówienia:</strong> co kupujesz, kiedy i jaką kwotę płacisz. Dane karty trafiają bezpośrednio do Stripe i nigdy do nas nie docierają.</li>
+            <li><strong>Quiz „Wynik miski”:</strong> twoje odpowiedzi zostają w przeglądarce aż do końca quizu. Gdy podasz imię i adres e-mail, dane twojego psa i wynik są przesyłane do tej strony, żebyśmy mogli wysłać ci e-mailem link do potwierdzenia adresu. Jeśli w niego klikniesz, zakładamy twoje konto (albo korzystamy z istniejącego) i przechowujemy w nim profil twojego psa na potrzeby panelu. Jeśli nie, niepotwierdzony wynik jest usuwany po 7 dniach. W angielskiej wersji quizu dane twojego psa i plan trafiają też do naszego dostawcy usług e-mailowych, Klaviyo, żebyśmy mogli wysłać ci plan i poradnik karmienia.</li>
+            <li><strong>Czat:</strong> twoje wiadomości i odpowiedzi są zapisywane na twoim koncie, żeby można było do nich wrócić. Do przygotowania każdej odpowiedzi twoje wiadomości i imię są przesyłane do firmy Anthropic, twórcy modelu AI Claude, razem z profilem twojego psa z quizu, ukończonymi lekcjami kursu i tym, co w nich napiszesz, żeby odpowiedzi pasowały do twojego psa. Czat możesz w każdej chwili wyczyścić.</li>
+            <li><strong>Kursy:</strong> twoje postępy, odpowiedzi w testach i to, co piszesz w lekcjach, są zapisywane na twoim koncie.</li>
+        </ul>
+        <p>Usunięcie konta usuwa wszystkie powyższe dane, które przechowujemy w tym serwisie.</p>
+
+        <h2>Kto nam pomaga</h2>
+        <ul>
+            <li><strong>Stripe</strong> obsługuje płatności.</li>
+            <li><strong>Amazon Web Services (SES)</strong> wysyła e-maile związane z kontem, takie jak potwierdzenia zakupu, linki do logowania i potwierdzenia quizu.</li>
+            <li><strong>Anthropic</strong> dostarcza model AI (Claude), który pisze odpowiedzi na czacie.</li>
+            <li><strong>Klaviyo</strong> wysyła plan z quizu i nasze e-maile, jeśli zapiszesz się przez quiz.</li>
+            <li><strong>Cloudflare Turnstile</strong> sprawdza, czy rejestrują się ludzie, a nie boty.</li>
+        </ul>
+
+        <h2>Pliki cookie</h2>
+        <p>Używamy wyłącznie plików cookie niezbędnych do działania strony: jednego, który utrzymuje cię w stanie zalogowania podczas wizyty, drugiego, który pamięta cię przez dwa tygodnie, jeśli zaznaczysz „Nie wylogowuj mnie”, i trzeciego, który przez rok pamięta wybrany język (angielski, litewski, ukraiński lub polski). W tym serwisie nie używamy reklamowych ani śledzących plików cookie.</p>
+
+        <h2>Twoje wybory</h2>
+        <p>W każdej chwili możesz zmienić swoje dane lub usunąć konto w sekcji <a href="{{ path('app_account') }}">Moje konto</a>. Usunięcie konta usuwa tutaj twoje dane, profil twojego psa i historię zamówień. Stripe przechowuje dane płatności tak długo, jak wymaga tego prawo.</p>
+
+        <h2>Kontakt</h2>
+        <p>Masz pytania dotyczące swoich danych? Napisz na <a href="mailto:support@myzenoo.com">support@myzenoo.com</a>.</p>
+
+        <p class="small muted">Ostatnia aktualizacja: 7 listopada 2026 r.</p>
+    </div>
+</section>
+{% endblock %}

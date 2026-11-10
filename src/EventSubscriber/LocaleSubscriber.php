@@ -3,6 +3,7 @@
 namespace App\EventSubscriber;
 
 use App\Entity\User;
+use App\Locale;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -14,19 +15,21 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 
 /**
- * Site language (English or Lithuanian), without language prefixes in the URLs.
+ * Site language (English, Lithuanian, Ukrainian or Polish, see App\Locale), without language
+ * prefixes in the URLs.
  *
- * The language comes from, in order: a "?lang=lt" / "?lang=en" link parameter (so a shared link
- * opens in that language; it is then remembered like a selector click), the "zenoo_lang" cookie
- * (set by the EN/LT selector, LanguageController), then the address (a .lt host such as app.zenoo.lt
- * means Lithuanian), then the browser's preferred language, then English.
+ * The language comes from, in order: a "?lang=uk" style link parameter (so a shared link opens in
+ * that language; it is then remembered like a flag click), the "zenoo_lang" cookie (set by the flags,
+ * LanguageController), then the address and the browser: on a .lt host such as app.zenoo.lt the page
+ * is Lithuanian unless the browser prefers Ukrainian or Polish; elsewhere the browser's preferred
+ * language, then English.
  * On login: if this browser has a language cookie, that latest choice is saved to the account;
  * otherwise (a new browser) the account's language is used and written to the cookie.
  */
 final class LocaleSubscriber implements EventSubscriberInterface
 {
     public const COOKIE = 'zenoo_lang';
-    public const LOCALES = ['en', 'lt'];
+    public const LOCALES = Locale::ALL;
 
     private ?string $loginLocale = null;
     private ?string $linkLocale = null;
@@ -51,11 +54,12 @@ final class LocaleSubscriber implements EventSubscriberInterface
         if (\in_array($cookie, self::LOCALES, true)) {
             return $cookie;
         }
-        // A Lithuanian address (app.zenoo.lt) opens in Lithuanian; the UK flag still switches.
+        // A Lithuanian address (app.zenoo.lt) opens in Lithuanian, unless the browser asks for
+        // Ukrainian or Polish (getPreferredLanguage gives the first of the list when nothing matches).
         if (str_ends_with(strtolower($request->getHost()), '.lt')) {
-            return 'lt';
+            return $request->getPreferredLanguage(['lt', 'uk', 'pl']) ?? 'lt';
         }
-        return $request->getPreferredLanguage(self::LOCALES) ?? 'en';
+        return $request->getPreferredLanguage(self::LOCALES) ?? Locale::DEFAULT;
     }
 
     public static function cookie(string $locale): Cookie

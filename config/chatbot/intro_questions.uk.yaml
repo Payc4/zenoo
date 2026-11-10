@@ -1,0 +1,33 @@
+# Ukrainian version of intro_questions.yaml (used when the site language is Ukrainian).
+# Keep the files in step: same questions, same order.
+
+questions:
+  - question: "Як звати вашого собаку?"
+    options: []
+
+  - question: "Скільки років вашому собаці?"
+    options:
+      - { label: "Цуценя", description: "До 1 року" }
+      - { label: "Дорослий", description: "Від 1 до 7 років" }
+      - { label: "Літній", description: "7 років і більше" }
+
+  - question: "Якого розміру ваш собака?"
+    options:
+      - { label: "Мініатюрний", description: "До 5 кг" }
+      - { label: "Малий", description: "5–10 кг" }
+      - { label: "Середній", description: "10–25 кг" }
+      - { label: "Великий", description: "Понад 25 кг" }
+
+  - question: "Чим здебільшого годуєте собаку зараз?"
+    options:
+      - { label: "Сухий корм", description: "Гранули" }
+      - { label: "Вологий корм", description: "Консерви або пакетики" }
+      - { label: "Сирий або домашній", description: "BARF, заморожений сирий або приготований удома" }
+      - { label: "ZENOO", description: "Окремо або в поєднанні" }
+
+  - question: "З чим вам найбільше хотілося б допомогти?"
+    options:
+      - { label: "Перебірливість у їжі", description: "Залишає корм або вередує" }
+      - { label: "Порції та вага", description: "Скільки годувати" }
+      - { label: "Перехід на інший корм", description: "Зміна раціону" }
+      - { label: "Животик і травлення", description: "Кал, гази, розлад шлунка" }

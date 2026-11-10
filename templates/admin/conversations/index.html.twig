@@ -17,7 +17,7 @@
       {% set c = r.conversation %}
       {% set dog = dogs[c.user.id] ?? null %}
       <tr>
-        <td><strong>{{ r.firstName ?: '—' }}</strong><br><span class="cs-muted cs-small">{{ r.email }} · {{ c.user.locale|upper }}</span></td>
+        <td><strong>{{ r.firstName ?: '—' }}</strong><br><span class="cs-muted cs-small">{{ r.email }} · {{ locale_name(c.user.locale) }}</span></td>
         <td>{{ dog ? dog.name ~ ' (' ~ dog.bowlScore ~ '/100)' : '—' }}</td>
         <td>{{ r.questions }}</td>
         <td>{{ c.updatedAt|date('Y-m-d H:i') }}</td>

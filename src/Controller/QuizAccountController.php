@@ -69,7 +69,7 @@ final class QuizAccountController extends AbstractController
         $data = \is_array($body) ? QuizResult::clean($body['properties'] ?? null) : null;
         $email = \is_array($body) ? mb_strtolower(trim((string) ($body['email'] ?? ''))) : '';
         $firstName = \is_array($body) ? trim(strip_tags((string) ($body['first_name'] ?? ''))) : '';
-        $locale = \in_array($body['locale'] ?? null, ['en', 'lt'], true) ? $body['locale'] : $request->getLocale();
+        $locale = \App\Locale::isSupported($body['locale'] ?? null) ? $body['locale'] : $request->getLocale();
         if ($data === null) {
             return $this->json(['error' => $this->translator->trans('Invalid quiz result.')], 400);
         }
@@ -101,7 +101,9 @@ final class QuizAccountController extends AbstractController
 
         $link = $this->generateUrl('app_quiz_confirm', ['token' => $token], 0);
         $inKlaviyo = $this->klaviyo->setProperties($email, $locale, ['dashboard_link' => $link]);
-        if ($this->siteConfirmEmail || !$inKlaviyo) {
+        // The quiz flow's own email (with dashboard_link) is in English, so Ukrainian and Polish
+        // quiz-takers (on the main account's list too) always get the site's translated email.
+        if ($this->siteConfirmEmail || !$inKlaviyo || \in_array($locale, ['uk', 'pl'], true)) {
             try {
                 $this->emails->sendQuizConfirmation($submission, $link);
             } catch (\Throwable $e) {

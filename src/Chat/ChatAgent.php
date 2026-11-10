@@ -18,7 +18,7 @@ use Symfony\Component\Yaml\Yaml;
  *   {{course_knowledge}}  the course lessons (CourseKnowledge::knowledge(), from the database)
  *   {{course_progress}}   this pet parent's finished lessons and written answers
  *   {{dog_profile}}       their dog's profile from the Bowl Score quiz
- *   {{language}}          a note to reply in Lithuanian when that's their site language
+ *   {{language}}          a note to reply in their site language (Lithuanian, Ukrainian, Polish) when it isn't English
  *
  * Everything above the "## This conversation" heading is the same for every pet parent, so it
  * is sent as a separate block marked for prompt caching: repeat requests read the long course
@@ -47,7 +47,7 @@ class ChatAgent
 
     /**
      * The starting questions for an empty chat, or null when there are none.
-     * Lithuanian pages use intro_questions.lt.yaml next to the English file, if it exists.
+     * Other languages use intro_questions.<locale>.yaml next to the English file, if it exists.
      */
     public function introQuestions(string $locale = 'en'): ?array
     {

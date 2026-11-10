@@ -62,6 +62,30 @@ final class KlaviyoEmailTest extends AppTestCase
         $this->assertSame('Welcome to ZENOO', $e['properties']['subject']);
         $this->assertSame('en', $e['properties']['locale']);
         $this->assertSame('http://localhost/dashboard', $e['properties']['dashboard_url']);
+        // The email's text travels with the event, for the language-neutral templates in docs/klaviyo/.
+        $this->assertSame('Welcome, Maria!', $e['properties']['copy_heading']);
+        $this->assertSame('Take the Bowl Score quiz', $e['properties']['copy_button']);
+        $this->assertSame('Log in any time at localhost/login with maria@example.com.', $e['properties']['copy_note']);
+        $this->assertSame('ZENOO team', $e['properties']['copy_team']);
+    }
+
+    public function testEventTextIsInTheRecipientsLanguage(): void
+    {
+        $t = static::getContainer()->get(TranslatorInterface::class);
+        foreach (['uk', 'pl'] as $locale) {
+            $this->em->clear();
+            FakeStripe::$klaviyo = [];
+            $this->createUser("$locale@example.com")->setLocale($locale);
+            $this->em->flush();
+            $crawler = $this->client->request('GET', '/forgot-password');
+            $this->client->submit($crawler->filter('form')->form(['email' => "$locale@example.com"]));
+            $e = $this->event();
+            $this->assertSame($locale, $e['properties']['locale']);
+            $this->assertSame($t->trans('Reset your password', [], null, $locale), $e['properties']['copy_heading']);
+            $this->assertNotSame('Reset your password', $e['properties']['copy_heading']);
+            $this->assertSame($t->trans('Choose a new password', [], null, $locale), $e['properties']['copy_button']);
+            $this->assertStringContainsString('Maria', $e['properties']['copy_intro']);
+        }
     }
 
     public function testPasswordResetLinkFromTheEventWorks(): void
@@ -123,7 +147,7 @@ final class KlaviyoEmailTest extends AppTestCase
             $klaviyo = new KlaviyoProfiles(new MockHttpClient(), new NullLogger(), $key, null, true);
             return new EmailService(
                 $this->createMock(MailerInterface::class), 'https://app.zenoo.lt', 'noreply@zenoo.lt', 'ZENOO',
-                $this->createMock(TranslatorInterface::class), $klaviyo, $dsn, 'auto',
+                $this->createMock(TranslatorInterface::class), $klaviyo, new \App\Twig\LocaleExtension($this->createMock(TranslatorInterface::class)), $dsn, 'auto',
             );
         };
         $this->assertSame('klaviyo', $make('null://null', 'pk_x')->deliveryFor('en'));

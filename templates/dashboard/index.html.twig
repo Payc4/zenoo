@@ -17,7 +17,7 @@
       {% if dog %}
         <ul class="dash-facts">
           {% if dog.get('breed') %}<li>{{ dog.get('breed') == 'mixed' ? 'Mixed breed'|trans : dog.get('breed') }}</li>{% endif %}
-          {% if dog.get('age_years') is not null %}<li>{{ '%n% years'|trans({'%n%': dog.get('age_years')|number_format(1, app.locale == 'lt' ? ',' : '.', '')|replace({'.0': '', ',0': ''})}) }}{% if stages[dog.get('life_stage')] is defined %} · {{ stages[dog.get('life_stage')]|trans }}{% endif %}</li>{% endif %}
+          {% if dog.get('age_years') is not null %}<li>{{ '%n% years'|trans({'%n%': dog.get('age_years')|number_format(1, decimal_sep(), '')|replace({'.0': '', ',0': ''})}) }}{% if stages[dog.get('life_stage')] is defined %} · {{ stages[dog.get('life_stage')]|trans }}{% endif %}</li>{% endif %}
           {% if dog.get('weight_kg') %}<li>{{ dog.get('weight_kg') }} kg</li>{% endif %}
         </ul>
       {% endif %}

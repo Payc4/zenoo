@@ -156,8 +156,9 @@ class CourseKnowledge
 
     public function language(User $user): string
     {
-        return $user->getLocale() === 'lt'
-            ? 'Their site language is Lithuanian: reply in Lithuanian unless they write in another language.'
+        $language = \App\Locale::ENGLISH_NAMES[$user->getLocale()] ?? null;
+        return $language !== null && $user->getLocale() !== 'en'
+            ? "Their site language is $language: reply in $language unless they write in another language."
             : '';
     }
 }

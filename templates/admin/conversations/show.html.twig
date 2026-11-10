@@ -7,7 +7,7 @@
 <main class="cs-wrap cv-show">
   <p><a href="{{ path('admin_conversations') }}">← All conversations</a></p>
   <h1 class="cs-h1">{{ user.firstName ?: user.email }}</h1>
-  <p class="cs-muted">{{ user.email }} · language {{ user.locale|upper }} · started {{ conversation.createdAt|date('Y-m-d H:i') }} ·
+  <p class="cs-muted">{{ user.email }} · language {{ locale_name(user.locale) }} · started {{ conversation.createdAt|date('Y-m-d H:i') }} ·
     <a href="{{ path('admin_conversation_text', {id: conversation.id}) }}">Download as text</a></p>
 
   <div class="cv-grid">

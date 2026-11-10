@@ -1,0 +1,33 @@
+# Polish version of intro_questions.yaml (used when the site language is Polish).
+# Keep the two files in step: same questions, same order.
+
+questions:
+  - question: "Jak ma na imię twój pies?"
+    options: []
+
+  - question: "Ile lat ma twój pies?"
+    options:
+      - { label: "Szczeniak", description: "Poniżej 1 roku" }
+      - { label: "Dorosły", description: "Od 1 do 7 lat" }
+      - { label: "Senior", description: "7 lat lub więcej" }
+
+  - question: "Jak duży jest twój pies?"
+    options:
+      - { label: "Miniaturowy", description: "Poniżej 5 kg" }
+      - { label: "Mały", description: "5–10 kg" }
+      - { label: "Średni", description: "10–25 kg" }
+      - { label: "Duży", description: "Powyżej 25 kg" }
+
+  - question: "Czym głównie karmisz teraz swojego psa?"
+    options:
+      - { label: "Sucha karma", description: "Granulki" }
+      - { label: "Mokra karma", description: "Puszki lub saszetki" }
+      - { label: "Surowa lub domowa karma", description: "BARF, mrożona surowa lub gotowana w domu" }
+      - { label: "ZENOO", description: "Samo lub w połączeniu z inną karmą" }
+
+  - question: "W czym najbardziej chcesz uzyskać pomoc?"
+    options:
+      - { label: "Wybredne jedzenie", description: "Zostawia jedzenie lub wybrzydza" }
+      - { label: "Porcje i waga", description: "Ile karmić" }
+      - { label: "Zmiana karmy", description: "Przejście na nową dietę" }
+      - { label: "Brzuszek i trawienie", description: "Stolce, gazy, rozstrojony brzuszek" }

@@ -30,8 +30,8 @@
   const plurals = new Intl.PluralRules(CFG.locale || 'en');
   const plural = (n, forms) => fill(forms[plurals.select(n)] || forms.other, { n });
   const sortBreeds = (list) => list.sort((x, y) => x.name.localeCompare(y.name, CFG.locale || undefined));
-  // Search ignores case and accents, so "cihua" finds "Čihuahua".
-  const fold = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  // Search ignores case, accents and the kind of apostrophe, so "cihua" finds "Čihuahua" and "тер'єр" finds "тер’єр".
+  const fold = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’ʼ`]/g, "'");
   const breedList = (q) => sortBreeds(C.breeds.filter((b) => fold(b.name).includes(fold(q))));
   const breedOptions = (q) => opt('breedId', 'mixed', U.breed.mixed, U.breed.mixedHint) + breedList(q).map((b) => opt('breedId', b.id, b.name)).join('');
 

@@ -1,0 +1,82 @@
+# Polish wording for the check-in questions in checkins.yaml (same ids and values).
+# Timing (every_days, per_visit, repeat_days) and what the coach sees come from checkins.yaml.
+# %dog% = the dog's name, always in the nominative, so it stands in brackets or after a colon.
+
+questions:
+  - id: goal
+    question: "W czym najbardziej chcesz pomóc swojemu psu (%dog%)?"
+    options:
+      - { value: digestion, label: "Lepsze trawienie" }
+      - { value: weight, label: "Zdrowa waga" }
+      - { value: skin, label: "Skóra i sierść" }
+      - { value: energy, label: "Więcej energii" }
+      - { value: food_switch, label: "Zmiana karmy" }
+
+  - id: stools
+    question: "Jakie były w tym tygodniu stolce twojego psa (%dog%)?"
+    options:
+      - { value: firm, label: "Zwarte, łatwe do sprzątnięcia" }
+      - { value: soft, label: "Trochę miękkie" }
+      - { value: loose, label: "Luźne lub wodniste" }
+      - { value: hard, label: "Twarde lub suche" }
+
+  - id: appetite
+    question: "Jaki ostatnio jest apetyt twojego psa (%dog%)?"
+    options:
+      - { value: eager, label: "Zjada wszystko szybko" }
+      - { value: normal, label: "Normalny" }
+      - { value: picky, label: "Wybredny" }
+      - { value: low, label: "Je niewiele" }
+
+  - id: energy
+    question: "Ile energii ma w tym tygodniu twój pies (%dog%)?"
+    options:
+      - { value: high, label: "Jest pełen energii" }
+      - { value: normal, label: "Tyle co zwykle" }
+      - { value: lower, label: "Mniej niż zwykle" }
+      - { value: very_low, label: "Bardzo mało" }
+
+  - id: itching
+    question: "Czy ostatnio pojawiło się swędzenie, lizanie łap albo problemy ze skórą?"
+    options:
+      - { value: none, label: "Nie" }
+      - { value: little, label: "Trochę" }
+      - { value: lot, label: "Dość dużo" }
+
+  - id: food_change
+    question: "Czy od czasu quizu karma twojego psa (%dog%) się zmieniła?"
+    options:
+      - { value: "no", label: "Nie" }
+      - { value: switched, label: "Tak, na nową karmę" }
+      - { value: added, label: "Doszły dodatki do miski lub suplementy" }
+
+  - id: weight_change
+    question: "Czy waga twojego psa (%dog%) ostatnio się zmieniła?"
+    options:
+      - { value: same, label: "Mniej więcej bez zmian" }
+      - { value: gained, label: "Przybrał na wadze" }
+      - { value: lost, label: "Schudł" }
+      - { value: unsure, label: "Nie wiem" }
+
+  - id: exercise
+    question: "Ile ruchu ma twój pies (%dog%) w zwykły dzień?"
+    options:
+      - { value: under_30, label: "Mniej niż 30 minut" }
+      - { value: "30_60", label: "30–60 minut" }
+      - { value: 1_2h, label: "1–2 godziny" }
+      - { value: over_2h, label: "Ponad 2 godziny" }
+
+  - id: treats
+    question: "Ile przysmaków lub resztek ze stołu dostaje dziennie twój pies (%dog%)?"
+    options:
+      - { value: none, label: "Wcale" }
+      - { value: few, label: "Kilka" }
+      - { value: lots, label: "Dość dużo" }
+
+  - id: vet
+    question: "Czy twój pies (%dog%) jest teraz pod opieką weterynarza z jakiegoś powodu?"
+    options:
+      - { value: "no", label: "Nie" }
+      - { value: digestion, label: "Tak, z powodu trawienia" }
+      - { value: skin, label: "Tak, z powodu skóry lub alergii" }
+      - { value: other, label: "Tak, z innego powodu" }

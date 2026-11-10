@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use App\Course\CourseDocumentParser;
+use App\Course\LessonLayouts;
 use App\Entity\Course;
 use App\Entity\Lesson;
 use App\Repository\CourseRepository;
@@ -17,13 +18,15 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
- * Loads the ZENOO Dog Wellness Course (English + Lithuanian) from the course document
- * into the Course studio. Run once after deploying; docker/entrypoint.sh runs it with
- * --if-empty, so a fresh database gets the lessons automatically.
+ * Loads the ZENOO Dog Wellness Course into the Course studio, one course per language:
+ * English and Lithuanian from the course document (content/courses/zenoo-dog-wellness.md),
+ * Ukrainian and Polish from their translations of the English lessons
+ * (content/courses/zenoo-dog-wellness.uk.json / .pl.json, same slides as the English course).
  *
- * Both courses are created as drafts (only admins see them) until someone ticks
- * "Published" in the studio, or runs this with --publish.
- * Lessons edited in the studio are never overwritten unless you pass --force.
+ * docker/docker-entrypoint.sh runs it with --missing on every deploy, so a language whose course
+ * doesn't exist yet gets it automatically (a fresh database gets all four).
+ * New courses are drafts (only admins see them) until someone ticks "Published" in the studio,
+ * or runs this with --publish. Lessons edited in the studio are never overwritten unless you pass --force.
  */
 #[AsCommand(name: 'app:course:import', description: 'Import the ZENOO Dog Wellness Course lessons from the course document')]
 final class ImportCourseCommand extends Command
@@ -39,6 +42,18 @@ final class ImportCourseCommand extends Command
             'title' => 'ZENOO šunų sveikatos kursas',
             'description' => '30 trumpų Agotos, ZENOO įkūrėjos, pamokų šeimininkams, kurie šeria šviežiu, namuose gamintu ar žaliu maistu arba jų deriniu. Kiekviena – apie 8 minutes.',
         ],
+        'uk' => [
+            'slug' => 'kurs-zdorovia-sobak',
+            'title' => 'Курс ZENOO про здоров\'я собак',
+            'description' => '30 коротких уроків від Аготи, засновниці ZENOO, для власників собак, які годують свіжим, домашнім чи сирим кормом або їх поєднанням. Приблизно 8 хвилин кожен.',
+            'file' => 'content/courses/zenoo-dog-wellness.uk.json',
+        ],
+        'pl' => [
+            'slug' => 'kurs-zdrowia-psa',
+            'title' => 'Kurs zdrowia psa ZENOO',
+            'description' => '30 krótkich lekcji od Agoty, założycielki ZENOO, dla opiekunów psów, którzy karmią świeżą, domową lub surową karmą albo ich połączeniem. Każda trwa około 8 minut.',
+            'file' => 'content/courses/zenoo-dog-wellness.pl.json',
+        ],
     ];
 
     public function __construct(
@@ -53,10 +68,11 @@ final class ImportCourseCommand extends Command
     {
         $this
             ->addArgument('file', InputArgument::OPTIONAL, 'The course document (Markdown)', 'content/courses/zenoo-dog-wellness.md')
-            ->addOption('lang', null, InputOption::VALUE_REQUIRED, 'Only this language: en or lt')
+            ->addOption('lang', null, InputOption::VALUE_REQUIRED, 'Only this language: en, lt, uk or pl')
             ->addOption('publish', null, InputOption::VALUE_NONE, 'Publish the courses (visible to every logged-in user)')
             ->addOption('force', null, InputOption::VALUE_NONE, 'Overwrite lessons that already exist (learners keep their progress)')
-            ->addOption('if-empty', null, InputOption::VALUE_NONE, 'Do nothing if any course exists already (used on deploy)');
+            ->addOption('if-empty', null, InputOption::VALUE_NONE, 'Do nothing if any course exists already')
+            ->addOption('missing', null, InputOption::VALUE_NONE, 'Only languages whose course doesn\'t exist yet (used on deploy)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -74,15 +90,34 @@ final class ImportCourseCommand extends Command
             return Command::FAILURE;
         }
 
-        try {
-            $parsed = (new CourseDocumentParser())->parse((string) file_get_contents($path));
-        } catch (\RuntimeException $e) {
-            $io->error($e->getMessage());
-            return Command::FAILURE;
+        $langs = $input->getOption('lang') ? [(string) $input->getOption('lang')] : array_keys(self::COURSES);
+        if ($input->getOption('missing')) {
+            $langs = array_values(array_filter($langs, fn (string $l) => isset(self::COURSES[$l]) && !$this->courses->findOneBy(['slug' => self::COURSES[$l]['slug']])));
+            if (!$langs) {
+                $io->writeln('Every language has its course already, nothing imported.');
+                return Command::SUCCESS;
+            }
         }
 
-        $langs = $input->getOption('lang') ? [(string) $input->getOption('lang')] : ['en', 'lt'];
+        $parsed = ['notes' => []];
+        if (array_intersect($langs, ['en', 'lt'])) {
+            try {
+                $parsed = (new CourseDocumentParser())->parse((string) file_get_contents($path));
+            } catch (\RuntimeException $e) {
+                $io->error($e->getMessage());
+                return Command::FAILURE;
+            }
+        }
+
         foreach ($langs as $lang) {
+            if (isset(self::COURSES[$lang]['file'])) {
+                try {
+                    $parsed[$lang] = $this->translation($lang);
+                } catch (\RuntimeException $e) {
+                    $io->warning($e->getMessage());
+                    continue;
+                }
+            }
             if (!isset(self::COURSES[$lang]) || empty($parsed[$lang])) {
                 $io->warning("No lessons for language \"$lang\".");
                 continue;
@@ -99,6 +134,24 @@ final class ImportCourseCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * A translated course: the lessons as the parser gives them (number, title, subtitle, minutes, slides).
+     *
+     * @return list<array>
+     */
+    private function translation(string $lang): array
+    {
+        $path = $this->projectDir . '/' . self::COURSES[$lang]['file'];
+        $lessons = is_file($path) ? json_decode((string) file_get_contents($path), true) : null;
+        if (!\is_array($lessons) || !$lessons) {
+            throw new \RuntimeException(sprintf('No lessons for "%s": %s is missing or not valid JSON.', $lang, self::COURSES[$lang]['file']));
+        }
+        foreach ($lessons as &$lesson) {
+            $lesson['slides'] = LessonLayouts::sanitizeSlides($lesson['slides'] ?? []);
+        }
+        return $lessons;
+    }
+
     /** @return array{int, int, int} created, updated, kept */
     private function import(string $lang, array $lessons, bool $publish, bool $force): array
     {
@@ -111,7 +164,7 @@ final class ImportCourseCommand extends Command
                 ->setDescription($meta['description'])
                 ->setLocale($lang)
                 ->setIsFree(true)
-                ->setPosition($lang === 'en' ? 0 : 1);
+                ->setPosition((int) array_search($lang, array_keys(self::COURSES), true));
             $this->em->persist($course);
         }
         if ($publish) {
