@@ -19,6 +19,9 @@ final class FakeStripe
     /** @var list<array{url: string, headers: array, body: string}> requests to Klaviyo's server API */
     public static array $klaviyo = [];
     public static bool $klaviyoDown = false;
+    /** @var list<array{url: string, headers: array, body: array}> ElevenLabs text-to-speech calls */
+    public static array $elevenlabs = [];
+    public static ?string $elevenlabsError = null;
 
     public static function reset(): void
     {
@@ -27,12 +30,20 @@ final class FakeStripe
         self::$down = false;
         self::$klaviyo = [];
         self::$klaviyoDown = false;
+        self::$elevenlabs = [];
+        self::$elevenlabsError = null;
     }
 
     public function __invoke(string $method, string $url, array $options = []): MockResponse
     {
         if (str_ends_with($url, '/v1/messages')) {
             return FakeClaude::respond($options);
+        }
+        if (str_contains($url, 'api.elevenlabs.io/')) {
+            self::$elevenlabs[] = ['url' => $url, 'headers' => $options['headers'] ?? [], 'body' => json_decode((string) ($options['body'] ?? ''), true) ?? []];
+            return self::$elevenlabsError !== null
+                ? new MockResponse(json_encode(['detail' => ['status' => 'invalid_api_key', 'message' => self::$elevenlabsError]]), ['http_code' => 401])
+                : new MockResponse('ID3fake-mp3-bytes', ['http_code' => 200, 'response_headers' => ['content-type' => 'audio/mpeg']]);
         }
         if (str_contains($url, 'a.klaviyo.com/')) {
             self::$klaviyo[] = ['url' => $url, 'headers' => $options['headers'] ?? [], 'body' => (string) ($options['body'] ?? '')];

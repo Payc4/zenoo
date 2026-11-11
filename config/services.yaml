@@ -26,6 +26,9 @@ parameters:
     chat.default_daily_limit: 60
     chat.default_timezone: 'Europe/Vilnius'
 
+    # Lesson voices (Course studio → Generate with ElevenLabs, app:course:voice). See src/Course/VoiceGenerator.php.
+    voice.default_model: 'eleven_v3'
+
 services:
     _defaults:
         autowire: true
@@ -50,3 +53,15 @@ services:
             $siteKey: '%app.turnstile.site_key%'
             $secretKey: '%app.turnstile.secret_key%'
             $environment: '%kernel.environment%'
+
+    App\Course\VoiceGenerator:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $apiKey: '%env(default::ELEVENLABS_API_KEY)%'
+            $voiceId: '%env(default::ELEVENLABS_VOICE_ID)%'
+            $voicesByLocale:
+                en: '%env(default::ELEVENLABS_VOICE_ID_EN)%'
+                lt: '%env(default::ELEVENLABS_VOICE_ID_LT)%'
+                uk: '%env(default::ELEVENLABS_VOICE_ID_UK)%'
+                pl: '%env(default::ELEVENLABS_VOICE_ID_PL)%'
+            $model: '%env(default:voice.default_model:ELEVENLABS_MODEL)%'

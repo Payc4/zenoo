@@ -64,6 +64,7 @@ final class LessonLayouts
                 'fields' => [
                     $headline,
                     ['key' => 'audio', 'type' => 'audio', 'label' => 'Audio file', 'help' => 'MP3 or M4A, up to 10 MB.'],
+                    ['key' => 'ai_voice', 'type' => 'checkbox', 'label' => 'AI-generated voice', 'help' => 'Ticked when the audio is made with ElevenLabs. Learners see a short note under the player.'],
                     ['key' => 'script', 'type' => 'textarea', 'label' => 'Transcript', 'rows' => 8, 'help' => 'Shown under the player as "Read along". Until the audio is uploaded, learners read it instead.'],
                     ['key' => 'question', 'type' => 'text', 'label' => 'Check question'],
                     ['key' => 'choices', 'type' => 'choices', 'label' => 'Answers', 'help' => 'Tick the correct answer.', 'default' => self::blankChoices()],
@@ -180,7 +181,7 @@ final class LessonLayouts
         $en = [
             'read' => 'Read', 'listen' => 'Listen', 'write' => 'Write', 'do' => 'Do it with your dog', 'deeper' => 'Go deeper',
             'quiz' => 'Quick check', 'vet' => 'Vet check', 'continue' => 'Continue', 'finish' => 'Finish lesson',
-            'readAlong' => 'Read along', 'audioSoon' => 'Agota\'s recording is coming soon. Read the script below for now.',
+            'readAlong' => 'Read along', 'audioSoon' => 'Agota\'s recording is coming soon. Read the script below for now.', 'aiVoice' => 'Voice generated with AI.',
             'correct' => 'Correct!', 'incorrect' => 'Not quite.', 'weak' => 'Weak example', 'model' => 'Model answer',
             'check' => 'Check my answer', 'placeholder' => 'Write your answer…', 'part' => 'Part',
             'badge' => 'Badge earned', 'lessonOf' => 'Lesson %n% of %total% complete', 'streak' => 'Day %n% streak',
@@ -191,7 +192,7 @@ final class LessonLayouts
         $lt = [
             'read' => 'Skaityk', 'listen' => 'Klausyk', 'write' => 'Rašyk', 'do' => 'Daryk su savo šunimi', 'deeper' => 'Giliau',
             'quiz' => 'Greita patikra', 'vet' => 'Veterinaro patikra', 'continue' => 'Toliau', 'finish' => 'Baigti pamoką',
-            'readAlong' => 'Skaitykite kartu', 'audioSoon' => 'Agotos įrašas netrukus. Kol kas perskaitykite tekstą žemiau.',
+            'readAlong' => 'Skaitykite kartu', 'audioSoon' => 'Agotos įrašas netrukus. Kol kas perskaitykite tekstą žemiau.', 'aiVoice' => 'Balsas sukurtas dirbtiniu intelektu.',
             'correct' => 'Teisingai!', 'incorrect' => 'Ne visai.', 'weak' => 'Silpnas pavyzdys', 'model' => 'Pavyzdinis atsakymas',
             'check' => 'Tikrinti atsakymą', 'placeholder' => 'Parašykite atsakymą…', 'part' => 'Dalis',
             'badge' => 'Gautas ženklelis', 'lessonOf' => '%n% pamoka iš %total% baigta', 'streak' => 'Serija: %n% d.',
@@ -202,7 +203,7 @@ final class LessonLayouts
         $uk = [
             'read' => 'Читати', 'listen' => 'Слухати', 'write' => 'Писати', 'do' => 'Зробіть разом із собакою',
             'deeper' => 'Глибше', 'quiz' => 'Швидка перевірка', 'vet' => 'Коли до ветеринара', 'continue' => 'Продовжити',
-            'finish' => 'Завершити урок', 'readAlong' => 'Читати разом', 'audioSoon' => 'Запис Аготи з\'явиться незабаром. А поки прочитайте текст нижче.', 'correct' => 'Правильно!',
+            'finish' => 'Завершити урок', 'readAlong' => 'Читати разом', 'audioSoon' => 'Запис Аготи з\'явиться незабаром. А поки прочитайте текст нижче.', 'aiVoice' => 'Голос створено штучним інтелектом.', 'correct' => 'Правильно!',
             'incorrect' => 'Не зовсім.', 'weak' => 'Слабкий приклад', 'model' => 'Зразкова відповідь', 'check' => 'Перевірити відповідь',
             'placeholder' => 'Напишіть свою відповідь…', 'part' => 'Частина', 'badge' => 'Отримано значок', 'lessonOf' => 'Урок %n% з %total% пройдено',
             'streak' => 'Серія: день %n%', 'close' => 'Закрити урок', 'back' => 'Попередній екран', 'done' => 'Виконано разом із собакою',
@@ -212,7 +213,7 @@ final class LessonLayouts
         $pl = [
             'read' => 'Czytaj', 'listen' => 'Słuchaj', 'write' => 'Pisz', 'do' => 'Zrób to ze swoim psem',
             'deeper' => 'Dowiedz się więcej', 'quiz' => 'Szybki test', 'vet' => 'Kiedy do weterynarza', 'continue' => 'Dalej',
-            'finish' => 'Zakończ lekcję', 'readAlong' => 'Czytaj razem z nagraniem', 'audioSoon' => 'Nagranie Agoty pojawi się wkrótce. Na razie przeczytaj tekst poniżej.', 'correct' => 'Dobrze!',
+            'finish' => 'Zakończ lekcję', 'readAlong' => 'Czytaj razem z nagraniem', 'audioSoon' => 'Nagranie Agoty pojawi się wkrótce. Na razie przeczytaj tekst poniżej.', 'aiVoice' => 'Głos wygenerowany przez AI.', 'correct' => 'Dobrze!',
             'incorrect' => 'Nie do końca.', 'weak' => 'Słaby przykład', 'model' => 'Wzorcowa odpowiedź', 'check' => 'Sprawdź moją odpowiedź',
             'placeholder' => 'Wpisz swoją odpowiedź…', 'part' => 'Część', 'badge' => 'Zdobyta odznaka', 'lessonOf' => 'Ukończona lekcja %n% z %total%',
             'streak' => 'Seria: dzień %n%', 'close' => 'Zamknij lekcję', 'back' => 'Poprzedni ekran', 'done' => 'Zrobione z moim psem',

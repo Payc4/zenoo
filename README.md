@@ -23,7 +23,7 @@ in capitals, Inter body copy, 24px corners and no shadows.
 | **My dog** (`/dashboard`) | The dog profile from the quiz: Bowl Score with the 7-part breakdown, the first tips, the daily plan, 3 lessons picked for the dog, course progress and the AI coach with starter questions. It's where pet parents land after logging in. |
 | **Flags** | Language selector top right: English, Lithuanian, Ukrainian, Polish. The whole site, emails, quiz, course and chat coach work in all four. See below. |
 | **Courses** (`/courses`) | The ZENOO Dog Wellness Course: 30 lessons in each of the four languages, 9 screens each, played one screen at a time. Logged-in pet parents only. Progress, quiz answers and written answers are saved; finished lessons and a day streak show on the course list. See below. |
-| **Course studio** (`/admin/course-studio`) | Admins edit courses and lessons screen by screen with a live phone preview, publish them, and upload Agota's audio. |
+| **Course studio** (`/admin/course-studio`) | Admins edit courses and lessons screen by screen with a live phone preview, publish them, and upload Agota's audio or generate it with ElevenLabs. |
 | **Chat** (`/chat`) | A Claude-powered chatbot in its own tab. Logged-in pet parents only, **one chat per person**, **60 messages per day** (admins unlimited). Replies stream in as they're written, the chat is saved, and "Clear chat" empties it. See below. |
 | **Admin** (`/admin`) | Overview, products, purchases (read-only) and pet parents (create, edit, set passwords, grant Admin). |
 
@@ -173,8 +173,13 @@ If you update the quiz from the handoff, copy the files over and update the hash
   + transcript + check question), quick check, write (saved to the account), do it with your dog
   (steps + "done" tick), go deeper, vet check + today's practice, achievement (badge, lesson x of 30,
   streak). Tables in the text (`| a | b |`) show as tables, and as cards on phones.
-- **Audio:** there is no recording yet, so the Listen screen shows the transcript. Upload an MP3 per
-  lesson in the Course studio.
+- **Audio:** upload an MP3 per lesson in the Course studio, or make it with ElevenLabs
+  (`ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID`, `src/Course/VoiceGenerator.php`): "Generate with
+  ElevenLabs" on a Listen screen in the editor, "Generate voices with ElevenLabs" under each course
+  for every screen without audio (one at a time, saved as it goes), or `php bin/console app:course:voice`
+  (`--dry-run` shows the characters it costs). The script is read without its Markdown, in the
+  course's language. Generated audio is marked "AI-generated voice", and learners see a short note
+  under the player. Until there is audio, the Listen screen shows the transcript.
 - **Language:** a course's language (English, Lietuvių, Українська, Polski) sets the player's buttons and labels.
 - **Access:** courses marked "Free" (both are) are open to every logged-in pet parent; otherwise only
   to people with a paid order.

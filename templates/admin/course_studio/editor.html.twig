@@ -13,6 +13,7 @@
      data-course-editor-save-url-value="{{ path('admin_course_studio_lesson_save', {id: lesson.id}) }}"
      data-course-editor-preview-url-value="{{ path('admin_course_studio_lesson_preview', {id: lesson.id}) }}"
      data-course-editor-upload-url-value="{{ path('admin_course_studio_upload_audio') }}"
+     data-course-editor-voice-url-value="{{ voice_ready ? path('admin_course_studio_generate_voice', {id: lesson.id}) : '' }}"
      data-course-editor-csrf-value="{{ csrf_token('studio') }}">
 
   <script type="application/json" data-course-editor-target="layouts">{{ layouts|json_encode|raw }}</script>

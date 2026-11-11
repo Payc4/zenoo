@@ -27,6 +27,9 @@ needs no manual steps.
 | `ANTHROPIC_API_KEY` | From the Claude Console (**API keys**). Switches on the Chat tab. Empty means the chat is off. |
 | `ANTHROPIC_MODEL` | Optional. Defaults to `claude-haiku-5-5`. |
 | `CHAT_DAILY_LIMIT` | Optional. Messages per pet parent per day, default `60`. |
+| `ELEVENLABS_API_KEY` | Optional, secret (untick Buildtime). An ElevenLabs API key with **Text to Speech** access. Switches on "Generate with ElevenLabs" in the Course studio for the Listen screens' audio. |
+| `ELEVENLABS_VOICE_ID` | The ElevenLabs voice for every language (Voices → the voice → copy its ID), e.g. a clone of Agota's voice made with her consent. `ELEVENLABS_VOICE_ID_EN`, `_LT`, `_UK`, `_PL` optionally use another voice for one language. |
+| `ELEVENLABS_MODEL` | Optional, default `eleven_v3` (speaks English, Lithuanian, Ukrainian and Polish). `eleven_multilingual_v2` has no Lithuanian. |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | From Cloudflare Turnstile. Empty switches the sign-up captcha off. |
 | `QUIZ_SEND_TO_KLAVIYO` | Defaults to `true`: finished quizzes go to the **live** Klaviyo flow and email the pet parent. Set `false` for a staging copy. |
 | `KLAVIYO_COMPANY_ID`, `KLAVIYO_LIST_ID` | Default to the EN account (`SVCcfJ`, list `Xubzza`). |

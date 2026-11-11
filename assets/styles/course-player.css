@@ -114,6 +114,7 @@
 /* Audio */
 .lp-audio { background: #fff; border-radius: var(--radius); padding: 1rem; border: 1px solid var(--lp-line); }
 .lp-audio audio { width: 100%; }
+.lp-audio__ai { margin: .5rem 0 0; font-size: .8rem; color: var(--lp-muted); text-align: center; }
 .lp-audio__empty { text-align: center; padding: 1.25rem 0.5rem; color: var(--lp-muted); }
 .lp-details { background: rgba(68, 89, 66, 0.04); border-radius: 14px; padding: 0.8rem 1rem; }
 .lp-details summary { cursor: pointer; font-weight: 600; color: var(--lp-ink); }

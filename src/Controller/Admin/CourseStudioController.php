@@ -3,7 +3,9 @@
 namespace App\Controller\Admin;
 
 use App\Controller\CourseController;
+use App\Course\CourseVoices;
 use App\Course\LessonLayouts;
+use App\Course\VoiceGenerator;
 use App\Entity\Course;
 use App\Entity\Lesson;
 use App\Repository\CourseRepository;
@@ -31,13 +33,27 @@ final class CourseStudioController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly CourseRepository $courses,
         private readonly SluggerInterface $slugger,
+        private readonly VoiceGenerator $voiceGenerator,
+        private readonly CourseVoices $courseVoices,
     ) {}
 
     #[Route('', name: 'admin_course_studio', methods: ['GET'])]
     public function index(): Response
     {
+        $courses = $this->courses->findAllOrdered();
+        $voices = [];
+        foreach ($courses as $course) {
+            $missing = $this->courseVoices->screens($course);
+            $voices[$course->getId()] = [
+                'missing' => \count($missing),
+                'chars' => CourseVoices::characters($missing),
+                'ready' => $this->voiceGenerator->isConfigured($course->getLocale()),
+            ];
+        }
         return $this->render('admin/course_studio/index.html.twig', [
-            'courses' => $this->courses->findAllOrdered(),
+            'courses' => $courses,
+            'voices' => $voices,
+            'voiceModel' => $this->voiceGenerator->model(),
         ]);
     }
 
@@ -152,6 +168,7 @@ final class CourseStudioController extends AbstractController
             'course' => $lesson->getCourse(),
             'layouts' => LessonLayouts::all(),
             'transitions' => LessonLayouts::TRANSITIONS,
+            'voice_ready' => $this->voiceGenerator->isConfigured($lesson->getCourse()->getLocale()),
         ]);
     }
 
@@ -221,6 +238,46 @@ final class CourseStudioController extends AbstractController
         $file->move($dir, $name);
 
         return $this->json(['ok' => true, 'url' => '/uploads/lesson-audio/' . $name, 'name' => $file->getClientOriginalName()]);
+    }
+
+    /** Editor: speech for the script on screen (not saved until the lesson is saved, like an upload). */
+    #[Route('/lesson/{id}/generate-voice', name: 'admin_course_studio_generate_voice', methods: ['POST'])]
+    public function generateVoice(Lesson $lesson, Request $request): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('studio', $request->headers->get('X-CSRF-Token'))) {
+            return $this->json(['error' => 'Your session expired. Reload the page and try again.'], 400);
+        }
+        $script = (string) (json_decode($request->getContent(), true)['script'] ?? '');
+        $course = $lesson->getCourse();
+        $number = 1 + (int) array_search($lesson, $course->getLessons()->toArray(), true);
+        try {
+            $url = $this->voiceGenerator->generate($script, $course->getLocale(), sprintf('%s-%s-lesson-%02d', $course->getLocale(), substr($course->getSlug(), 0, 30), $number));
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 502);
+        }
+        return $this->json(['ok' => true, 'url' => $url]);
+    }
+
+    /**
+     * Course list: makes the voice for the next Listen screen without audio and saves it.
+     * The page calls this again and again until nothing is left, so no request runs for long.
+     */
+    #[Route('/course/{id}/voices/next', name: 'admin_course_studio_voices_next', methods: ['POST'])]
+    public function nextVoice(Course $course, Request $request): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('studio', $request->headers->get('X-CSRF-Token'))) {
+            return $this->json(['error' => 'Your session expired. Reload the page and try again.'], 400);
+        }
+        $todo = $this->courseVoices->screens($course);
+        if (!$todo) {
+            return $this->json(['ok' => true, 'remaining' => 0]);
+        }
+        try {
+            $url = $this->courseVoices->generate($todo[0]['lesson'], $todo[0]['slide']);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage(), 'remaining' => \count($todo)], 502);
+        }
+        return $this->json(['ok' => true, 'url' => $url, 'lesson' => $todo[0]['lesson']->getTitle(), 'remaining' => \count($todo) - 1]);
     }
 
     // ───────────────────────── helpers ─────────────────────────

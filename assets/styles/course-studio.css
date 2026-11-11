@@ -208,3 +208,9 @@ textarea.cs-input { resize: vertical; line-height: 1.5; }
 .cv-side { position: sticky; top: 4rem; background: #fff; border-radius: 12px; padding: 1rem; }
 .cv-pre { white-space: pre-wrap; font: inherit; font-size: 0.82rem; margin: 0; }
 @media (max-width: 860px) { .cv-grid { grid-template-columns: 1fr; } .cv-side { position: static; } }
+
+/* Course list: generate the missing lesson voices with ElevenLabs */
+.cs-voices { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 0.75rem 0 0; padding: 0.7rem 0.9rem; border-radius: 12px; background: #f4f6f2; font-size: 0.9rem; }
+.cs-voices > span:nth-child(2) { flex: 1 1 320px; }
+.cs-voices .cs-btn { margin-left: auto; }
+.cs-audio-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }

@@ -59,6 +59,23 @@
       </tbody>
     </table>
 
+    {% set v = voices[course.id] %}
+    {% if v.missing > 0 or v.ready %}
+    <div class="cs-voices" data-controller="voice-batch"
+         data-voice-batch-url-value="{{ path('admin_course_studio_voices_next', {id: course.id}) }}"
+         data-voice-batch-csrf-value="{{ token }}" data-voice-batch-remaining-value="{{ v.missing }}">
+      <span>🎙️</span>
+      {% if v.missing == 0 %}
+        <span class="cs-muted">Every Listen screen has audio.</span>
+      {% elseif v.ready %}
+        <span data-voice-batch-target="status"><strong>{{ v.missing }}</strong> Listen {{ v.missing == 1 ? 'screen has' : 'screens have' }} no audio yet (about {{ v.chars|number_format(0, '.', ',') }} characters of ElevenLabs credit, model {{ voiceModel }}).</span>
+        <button type="button" class="cs-btn cs-btn--sm" data-voice-batch-target="button" data-action="voice-batch#start">Generate voices with ElevenLabs</button>
+      {% else %}
+        <span class="cs-muted"><strong>{{ v.missing }}</strong> Listen {{ v.missing == 1 ? 'screen has' : 'screens have' }} no audio yet. Upload recordings in each lesson, or set ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID in Coolify to generate them.</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
     <div class="cs-course__foot">
       <form method="post" action="{{ path('admin_course_studio_lesson_new', {id: course.id}) }}" class="cs-inline">
         <input type="hidden" name="_token" value="{{ token }}">

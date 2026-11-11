@@ -12,7 +12,7 @@ export default class extends Controller {
     static targets = ["layouts", "lessonData", "transitions", "title", "subtitle", "duration", "published",
         "status", "saveBtn", "list", "form", "frame", "previewForm", "previewPayload",
         "picker", "pickerGrid", "pickerTitle"]
-    static values = { saveUrl: String, previewUrl: String, uploadUrl: String, csrf: String }
+    static values = { saveUrl: String, previewUrl: String, uploadUrl: String, voiceUrl: String, csrf: String }
 
     connect() {
         this.layouts = JSON.parse(this.layoutsTarget.textContent)
@@ -348,8 +348,9 @@ export default class extends Controller {
                     ${value ? `<audio controls src="${this.esc(value)}" class="cs-audio"></audio>
                        <div class="cs-row"><span class="cs-small cs-muted">${this.esc(value.split('/').pop())}</span>
                        <button type="button" class="cs-linkbtn cs-linkbtn--danger" data-path="${path}" data-action="course-editor#removeAudio">Remove</button></div>` : ''}
-                    <label class="cs-upload"><input type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg" data-path="${path}" data-kind="audio" hidden>
+                    <div class="cs-audio-actions"><label class="cs-upload"><input type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg" data-path="${path}" data-kind="audio" hidden>
                       <span class="cs-btn cs-btn--ghost cs-btn--sm">${value ? 'Replace audio' : 'Upload audio'}</span></label>
+                    ${this.voiceUrlValue ? `<button type="button" class="cs-btn cs-btn--ghost cs-btn--sm" data-path="${path}" data-action="course-editor#generateVoice">🎙️ ${value ? 'Regenerate with ElevenLabs' : 'Generate with ElevenLabs'}</button>` : ''}</div>
                     ${help}</div>`
             case 'choices': {
                 const items = (value || []).map((c, i) => `
@@ -486,10 +487,38 @@ export default class extends Controller {
             const data = await res.json().catch(() => ({}))
             if (!res.ok || !data.ok) throw new Error(data.error || 'Upload failed')
             this.setPath(path, data.url)
+            if (this.slide.fields && 'ai_voice' in this.slide.fields) this.slide.fields.ai_voice = false
             this.renderForm()
             this.changed()
         } catch (e) {
             alert(e.message || 'Upload failed')
+            this.renderForm()
+        }
+    }
+
+    // Speech for this screen's script (fields.script) with ElevenLabs. Like an upload, it's kept once the lesson is saved.
+    async generateVoice(event) {
+        const button = event.currentTarget
+        const path = button.dataset.path
+        const fields = this.slide.fields || {}
+        if (!(fields.script || '').trim()) { alert('Write the script (Transcript) first: that is what gets read out.'); return }
+        if (fields.audio && !confirm('Replace the current audio with a new ElevenLabs voice?')) return
+        button.disabled = true
+        button.textContent = 'Making the voice… (up to a minute)'
+        try {
+            const res = await fetch(this.voiceUrlValue, {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': this.csrfValue, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ script: fields.script }),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok || !data.ok) throw new Error(data.error || 'ElevenLabs didn\'t answer. Try again.')
+            this.setPath(path, data.url)
+            fields.ai_voice = true
+            this.renderForm()
+            this.changed()
+        } catch (e) {
+            alert(e.message)
             this.renderForm()
         }
     }

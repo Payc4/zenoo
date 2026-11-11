@@ -4,5 +4,8 @@
 import './styles/course-studio.css';
 import { Application } from '@hotwired/stimulus';
 import CourseEditor from './controllers/course_editor_controller.js';
+import VoiceBatch from './controllers/voice_batch_controller.js';
 
-Application.start().register('course-editor', CourseEditor);
+const app = Application.start();
+app.register('course-editor', CourseEditor);
+app.register('voice-batch', VoiceBatch);

@@ -4,6 +4,7 @@
 <div class="lp-audio">
   {% if f.audio is not empty %}
     <audio controls preload="metadata" src="{{ f.audio }}"></audio>
+    {% if f.ai_voice|default(false) %}<p class="lp-audio__ai">{{ ctx.ui.aiVoice }}</p>{% endif %}
   {% else %}
     <div class="lp-audio__empty">🎧 {{ ctx.preview ? 'Upload an audio file in the studio' : ctx.ui.audioSoon }}</div>
   {% endif %}
