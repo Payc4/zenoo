@@ -65,3 +65,18 @@
   .dash-lesson { grid-template-columns: auto 1fr; }
   .dash-lesson .btn { grid-column: 1 / -1; }
 }
+
+/* Dog photo with a camera button, and "Finish the profile" */
+.dash-photo-wrap { position: relative; margin: 0; flex: none; }
+.dash-photo-edit { position: absolute; right: -2px; bottom: -2px; width: 38px; height: 38px; border-radius: 50%; background: var(--sun); color: #fff; display: grid; place-items: center; cursor: pointer; font-size: 18px; border: 3px solid var(--forest); }
+.dash-photo-wrap.is-sending, .dash-steps form.is-sending { opacity: .5; pointer-events: none; }
+.dash-finish h2 { font-size: 1.25rem; margin: 0 0 6px; }
+.dash-finish > p { margin: 0 0 14px; }
+.dash-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; counter-reset: step; }
+.dash-steps li { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-radius: 14px; background: var(--white); }
+.dash-steps li.is-done { color: var(--ink-muted); }
+.dash-steps form { margin: 0; }
+.dash-steps label.btn { cursor: pointer; }
+.dash-coach__photo { grid-column: 1 / -1; display: flex; gap: 14px; align-items: center; padding: 14px 16px; border-radius: 16px; background: rgba(255, 255, 255, .1); color: #fff; text-decoration: none; }
+.dash-coach__photo:hover { background: rgba(255, 255, 255, .16); }
+.dash-coach__photo > span:first-child { font-size: 1.6rem; }

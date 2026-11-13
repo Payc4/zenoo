@@ -10,7 +10,17 @@
 {% block body %}
 <section class="dash-head">
   <div class="wrap dash-head__in">
-    {% if photo %}<img class="dash-photo" src="{{ photo }}" alt="">{% elseif dog %}<span class="dash-photo dash-photo--empty" aria-hidden="true">🐾</span>{% endif %}
+    {% if dog %}
+      <form class="dash-photo-wrap" method="post" action="{{ path('app_dog_photo') }}" enctype="multipart/form-data" data-photo-form>
+        {% if photo %}<img class="dash-photo" src="{{ photo }}" alt="{{ ownPhoto ? dog.name : '' }}">{% else %}<span class="dash-photo dash-photo--empty" aria-hidden="true">🐾</span>{% endif %}
+        <input type="hidden" name="_token" value="{{ csrf_token('dog-photo') }}">
+        <label class="dash-photo-edit" title="{{ ownPhoto ? 'Change the photo'|trans : 'Add a photo of %dog%'|trans({'%dog%': dog.name}) }}">
+          <span aria-hidden="true">📷</span><span class="visually-hidden">{{ ownPhoto ? 'Change the photo'|trans : 'Add a photo of %dog%'|trans({'%dog%': dog.name}) }}</span>
+          <input type="file" name="photo" accept="image/*" hidden>
+        </label>
+        <noscript><button type="submit" class="btn btn-small">{{ 'Save'|trans }}</button></noscript>
+      </form>
+    {% endif %}
     <div class="dash-head__text">
       <p class="kicker">{{ 'Hi, %name%'|trans({'%name%': user.displayName}) }}</p>
       <h1>{{ dog ? '%dog%’s dashboard'|trans({'%dog%': dog.name}) : 'My dog'|trans }}</h1>
@@ -32,6 +42,36 @@
       <p><strong>{{ 'Choose a password'|trans }}</strong> {{ 'so you can log in any time. Until then, use “Email me a login link” on the login page.'|trans }}</p>
       <a class="btn btn-small" href="{{ path('app_account') }}#password">{{ 'Choose a password'|trans }}</a>
     </div>
+  {% endif %}
+
+  {% if dog and (not dog.food or not ownPhoto) %}
+    {# The two things the coach needs first. #}
+    <section class="card card-sun-border dash-finish" aria-labelledby="finish-h">
+      <h2 id="finish-h">{{ 'Finish %dog%’s profile'|trans({'%dog%': dog.name}) }}</h2>
+      <p>{{ 'Two quick steps, and the coach’s tips fit %dog% much better.'|trans({'%dog%': dog.name}) }}</p>
+      <ol class="dash-steps">
+        <li class="{{ dog.food ? 'is-done' }}">
+          {% if dog.food %}
+            <span>✓ {{ 'Food: %food%'|trans({'%food%': (dog.food.brand ~ ' ' ~ dog.food.product)|trim}) }}</span>
+          {% else %}
+            <span>{{ 'Show the coach what %dog% eats: a photo of the food label, or its name.'|trans({'%dog%': dog.name}) }}</span>
+            <a class="btn btn-small" href="{{ path('app_chat') }}">{{ '📷 Snap the food label'|trans }}</a>
+          {% endif %}
+        </li>
+        <li class="{{ ownPhoto ? 'is-done' }}">
+          {% if ownPhoto %}
+            <span>✓ {{ 'Photo added'|trans }}</span>
+          {% else %}
+            <span>{{ 'Add a photo of %dog%.'|trans({'%dog%': dog.name}) }}</span>
+            <form method="post" action="{{ path('app_dog_photo') }}" enctype="multipart/form-data" data-photo-form>
+              <input type="hidden" name="_token" value="{{ csrf_token('dog-photo') }}">
+              <label class="btn btn-small btn-outline">{{ '📷 Add a photo'|trans }}<input type="file" name="photo" accept="image/*" hidden></label>
+              <noscript><button type="submit" class="btn btn-small">{{ 'Save'|trans }}</button></noscript>
+            </form>
+          {% endif %}
+        </li>
+      </ol>
+    </section>
   {% endif %}
 
   {% if not dog %}
@@ -131,6 +171,10 @@
       {% endfor %}
       <a class="btn btn-small" href="{{ path('app_chat') }}">{{ 'Open the chat'|trans }}</a>
     </div>
+    <a class="dash-coach__photo" href="{{ path('app_chat', {photo: 1}) }}">
+      <span aria-hidden="true">📷</span>
+      <span><strong>{{ 'Something looks off?'|trans }}</strong> {{ 'A rash, an upset tummy, a new food? Show the coach a photo and get first tips and next steps.'|trans }}</span>
+    </a>
   </section>
 </div>
 {% endblock %}

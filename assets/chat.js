@@ -9,6 +9,10 @@
  *
  * Check-ins (#chat-checkin, every few days): the same cards, but the answers are saved to the
  * dog's profile (POST /chat/checkin) instead of being sent as a message, so they cost no AI call.
+ *
+ * Photos and PDFs (camera button, up to data-max-files): photos are shrunk in the browser to a
+ * 1568px JPEG first (quicker on a phone connection, upright, and all the coach needs), then sent
+ * with the message as a form (message + files[]).
  */
 import './styles/chat.css';
 
@@ -28,7 +32,11 @@ if (app) {
   const limitNote = $('chat-limit-note');
   const remainingEl = $('chat-remaining');
   const maxChars = Number(app.dataset.maxChars) || 2000;
+  const maxFiles = Number(app.dataset.maxFiles) || 3;
   const configured = app.dataset.configured === 'true';
+  const fileInput = $('chat-file');
+  const pendingEl = $('chat-pending');
+  let pendingFiles = []; // { blob, name, type, url }
   let busy = false;
 
   const scrollToBottom = (force = false) => {
@@ -53,15 +61,99 @@ if (app) {
     }
   };
 
-  const addUserMessage = (text) => {
+  const addUserMessage = (text, files = []) => {
     const wrap = document.createElement('div');
     wrap.className = 'chat-msg chat-msg--user';
-    const bubble = document.createElement('div');
-    bubble.className = 'chat-bubble';
-    bubble.textContent = text;
-    wrap.appendChild(bubble);
+    if (files.length) {
+      const list = document.createElement('div');
+      list.className = 'chat-files';
+      for (const f of files) {
+        const a = document.createElement('a');
+        a.className = 'chat-file' + (f.type === 'application/pdf' ? ' chat-file--pdf' : '');
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.href = f.url;
+        if (f.type === 'application/pdf') a.textContent = '📄 ' + f.name;
+        else { const img = document.createElement('img'); img.src = f.url; img.alt = t('photoAlt', 'Photo you sent'); a.appendChild(img); }
+        list.appendChild(a);
+      }
+      wrap.appendChild(list);
+    }
+    if (text) {
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble';
+      bubble.textContent = text;
+      wrap.appendChild(bubble);
+    }
     thread.appendChild(wrap);
+    return wrap;
   };
+
+  // ───────── Photos and PDFs ─────────
+  const shrink = async (file) => {
+    // Upright (EXIF) and at most 1568px on the long side, as a JPEG. Falls back to the original.
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      const scale = Math.min(1, 1568 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((ok) => canvas.toBlob(ok, 'image/jpeg', 0.85));
+      return blob || file;
+    } catch (e) {
+      return file;
+    }
+  };
+
+  const renderPending = () => {
+    pendingEl.innerHTML = '';
+    pendingEl.hidden = pendingFiles.length === 0;
+    pendingFiles.forEach((f, i) => {
+      const item = document.createElement('div');
+      item.className = 'chat-pending__item';
+      if (f.type === 'application/pdf') item.textContent = '📄 PDF';
+      else { const img = document.createElement('img'); img.src = f.url; img.alt = ''; item.appendChild(img); }
+      const x = document.createElement('button');
+      x.type = 'button';
+      x.className = 'chat-pending__remove';
+      x.setAttribute('aria-label', t('removeFile', 'Remove'));
+      x.textContent = '×';
+      x.addEventListener('click', () => { URL.revokeObjectURL(f.url); pendingFiles.splice(i, 1); renderPending(); updateSend(); });
+      item.appendChild(x);
+      pendingEl.appendChild(item);
+    });
+  };
+
+  const updateSend = () => {
+    sendBtn.disabled = busy || input.disabled || (!input.value.trim() && pendingFiles.length === 0);
+  };
+
+  const addFiles = async (list) => {
+    limitNote.classList.remove('is-error');
+    for (const file of list) {
+      if (pendingFiles.length >= maxFiles) { limitNote.textContent = t('tooManyFiles', `You can send up to ${maxFiles} files at a time.`); break; }
+      if (file.type === 'application/pdf') {
+        if (file.size > 8 * 1024 * 1024) { limitNote.textContent = t('pdfTooBig', 'That file is too large. PDFs can be up to 8 MB.'); continue; }
+        pendingFiles.push({ blob: file, name: file.name, type: file.type, url: URL.createObjectURL(file) });
+      } else if (file.type.startsWith('image/') || /\.(heic|heif)$/i.test(file.name)) {
+        const blob = await shrink(file);
+        pendingFiles.push({ blob, name: (file.name || 'photo').replace(/\.\w+$/, '') + '.jpg', type: blob.type || file.type, url: URL.createObjectURL(blob) });
+      } else {
+        limitNote.textContent = t('badFile', 'Please send a photo (JPG, PNG, WebP) or a PDF.');
+      }
+    }
+    renderPending();
+    updateSend();
+    input.focus();
+  };
+
+  document.querySelectorAll('[data-attach]').forEach((b) => b.addEventListener('click', () => { if (!input.disabled) fileInput.click(); }));
+  fileInput?.addEventListener('change', () => { addFiles([...fileInput.files]); fileInput.value = ''; });
+  if (app.dataset.attachHint === 'true') $('chat-attach')?.classList.add('is-pulsing');
 
   const addBotMessage = () => {
     const el = document.createElement('div');
@@ -107,26 +199,36 @@ if (app) {
   };
 
   const send = async (text) => {
+    const typed = text === undefined;
     text = (text ?? input.value).trim();
-    if (!text || busy || !configured || input.disabled) return;
+    const files = typed ? pendingFiles : [];
+    if ((!text && !files.length) || busy || !configured || input.disabled) return;
 
     busy = true;
     sendBtn.disabled = true;
-    input.value = '';
+    if (typed) input.value = '';
+    pendingFiles = typed ? [] : pendingFiles;
+    renderPending();
     resize();
     $('chat-empty')?.remove();
-    addUserMessage(text);
+    const mine = addUserMessage(text, files);
     const reply = addBotMessage();
     scrollToBottom(true);
 
     let raw = '';
     let cards = null;
     try {
-      const res = await fetch(app.dataset.sendUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', 'X-CSRF-Token': app.dataset.csrf },
-        body: JSON.stringify({ message: text }),
-      });
+      let body;
+      const headers = { Accept: 'text/event-stream', 'X-CSRF-Token': app.dataset.csrf };
+      if (files.length) {
+        body = new FormData();
+        body.append('message', text);
+        files.forEach((f) => body.append('files[]', f.blob, f.name));
+      } else {
+        headers['Content-Type'] = 'application/json';
+        body = JSON.stringify({ message: text });
+      }
+      const res = await fetch(app.dataset.sendUrl, { method: 'POST', headers, body });
       const type = res.headers.get('content-type') || '';
       if (!res.ok || !type.includes('text/event-stream')) {
         let message = t('error', 'Something went wrong. Please try again.');
@@ -140,7 +242,23 @@ if (app) {
       }
 
       await readStream(res, {
-        meta: onMeta,
+        meta: (d) => {
+          onMeta(d);
+          // The sent photos now point to their saved copies.
+          (d.files || []).forEach((f, i) => {
+            const link = mine.querySelectorAll('.chat-file')[i];
+            if (!link) return;
+            link.href = f.url;
+            const img = link.querySelector('img');
+            if (img) { const old = img.src; img.src = f.url; URL.revokeObjectURL(old); }
+          });
+        },
+        note: (d) => {
+          const note = document.createElement('p');
+          note.className = 'chat-note';
+          note.textContent = '✓ ' + d.text;
+          thread.appendChild(note);
+        },
         delta: (d) => { raw += d.text; renderInto(reply.answer, raw); },
         questions: (d) => { cards = d.questions; },
         done: () => {},
@@ -167,19 +285,20 @@ if (app) {
       if (frame) cancelAnimationFrame(frame);
       reply.el.classList.add('is-error');
       reply.answer.textContent = e.message || t('error', 'Something went wrong. Please try again.');
-      // Give the text back so it can be sent again.
+      // Give the text and files back so they can be sent again.
       if (!input.value && !input.disabled) { input.value = text; resize(); }
+      if (files.length && !pendingFiles.length) { pendingFiles = files; renderPending(); }
     } finally {
       reply.el.classList.remove('is-pending');
       busy = false;
-      sendBtn.disabled = input.disabled;
+      updateSend();
       scrollToBottom();
       if (!input.disabled) input.focus();
     }
   };
 
   form.addEventListener('submit', (e) => { e.preventDefault(); send(); });
-  input.addEventListener('input', resize);
+  input.addEventListener('input', () => { resize(); updateSend(); });
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); }
   });
@@ -354,6 +473,7 @@ if (app) {
   scrollToBottom(true);
   window.addEventListener('load', () => scrollToBottom(true), { once: true });
   resize();
+  updateSend();
   if (configured && !input.disabled && !q && window.matchMedia('(min-width: 900px)').matches) input.focus();
 }
 

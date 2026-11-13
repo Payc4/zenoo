@@ -214,3 +214,6 @@ textarea.cs-input { resize: vertical; line-height: 1.5; }
 .cs-voices > span:nth-child(2) { flex: 1 1 320px; }
 .cs-voices .cs-btn { margin-left: auto; }
 .cs-audio-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+.cv-files { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+.cv-files img { width: 140px; height: 140px; object-fit: cover; border-radius: 12px; display: block; }

@@ -9,7 +9,9 @@ use App\Repository\ChatConversationRepository;
 use App\Repository\DogProfileRepository;
 use App\Repository\LessonProgressRepository;
 use App\Repository\QuizSubmissionRepository;
+use App\Chat\ChatFiles;
 use App\Service\AvatarUploader;
+use App\Service\DogPhotoUploader;
 use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -139,7 +141,7 @@ class AccountController extends AbstractController
     }
 
     #[Route('/delete', name: 'app_account_delete', methods: ['POST'])]
-    public function delete(Request $request, UserPasswordHasherInterface $hasher, Security $security, AvatarUploader $avatars, ChatConversationRepository $chats, LessonProgressRepository $lessonProgress, DogProfileRepository $dogs, QuizSubmissionRepository $quizSubmissions): Response
+    public function delete(Request $request, UserPasswordHasherInterface $hasher, Security $security, AvatarUploader $avatars, ChatConversationRepository $chats, LessonProgressRepository $lessonProgress, DogProfileRepository $dogs, QuizSubmissionRepository $quizSubmissions, ChatFiles $chatFiles, DogPhotoUploader $dogPhotos): Response
     {
         if (!$this->isCsrfTokenValid('account-delete', (string) $request->request->get('_csrf_token'))) {
             return $this->back('error', 'Your session expired. Please try again.', 'delete');
@@ -159,6 +161,10 @@ class AccountController extends AbstractController
 
         $avatars->remove($user->getProfileImage());
         $chats->deleteAllForUser($user);
+        $chatFiles->removeAll($user);
+        if ($dog = $dogs->findForUser($user)) {
+            $dogPhotos->remove($dog);
+        }
         $lessonProgress->deleteAllForUser($user);
         $dogs->deleteForUser($user);
         $quizSubmissions->deleteForEmail($user->getEmail());

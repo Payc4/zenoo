@@ -10,7 +10,8 @@ needs no manual steps.
 1. **Database:** in Coolify, add a **MySQL 8** resource. Note its internal URL, user and password.
 2. **Application:** add this GitHub repository with the **Dockerfile** build pack (not Docker Compose). The port is **80**.
 3. **Persistent storage:** mount a volume at `/var/www/html/public/uploads` so profile
-   photos survive deploys.
+   photos, dog photos and chat attachments survive deploys. Chat attachments are under
+   `uploads/private/`, which nginx refuses to serve directly (the app serves them to their owner).
 
 ## 2. Environment variables
 

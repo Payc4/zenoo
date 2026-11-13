@@ -11,8 +11,11 @@ use App\Entity\User;
 use App\Repository\CourseRepository;
 use App\Repository\DogProfileRepository;
 use App\Repository\LessonProgressRepository;
+use App\Service\DogPhotoUploader;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -22,6 +25,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * "My dog": the pet parent's home after login. Shows the dog profile from the Bowl Score
  * quiz (score, breakdown, tips, daily plan), three lessons picked for the dog, the course
  * progress and the AI coach. Without a quiz result it invites them to take the quiz.
+ *
+ * "Finish the profile" asks for the two things the coach needs first: the food (a label photo
+ * in the chat) and a photo of the dog (uploaded here, DogPhotoUploader).
  */
 #[IsGranted('ROLE_USER')]
 final class DashboardController extends AbstractController
@@ -31,6 +37,8 @@ final class DashboardController extends AbstractController
         private readonly CourseRepository $courses,
         private readonly LessonProgressRepository $progress,
         private readonly LessonRecommender $recommender,
+        private readonly DogPhotoUploader $dogPhotos,
+        private readonly EntityManagerInterface $em,
         #[Autowire('%kernel.project_dir%')] private readonly string $projectDir,
     ) {
     }
@@ -68,6 +76,7 @@ final class DashboardController extends AbstractController
             'user' => $user,
             'dog' => $dog,
             'photo' => $dog ? $this->photo($dog) : null,
+            'ownPhoto' => $dog ? $this->dogPhotos->url($dog) !== null : false,
             'course' => $course,
             'picks' => $picks,
             'done' => $done,
@@ -76,6 +85,31 @@ final class DashboardController extends AbstractController
             'streak' => $this->progress->getStreak($user),
             'coachQuestions' => $dog ? $this->coachQuestions($dog) : [],
         ]);
+    }
+
+    /** The dog's own photo ("Finish the profile", or the camera on the dashboard photo). */
+    #[Route('/dashboard/dog-photo', name: 'app_dog_photo', methods: ['POST'])]
+    public function dogPhoto(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $dog = $this->dogs->findForUser($user);
+        if (!$dog || !$this->isCsrfTokenValid('dog-photo', (string) $request->request->get('_token'))) {
+            return $this->redirectToRoute('app_dashboard');
+        }
+        $file = $request->files->get('photo');
+        if (!$file instanceof UploadedFile) {
+            $this->addFlash('error', 'Choose a photo first.');
+            return $this->redirectToRoute('app_dashboard');
+        }
+        try {
+            $this->dogPhotos->store($dog, $file);
+            $this->em->flush();
+            $this->addFlash('success', 'Lovely! The photo is saved.');
+        } catch (\InvalidArgumentException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+        return $this->redirectToRoute('app_dashboard');
     }
 
     /** The course in the page's language (English as a fallback), if pet parents can see it. */
@@ -91,9 +125,12 @@ final class DashboardController extends AbstractController
         return null;
     }
 
-    /** The quiz's own breed photo (public/quiz/assets/photos), matched from the email photo URL. */
+    /** The dog's own photo, else the quiz's breed photo (public/quiz/assets/photos), matched from the email photo URL. */
     private function photo(DogProfile $dog): ?string
     {
+        if ($own = $this->dogPhotos->url($dog)) {
+            return $own;
+        }
         if (preg_match('/zq-email-([a-z0-9-]+)\.jpg$/', (string) $dog->get('breed_photo_url', ''), $m)
             && is_file($this->projectDir . '/public/quiz/assets/photos/' . $m[1] . '.jpg')) {
             return '/quiz/assets/photos/' . $m[1] . '.jpg';

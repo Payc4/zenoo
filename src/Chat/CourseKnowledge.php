@@ -146,6 +146,14 @@ class CourseKnowledge
                 $lines[] = "- $label: " . $this->oneLine((string) $g($k));
             }
         }
+        $food = $dog->getFood();
+        $lines[] = $food
+            ? '- Food they feed (saved ' . $food['at'] . ', from the ' . $food['source'] . '): ' . trim($food['brand'] . ' ' . $food['product'])
+                . ($food['format'] ? ' (' . $food['format'] . ')' : '') . ($food['notes'] ? '. Label notes: ' . $this->oneLine($food['notes']) : '')
+            : '- Food brand: not known yet. When it fits, early in the chat, invite them once to snap a photo of the food label with the camera button next to the message box, or to type the food\'s name, and offer to check it. Then save it with save_food.';
+        $lines[] = $dog->getPhoto()
+            ? '- They added a photo of ' . $dog->getName() . ' to the profile.'
+            : '- No photo of ' . $dog->getName() . ' yet; they can add one on the dashboard ("Finish the profile").';
         $lines[] = 'This is what they told the quiz; it is not a vet assessment. Their dog may have changed since.';
         $checkIns = $this->checkIns->forCoach($dog);
         if ($checkIns !== '') {

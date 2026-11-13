@@ -15,6 +15,8 @@ final class ChatCheckInTest extends AppTestCase
         $user = $this->createUser();
         $user->setLocale($locale);
         $dog = (new DogProfile($user))->fillFromQuiz(QuizAccountTest::result(), $locale);
+        // Check-ins start once the coach knows the food (until then the chat asks for the label).
+        $dog->setFood('Orijen', 'Original', 'dry', '', 'chat', new \DateTimeImmutable());
         $this->em->persist($dog);
         $this->em->flush();
         $this->client->loginUser($user);

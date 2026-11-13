@@ -12,6 +12,8 @@
      data-checkin-url="{{ path('app_chat_checkin') }}"
      data-csrf="{{ csrf_token('chat') }}"
      data-max-chars="{{ maxChars }}"
+     data-max-files="{{ maxFiles }}"
+     data-attach-hint="{{ attachHint ? 'true' : 'false' }}"
      data-configured="{{ configured ? 'true' : 'false' }}"
      data-limit="{{ limit }}"
      data-reset-label="{{ resetLabel|trans }}"
@@ -34,6 +36,12 @@
         aboutDog: 'A bit about my dog:'|trans,
         checkin: 'Quick check-in'|trans,
         saveAnswers: 'Save'|trans,
+        removeFile: 'Remove'|trans,
+        tooManyFiles: 'You can send up to %n% files at a time.'|trans({'%n%': maxFiles}),
+        badFile: 'Please send a photo (JPG, PNG, WebP) or a PDF.'|trans,
+        pdfTooBig: 'That file is too large. PDFs can be up to 8 MB.'|trans,
+        photoAlt: 'Photo you sent'|trans,
+        sending: 'Sending…'|trans,
      }|json_encode }}">
 
     <section class="chat-main">
@@ -68,12 +76,20 @@
                     <div class="chat-empty" id="chat-empty">
                         <img src="/apple-touch-icon.png" alt="" width="56" height="56">
                         <h1>{{ 'Hi %name%, how can we help?'|trans({'%name%': app.user.displayName}) }}</h1>
+                        {% if needsFood and configured %}
+                            {# First step after sign-up: what the dog eats, from a label photo or by name. #}
+                            <div class="chat-onboard" id="chat-onboard">
+                                <p class="chat-onboard__title">{{ 'Let’s start with what %dog% eats.'|trans({'%dog%': dog.name}) }}</p>
+                                <p class="chat-muted">{{ 'Snap a photo of the food label (or a screenshot from the shop), or just type the food’s name. I’ll check it and tell you how it fits %dog%.'|trans({'%dog%': dog.name}) }}</p>
+                                <button type="button" class="btn chat-onboard__btn" data-attach>{{ '📷 Snap the food label'|trans }}</button>
+                            </div>
+                        {% endif %}
                         {% if cardsAreIntro and configured %}
                             <p class="chat-muted" id="chat-intro-note">{{ 'A few quick questions first, so the tips fit your dog. You can skip any of them.'|trans }}</p>
                         {% else %}
                             <p class="chat-muted">{{ 'Ask anything about feeding your dog or using ZENOO.'|trans }}</p>
                         {% endif %}
-                        <div class="chat-suggest" id="chat-suggest" {{ cardsAreIntro and configured ? 'hidden' }}>
+                        <div class="chat-suggest" id="chat-suggest" {{ (cardsAreIntro or needsFood) and configured ? 'hidden' }}>
                             {% for s in [
                                 'How much should my dog eat a day?',
                                 'How do I switch my dog to a new food?',
@@ -88,7 +104,21 @@
 
                 {% for m in messages %}
                     {% if m.fromUser %}
-                        <div class="chat-msg chat-msg--user"><div class="chat-bubble">{{ m.content|nl2br }}</div></div>
+                        <div class="chat-msg chat-msg--user">
+                            {% if m.attachments %}
+                                <div class="chat-files">
+                                    {% for a in m.attachments %}
+                                        {% set url = path('app_chat_file', {id: m.id, index: loop.index0}) %}
+                                        {% if a.type == 'application/pdf' %}
+                                            <a class="chat-file chat-file--pdf" href="{{ url }}" target="_blank" rel="noopener">📄 {{ a.name }}</a>
+                                        {% else %}
+                                            <a class="chat-file" href="{{ url }}" target="_blank" rel="noopener"><img src="{{ url }}" alt="{{ 'Photo you sent'|trans }}" loading="lazy"></a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if m.content %}<div class="chat-bubble">{{ m.content|nl2br }}</div>{% endif %}
+                        </div>
                     {% else %}
                         <div class="chat-msg chat-msg--bot">
                             <img class="chat-avatar" src="/favicon.png" alt="" width="32" height="32">
@@ -114,9 +144,14 @@
         {% endif %}
 
         <form class="chat-composer" id="chat-form">
+            <div class="chat-pending" id="chat-pending" hidden></div>
             <div class="chat-composer__box">
+                <input type="file" id="chat-file" accept="image/*,application/pdf" multiple hidden>
+                <button type="button" class="chat-attach" id="chat-attach" data-attach aria-label="{{ 'Add a photo or PDF'|trans }}" title="{{ 'Add a photo or PDF'|trans }}" {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                </button>
                 <label for="chat-input" class="visually-hidden">{{ 'Your message'|trans }}</label>
-                <textarea id="chat-input" rows="1" maxlength="{{ maxChars }}" placeholder="{{ 'Ask about your dog’s food…'|trans }}"
+                <textarea id="chat-input" rows="1" maxlength="{{ maxChars }}" placeholder="{{ (attachHint ? 'Describe what you see and add a photo…' : 'Ask about your dog’s food…')|trans }}"
                           {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}>{{ ask }}</textarea>
                 <button type="submit" class="chat-send" id="chat-send" aria-label="{{ 'Send'|trans }}" {{ configured and (unlimited or remaining > 0) ? '' : 'disabled' }}>
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>

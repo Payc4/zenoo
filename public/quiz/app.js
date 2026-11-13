@@ -255,6 +255,7 @@ ${nav()}`,
     label: () => {
       const T = U.label;
       return `${qhead(tx(T.title), T.lead)}
+        ${scanBox()}
         <button class="zq-btn outline block" data-action="skipLabel">${T.skip}</button>
         <p class="zq-small" style="text-align:center;margin:8px 0 18px">${tx(T.skipNote)}</p>
         ${photo('label-closeup', T.alt, true)}
@@ -423,6 +424,8 @@ ${nav()}`,
         quiz_weight_kg: +a.weight, quiz_bcs: a.bcs, quiz_ideal_weight_kg: r.idealKg,
         quiz_activity_band: S.activityLevel(a.actBand, a.actType), quiz_recommended_activity_band: r.subs.activity.recommended,
         quiz_food_main: a.foodMain, quiz_food_types: a.foods, quiz_label_given: d.fromLabel,
+        quiz_label_scanned: !!a.labelScan, quiz_food_brand: a.labelScan?.brand || null,
+        quiz_food_product: a.labelScan?.product || null, quiz_food_format: a.labelScan?.format || null,
         quiz_carbs_dm: Math.round(d.cDm), quiz_protein_dm: Math.round(d.pDm), quiz_appetite: a.appetite, quiz_signs: a.signs,
         quiz_top_sign: a.signs[0] || null, quiz_bowl_score: r.total, quiz_score_band: r.band,
         quiz_sub_protein: r.subs.protein.score, quiz_sub_carbs: r.subs.carbs.score, quiz_sub_freshness: r.subs.freshness.score,
@@ -470,6 +473,65 @@ ${nav()}`,
     if (btn && s.valid) btn.disabled = !s.valid();
   }
 
+  // One free try: the AI reads a photo of the food label and fills the numbers in (QuizLabelController).
+  // The photo is only read, never stored; brand and product go on the profile so the coach knows the food.
+  let scan = { state: 'idle' };
+  function scanBox() {
+    if (!CFG.labelScanUrl) return '';
+    const T = U.label.scan; const r = a.labelScan;
+    const out = {
+      idle: '', reading: `<p class="zq-scan-msg">${T.reading}</p>`,
+      error: `<p class="zq-scan-msg err">${esc(scan.error || T.error)}</p>`,
+    }[scan.state] ?? '';
+    const found = r && scan.state !== 'reading' ? `<div class="zq-scan-result">
+        ${r.brand ? `<p><b>${esc([r.brand, r.product].filter(Boolean).join(' – '))}</b></p>` : ''}
+        <p>${r.readable ? T.filled : T.unreadable}</p>${r.take ? `<p class="zq-small">${esc(r.take)}</p>` : ''}</div>` : '';
+    const canTry = (a.labelScanTriesLeft ?? 1) > 0 && !(r && r.readable);
+    const btn = canTry ? `<button type="button" class="zq-btn block" data-action="scanLabel" ${scan.state === 'reading' ? 'disabled' : ''}>${scan.state === 'reading' ? T.reading : T.button}</button>
+        <p class="zq-small" style="text-align:center;margin:6px 0 0">${T.note}</p>
+        <input type="file" id="zq-scanfile" accept="image/*" hidden>` : '';
+    return `<div class="zq-scan" id="zq-scan">${btn}${out}${found}</div>${canTry || found ? `<p class="zq-or">${T.or}</p>` : ''}`;
+  }
+  function refreshScan() {
+    if (active()[step].id !== 'label') return;
+    render();
+  }
+  // Big phone photos are slow to upload: shrink to 1568 px JPEG first (what the AI reads anyway).
+  async function shrinkPhoto(file) {
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      const k = Math.min(1, 1568 / Math.max(bmp.width, bmp.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      const blob = await new Promise((res) => c.toBlob(res, 'image/jpeg', 0.85));
+      return blob || file;
+    } catch (e) { return file; }
+  }
+  async function scanLabel(file) {
+    scan = { state: 'reading' }; refreshScan();
+    try {
+      const body = new FormData();
+      body.append('photo', await shrinkPhoto(file), 'label.jpg');
+      body.append('locale', CFG.locale || 'en');
+      const res = await fetch(CFG.labelScanUrl, { method: 'POST', headers: { 'X-CSRF-Token': CFG.accountToken }, body });
+      const data = await res.json().catch(() => ({}));
+      if (data.limit) a.labelScanTriesLeft = 0;
+      if (!res.ok || !data.ok) throw new Error(data.error || '');
+      a.labelScanTriesLeft = data.triesLeft;
+      a.labelScan = { readable: data.readable, brand: data.brand, product: data.product, format: data.format, take: data.take };
+      if (data.readable) {
+        Object.entries(data.values || {}).forEach(([k, v]) => { a.label[k] = String(v); });
+        a.labelSkipped = false;
+      }
+      scan = { state: 'idle' };
+    } catch (err) {
+      console.error('[ZENOO quiz] label scan', err);
+      scan = { state: 'error', error: err.message || '' };
+    }
+    refreshScan();
+  }
+
   function setPath(key, val) {
     if (key.startsWith('label.')) { a.label[key.slice(6)] = val; a.labelSkipped = false; } else a[key] = val;
   }
@@ -489,6 +551,7 @@ ${nav()}`,
       if (active()[step].id === 'gate') submit();
       step = Math.min(step + 1, active().length - 1); render();
     } else if (t.dataset.action === 'back') { step = Math.max(0, step - 1); render(); }
+    else if (t.dataset.action === 'scanLabel') { document.getElementById('zq-scanfile')?.click(); }
     else if (t.dataset.action === 'skipLabel') { a.labelSkipped = true; step += 1; render(); }
     else if (t.dataset.action === 'restart') { a = blank(); step = 0; render(); }
     else if (t.dataset.action === 'share') {
@@ -521,6 +584,10 @@ ${nav()}`,
       }
       refreshNext(); save();
     }
+  });
+
+  app.addEventListener('change', (e) => {
+    if (e.target.id === 'zq-scanfile' && e.target.files[0]) scanLabel(e.target.files[0]);
   });
 
   app.addEventListener('keydown', (e) => {

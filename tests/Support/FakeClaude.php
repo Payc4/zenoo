@@ -13,6 +13,13 @@ final class FakeClaude
     public static ?array $askQuestions = null;
     /** @var list<array> request bodies sent to Claude */
     public static array $requests = [];
+    /**
+     * Replies for the next requests, in order: {text, tool?: {name, input}}. Once used up, the
+     * default reply above is used.
+     *
+     * @var list<array{text: string, tool?: array{name: string, input: array}}>
+     */
+    public static array $script = [];
 
     public static function reset(): void
     {
@@ -20,6 +27,7 @@ final class FakeClaude
         self::$fail = false;
         self::$askQuestions = null;
         self::$requests = [];
+        self::$script = [];
     }
 
     public static function respond(array $options): MockResponse
@@ -29,21 +37,29 @@ final class FakeClaude
             return new MockResponse(json_encode(['type' => 'error', 'error' => ['type' => 'overloaded_error', 'message' => 'Overloaded']]), ['http_code' => 529]);
         }
 
+        $reply = self::$reply;
+        $tool = self::$askQuestions !== null ? ['name' => 'ask_questions', 'input' => self::$askQuestions] : null;
+        if (self::$script) {
+            $next = array_shift(self::$script);
+            $reply = $next['text'];
+            $tool = $next['tool'] ?? null;
+        }
+
         $events = [
             ['message_start', ['type' => 'message_start', 'message' => ['usage' => ['input_tokens' => 300, 'output_tokens' => 1]]]],
             ['content_block_start', ['type' => 'content_block_start', 'index' => 0, 'content_block' => ['type' => 'text', 'text' => '']]],
         ];
-        foreach (str_split(self::$reply, 8) as $piece) {
+        foreach ($reply === '' ? [] : mb_str_split($reply, 8) as $piece) {
             $events[] = ['content_block_delta', ['type' => 'content_block_delta', 'index' => 0, 'delta' => ['type' => 'text_delta', 'text' => $piece]]];
         }
-        if (self::$askQuestions !== null) {
-            $events[] = ['content_block_start', ['type' => 'content_block_start', 'index' => 1, 'content_block' => ['type' => 'tool_use', 'id' => 'toolu_test', 'name' => 'ask_questions', 'input' => new \stdClass()]]];
-            foreach (str_split(json_encode(self::$askQuestions), 30) as $piece) {
+        if ($tool !== null) {
+            $events[] = ['content_block_start', ['type' => 'content_block_start', 'index' => 1, 'content_block' => ['type' => 'tool_use', 'id' => 'toolu_' . \count(self::$requests), 'name' => $tool['name'], 'input' => new \stdClass()]]];
+            foreach (str_split(json_encode($tool['input']), 30) as $piece) {
                 $events[] = ['content_block_delta', ['type' => 'content_block_delta', 'index' => 1, 'delta' => ['type' => 'input_json_delta', 'partial_json' => $piece]]];
             }
             $events[] = ['content_block_stop', ['type' => 'content_block_stop', 'index' => 1]];
         }
-        $events[] = ['message_delta', ['type' => 'message_delta', 'delta' => ['stop_reason' => self::$askQuestions !== null ? 'tool_use' : 'end_turn'], 'usage' => ['output_tokens' => 42]]];
+        $events[] = ['message_delta', ['type' => 'message_delta', 'delta' => ['stop_reason' => $tool !== null ? 'tool_use' : 'end_turn'], 'usage' => ['output_tokens' => 42]]];
         $events[] = ['message_stop', ['type' => 'message_stop']];
 
         $body = '';

@@ -127,6 +127,29 @@ If you update the quiz from the handoff, copy the files over and update the hash
   the dog's profile and check-in answers beside it, and "Download as text" for reviewing tester
   feedback and improving `config/chatbot/system_prompt.md`.
 
+## Photos and files (vet partner feedback)
+
+- **Chat attachments** (`src/Chat/ChatFiles.php`): up to 3 photos or PDFs per message (camera button
+  in the composer; photos are shrunk to 1568 px in the browser). Images are re-encoded to JPEG, PDFs
+  checked, and both stored **privately** in `public/uploads/private/chat/{userId}/` — nginx refuses
+  `/uploads/private/`, and `GET /chat/file/{message}/{n}` serves them to the owner or an admin. The
+  newest 2 messages with files go to Claude as image/document blocks; older ones are only mentioned.
+  Clearing the chat or deleting the account deletes the files.
+- **Food first:** until the dog's food is known (`DogProfile::getFood()`), the chat opens with a
+  "snap the food label" step instead of check-ins. The coach saves what it reads with the
+  `save_food` tool, then carries on answering; the system prompt's "Photos and files" section says
+  how to handle labels, health photos (first tips and next steps, never a diagnosis) and vet documents.
+- **Finish the profile** card on the dashboard: food step (links to the chat) and a dog photo
+  (`POST /dashboard/dog-photo`, `src/Service/DogPhotoUploader.php`, 600×600 JPEG in `uploads/dogs/`).
+  The coach card also links to `/chat?photo=1` ("Something looks off?").
+- **Quiz label try-out** (`src/Controller/QuizLabelController.php`, `POST /quiz/label-scan`): on the
+  label step, "Let our AI read the label" reads one photo with a forced `label_reading` tool and fills
+  the numbers in. 2 tries per visitor session and 6 per IP a day; the photo isn't stored. Brand and
+  product go out as `quiz_food_brand` / `quiz_food_product` / `quiz_food_format` / `quiz_label_scanned`,
+  so the coach knows the food after sign-up. Extra quiz styles live in `public/quiz/site.css`
+  (`styles.css` stays the handoff copy). Hidden when `ANTHROPIC_API_KEY` isn't set.
+- Paid vet review of a photo is planned for later.
+
 ## Languages (English, Lithuanian, Ukrainian, Polish)
 
 - The list is `src/Locale.php` (codes `en`, `lt`, `uk`, `pl`); its comment lists every file a new

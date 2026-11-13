@@ -270,6 +270,8 @@ window.ZQ_CONTENT = {
       fields: { p: 'Baltymai', f: 'Riebalai', fi: 'Ląsteliena', a: 'Pelenai', m: 'Drėgmė' },
       moistureNote: 'Drėgmė nenurodyta? Sausame maiste jos paprastai būna apie 8–10 %.',
       submit: 'PARODYKITE',
+      // One free AI read of a label photo (only shown when the site has the AI configured)
+      scan: { button: '📷 TEGUL DI PERSKAITO ETIKETĘ', note: 'Nufotografuokite „analitines sudedamąsias dalis“ arba įkelkite ekrano nuotrauką. Vienas nemokamas bandymas; nuotrauka nesaugoma.', reading: 'Skaitome etiketę…', filled: 'Atlikta! Skaičius įrašėme žemiau. Patikrinkite, ar jie sutampa su pakuote.', unreadable: 'Nepavyko perskaityti visų skaičių. Įrašykite juos žemiau.', error: 'Kažkas nepavyko. Įrašykite skaičius patys.', or: 'arba įrašykite patys' },
     },
     slideBowl: {
       tag: 'KAS YRA DUBENĖLYJE',

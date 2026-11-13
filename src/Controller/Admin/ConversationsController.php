@@ -68,6 +68,9 @@ final class ConversationsController extends AbstractController
         $out = ['Conversation #' . $conversation->getId() . ' with ' . $user->getEmail() . ' (' . $user->getLocale() . ')', ''];
         foreach ($conversation->getMessages() as $m) {
             $out[] = '[' . $m->getCreatedAt()->format('Y-m-d H:i') . '] ' . ($m->isFromUser() ? 'PET PARENT' : 'COACH') . ':';
+            foreach ($m->getAttachments() as $a) {
+                $out[] = '  (' . ($a['type'] === 'application/pdf' ? 'PDF' : 'photo') . ') ' . $a['name'];
+            }
             $out[] = $m->getContent();
             foreach ($m->getQuestions() ?? [] as $q) {
                 $out[] = '  (card) ' . $q['question'] . ($q['options'] ? ' — ' . implode(' / ', array_column($q['options'], 'label')) : '');

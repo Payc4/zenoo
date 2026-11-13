@@ -44,6 +44,7 @@ class HomeController extends AbstractController
         #[Autowire('%app.quiz.klaviyo_lt_company_id%')] ?string $klaviyoLtCompanyId,
         #[Autowire('%app.quiz.klaviyo_lt_list_id%')] ?string $klaviyoLtListId,
         #[Autowire('%app.quiz.send_to_klaviyo%')] bool $sendToKlaviyo,
+        \App\Chat\ClaudeClient $claude,
         CsrfTokenManagerInterface $csrf,
     ): Response {
         $user = $this->getUser();
@@ -71,6 +72,8 @@ class HomeController extends AbstractController
                 // Quiz → account (QuizAccountController)
                 'accountSubmitUrl' => $this->generateUrl('app_quiz_submit'),
                 'accountToken' => $csrf->getToken('quiz')->getValue(),
+                // One-time "let our AI read the label" in the label step (QuizLabelController).
+                'labelScanUrl' => $claude->isConfigured() ? $this->generateUrl('app_quiz_label_scan') : null,
                 'user' => $user instanceof User ? ['firstName' => $user->getFirstName(), 'email' => $user->getEmail()] : null,
             ],
         ]);

@@ -41,6 +41,13 @@ class ChatMessage
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $questions = null;
 
+    /**
+     * Photos and files sent with this message (see App\Chat\ChatFiles):
+     * list of {file, type, name, size}. The files themselves are private, on the uploads volume.
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $attachments = null;
+
     #[ORM\Column(nullable: true)]
     private ?int $inputTokens = null;
 
@@ -102,6 +109,19 @@ class ChatMessage
     public function setQuestions(?array $questions): static
     {
         $this->questions = $questions ?: null;
+
+        return $this;
+    }
+
+    /** @return list<array{file: string, type: string, name: string, size: int}> */
+    public function getAttachments(): array
+    {
+        return $this->attachments ?? [];
+    }
+
+    public function setAttachments(array $attachments): static
+    {
+        $this->attachments = $attachments ? array_values($attachments) : null;
 
         return $this;
     }

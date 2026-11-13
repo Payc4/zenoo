@@ -271,6 +271,8 @@ window.ZQ_CONTENT = {
       fields: { p: 'Białko', f: 'Tłuszcz', fi: 'Włókno', a: 'Popiół', m: 'Wilgotność' },
       moistureNote: 'Nie podano wilgotności? Sucha karma ma jej zwykle około 8–10%.',
       submit: 'POKAŻ',
+      // One free AI read of a label photo (only shown when the site has the AI configured)
+      scan: { button: '📷 NIECH AI PRZECZYTA ETYKIETĘ', note: 'Zrób zdjęcie „składników analitycznych” albo wgraj zrzut ekranu. Jedna darmowa próba; zdjęcie nie jest zapisywane.', reading: 'Czytamy etykietę…', filled: 'Gotowe! Wpisaliśmy wartości poniżej. Sprawdź, czy zgadzają się z opakowaniem.', unreadable: 'Nie udało się odczytać wszystkich wartości. Wpisz je poniżej.', error: 'Coś poszło nie tak. Wpisz wartości samodzielnie.', or: 'albo wpisz je sam(a)' },
     },
     slideBowl: {
       tag: 'CO JEST W MISCE',

@@ -15,6 +15,14 @@
       {% for m in conversation.messages %}
         <article class="cv-msg {{ m.fromUser ? 'cv-msg--user' : 'cv-msg--bot' }}">
           <header class="cs-small cs-muted">{{ m.fromUser ? 'Pet parent' : 'Coach' }} · {{ m.createdAt|date('Y-m-d H:i') }}{% if m.outputTokens %} · {{ m.inputTokens }} / {{ m.outputTokens }} tokens{% endif %}</header>
+          {% if m.attachments %}
+            <div class="cv-files">
+              {% for a in m.attachments %}
+                {% set url = path('app_chat_file', {id: m.id, index: loop.index0}) %}
+                {% if a.type == 'application/pdf' %}<a href="{{ url }}" target="_blank" rel="noopener">📄 {{ a.name }}</a>{% else %}<a href="{{ url }}" target="_blank" rel="noopener"><img src="{{ url }}" alt="Photo: {{ a.name }}" loading="lazy"></a>{% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
           <div class="cv-body">{{ m.fromUser ? m.content|nl2br : m.content|chat_markdown }}</div>
           {% if m.questions %}
             <ul class="cv-cards">{% for q in m.questions %}<li><strong>{{ q.question }}</strong>{% if q.options %} — {{ q.options|map(o => o.label)|join(' / ') }}{% endif %}</li>{% endfor %}</ul>
@@ -34,7 +42,8 @@
           {% for k, label in {breed: 'Breed', age_years: 'Age (years)', weight_kg: 'Weight (kg)', food_main: 'Main food'} %}
             {% if dog.get(k) %}{{ label }}: {{ dog.get(k) }}<br>{% endif %}
           {% endfor %}
-          {% if dog.get('signs') %}Signs: {{ dog.get('signs') is iterable ? dog.get('signs')|join(', ') : dog.get('signs') }}{% endif %}
+          {% if dog.get('signs') %}Signs: {{ dog.get('signs') is iterable ? dog.get('signs')|join(', ') : dog.get('signs') }}<br>{% endif %}
+          {% if dog.food %}Food: {{ dog.food.brand }} {{ dog.food.product }}{% if dog.food.format %} ({{ dog.food.format }}){% endif %} · from {{ dog.food.source }}, {{ dog.food.at }}{% if dog.food.notes %}<br><span class="cs-muted">{{ dog.food.notes }}</span>{% endif %}{% else %}Food brand: not known yet{% endif %}
         </p>
         <h2 class="cs-label">Check-in answers</h2>
         {% if checkins %}<pre class="cv-pre">{{ checkins }}</pre>{% else %}<p class="cs-muted cs-small">None yet.</p>{% endif %}

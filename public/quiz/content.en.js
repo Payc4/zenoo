@@ -268,6 +268,8 @@ window.ZQ_CONTENT = {
       fields: { p: 'Protein', f: 'Fat', fi: 'Fibre', a: 'Ash', m: 'Moisture' },
       moistureNote: 'No moisture listed? Dry food is usually around 8–10%.',
       submit: 'SHOW ME',
+      // One free AI read of a label photo (only shown when the site has the AI configured)
+      scan: { button: '📷 LET OUR AI READ THE LABEL', note: 'Snap the “analytical constituents” panel or upload a screenshot. One free try; the photo isn’t stored.', reading: 'Reading the label…', filled: 'Done! We filled the numbers in below. Check they match the bag.', unreadable: 'We couldn’t read all the numbers. Please type them in below.', error: 'Something went wrong. Please type the numbers in.', or: 'or type it in yourself' },
     },
     slideBowl: {
       tag: 'WHAT’S IN THE BOWL',

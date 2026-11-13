@@ -16,6 +16,7 @@
             <li><strong>Your orders:</strong> what you bought, when, and the amount paid. Card details go straight to Stripe and never reach us.</li>
             <li><strong>Bowl Score quiz:</strong> your answers stay in your browser until the end. When you give your name and email, your dog’s details and result are sent to this site so we can email you a link to confirm your address. If you click it, we create your account (or use your existing one) and keep your dog’s profile there for your dashboard. If you don’t, the unconfirmed result is deleted after 7 days. On the English quiz your dog’s details and plan also go to our email provider, Klaviyo, so we can send you the plan and the feeding guide.</li>
             <li><strong>Chat:</strong> your chat messages and the replies are saved in your account so you can come back to them. To write each reply, your messages and your first name are sent to Anthropic, the company behind the Claude AI model, together with your dog’s quiz profile, the course lessons you’ve finished and what you wrote in them, so the replies fit your dog. You can clear your chat at any time.</li>
+            <li><strong>Photos and files:</strong> photos and PDFs you send in the chat (for example a food label, a vet report or a photo of your dog’s skin) are stored privately in your account, where only you can open them, and sent to Anthropic so the coach can answer. The food the coach reads from a label is saved to your dog’s profile. A photo of your dog that you add to the dashboard is stored with your dog’s profile. If you let the AI read a label in the Bowl Score quiz, that photo is sent to Anthropic to read the numbers and isn’t stored. Clearing your chat deletes the chat files; deleting your account deletes all of them.</li>
             <li><strong>Courses:</strong> your progress, quiz answers and what you write in the lessons are saved in your account.</li>
         </ul>
         <p>Deleting your account deletes all of the above that we keep on this site.</p>
@@ -24,7 +25,7 @@
         <ul>
             <li><strong>Stripe</strong> processes payments.</li>
             <li><strong>Amazon Web Services (SES)</strong> sends account emails such as receipts, login links and quiz confirmations.</li>
-            <li><strong>Anthropic</strong> provides the AI model (Claude) that writes the chat replies.</li>
+            <li><strong>Anthropic</strong> provides the AI model (Claude) that writes the chat replies and reads the photos and files you send.</li>
             <li><strong>Klaviyo</strong> sends the quiz plan and our emails, if you sign up through the quiz.</li>
             <li><strong>Cloudflare Turnstile</strong> checks that sign-ups come from people, not bots.</li>
         </ul>
@@ -38,7 +39,7 @@
         <h2>Contact</h2>
         <p>Questions about your data? Write to <a href="mailto:support@myzenoo.com">support@myzenoo.com</a>.</p>
 
-        <p class="small muted">Last updated 7 November 2026.</p>
+        <p class="small muted">Last updated 13 November 2026.</p>
     </div>
 </section>
 {% endblock %}
