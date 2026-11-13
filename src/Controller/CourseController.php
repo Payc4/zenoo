@@ -37,12 +37,11 @@ final class CourseController extends AbstractController
         $user = $this->getUser();
         $isAdmin = $this->isGranted('ROLE_ADMIN');
         $courses = $this->courses->findAllOrdered(!$isAdmin);
-        // Pet parents see the courses in the site language (others only if there are none);
-        // admins see every course, so they can check both languages.
-        if (!$isAdmin) {
-            $inLanguage = array_values(array_filter($courses, fn (Course $c) => $c->getLocale() === $request->getLocale()));
-            $courses = $inLanguage ?: $courses;
-        }
+        // Everyone sees the courses in the language picked in the header (admins also see that
+        // language's drafts). With none in that language, the English ones, else whatever exists.
+        // Admins check other languages by switching the language, or in the Course studio.
+        $in = fn (string $locale) => array_values(array_filter($courses, fn (Course $c) => $c->getLocale() === $locale));
+        $courses = $in($request->getLocale()) ?: $in('en') ?: $courses;
         $list = [];
         foreach ($courses as $course) {
             $lessons = $isAdmin ? $course->getLessons()->toArray() : $course->getPublishedLessons();

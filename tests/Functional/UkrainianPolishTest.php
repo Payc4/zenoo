@@ -145,4 +145,23 @@ final class UkrainianPolishTest extends AppTestCase
         $this->assertEmailHeaderSame($this->getMailerMessage(), 'Subject', $subject);
         $this->assertEmailHtmlBodyContains($this->getMailerMessage(), $this->t('Choose a new password', $l));
     }
+
+    public function testCourseListFollowsTheLanguagePickedEvenForAdmins(): void
+    {
+        (new CommandTester((new Application(static::$kernel))->find('app:course:import')))->execute([]);
+        $this->createUser('admin@example.com', 'Password123', ['ROLE_ADMIN']);
+        $this->loginViaForm('admin@example.com', 'Password123');
+        foreach (Locale::ALL as $l) {
+            $this->use($l);
+            $titles = $this->client->request('GET', '/courses')->filter('.cl-course__title')->each(fn ($n) => $n->text());
+            $this->assertCount(1, $titles, $l);
+            $this->assertStringStartsWith(ImportCourseCommand::COURSES[$l]['title'], $titles[0]);
+        }
+        // A language without a course shows the English one.
+        $this->em->remove($this->em->getRepository(Course::class)->findOneBy(['locale' => 'pl']));
+        $this->em->flush();
+        $this->use('pl');
+        $titles = $this->client->request('GET', '/courses')->filter('.cl-course__title')->each(fn ($n) => $n->text());
+        $this->assertStringStartsWith(ImportCourseCommand::COURSES['en']['title'], $titles[0]);
+    }
 }

@@ -43,3 +43,4 @@
 /.env.local
 /node_modules
 .windsurf*
+*.whl

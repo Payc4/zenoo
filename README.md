@@ -153,7 +153,7 @@ If you update the quiz from the handoff, copy the files over and update the hash
 - The coach replies in the pet parent's site language (`CourseKnowledge::language()`).
 - The Ukrainian and Polish texts (site, quiz, course) were machine-translated from English and
   should be read by a native speaker before launch, as the vet review covers the content.
-- Pet parents see the course in their language; admins see all of them. The admin area stays in English.
+- The course list shows the courses in the language picked in the header (admins also see its drafts), or the English ones if that language has none. The admin area stays in English.
 
 ## The course
 
