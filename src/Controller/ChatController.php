@@ -10,6 +10,7 @@ use App\Chat\ClaudeClient;
 use App\Chat\ClaudeException;
 use App\Entity\ChatConversation;
 use App\Entity\ChatMessage;
+use App\Entity\DogProfile;
 use App\Entity\User;
 use App\Repository\ChatConversationRepository;
 use App\Repository\DogProfileRepository;
@@ -43,6 +44,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class ChatController extends AbstractController
 {
     public const MAX_MESSAGE_CHARS = 2000;
+    /** The coach opens the chat itself when the last message is at least this old. */
+    public const OPENER_AFTER_DAYS = 2;
 
     public function __construct(
         private readonly ChatConversationRepository $conversations,
@@ -70,9 +73,14 @@ class ChatController extends AbstractController
         // First step after sign-up: the food label, until the coach knows the food.
         $needsFood = $dog !== null && $dog->getFood() === null && !$messages;
 
+        // Coming back after a while (or a first chat once the food is known): the coach opens
+        // the conversation itself (POST /chat/opener). It replaces the check-in cards that day.
+        $opener = $claude->isConfigured() && !$request->query->has('ask') && !$request->query->has('photo') && ($cards === null)
+            ? $this->openerDue($messages, $dog) : null;
+
         // Otherwise, every few days: a check-in about the dog (no AI call, see CheckIns).
         $checkin = null;
-        if ($cards === null && $dog && !$needsFood) {
+        if ($cards === null && $dog && !$needsFood && $opener === null) {
             $now = new \DateTimeImmutable();
             $checkin = $checkIns->cardsFor($dog, $request->getLocale(), $now);
             if ($checkin !== null) {
@@ -97,9 +105,95 @@ class ChatController extends AbstractController
             // From the dashboard's "Show the coach a photo" (/chat?photo=1).
             'attachHint' => $request->query->has('photo'),
             'checkin' => $checkin,
+            'openerUrl' => $opener !== null ? $this->generateUrl('app_chat_opener') : null,
             // Starter question from the dashboard (/chat?ask=…), put in the message box.
             'ask' => mb_substr(trim((string) $request->query->get('ask', '')), 0, 300),
         ]);
+    }
+
+    /**
+     * Days since the last message when the coach should open the chat (0 = first chat), or null.
+     *
+     * @param list<ChatMessage> $messages
+     */
+    private function openerDue(array $messages, ?DogProfile $dog): ?int
+    {
+        if ($dog === null || $dog->getFood() === null) {
+            return null; // no quiz yet, or the "snap the food label" step comes first
+        }
+        if (!$messages) {
+            return 0;
+        }
+        $last = end($messages)->getCreatedAt();
+        $days = (int) floor(((new \DateTimeImmutable())->getTimestamp() - $last->getTimestamp()) / 86400);
+        return $days >= self::OPENER_AFTER_DAYS ? $days : null;
+    }
+
+    #[Route('/opener', name: 'app_chat_opener', methods: ['POST'])]
+    public function opener(Request $request, ClaudeClient $claude, ChatAgent $agent, DogProfileRepository $dogs, LoggerInterface $logger): Response
+    {
+        $user = $this->currentUser();
+        if (!$this->isCsrfTokenValid('chat', (string) $request->headers->get('X-CSRF-Token'))) {
+            return new JsonResponse(['error' => 'csrf'], 403);
+        }
+        $conversation = $this->conversations->findForUser($user);
+        $days = $claude->isConfigured() ? $this->openerDue($conversation ? $conversation->getMessages()->toArray() : [], $dogs->findForUser($user)) : null;
+        if ($days === null) {
+            return new Response('', 204);
+        }
+        $isNew = $conversation === null;
+        if ($isNew) {
+            $conversation = new ChatConversation($user);
+            $this->em->persist($conversation);
+            $this->em->flush();
+        }
+        if ($request->hasSession()) {
+            $request->getSession()->save();
+        }
+
+        $stream = $this->environment !== 'test';
+        $response = new StreamedResponse(function () use ($agent, $conversation, $isNew, $days, $logger, $stream) {
+            ignore_user_abort(true);
+            if ($stream) {
+                while (ob_get_level() > 0) {
+                    ob_end_flush();
+                }
+            }
+            $emit = static function (string $event, array $data) use ($stream): void {
+                echo 'event: ' . $event . "\n" . 'data: ' . json_encode($data, JSON_UNESCAPED_UNICODE) . "\n\n";
+                if ($stream) {
+                    @flush();
+                }
+            };
+            try {
+                $result = $agent->opener($conversation, $days, static fn (string $d) => $emit('delta', ['text' => $d]));
+                if ($result['text'] === '' && !$result['questions']) {
+                    throw new \RuntimeException('Empty opener');
+                }
+                $message = (new ChatMessage($conversation, ChatMessage::ROLE_ASSISTANT, $result['text']))
+                    ->setQuestions($result['questions'])
+                    ->setUsage($result['usage']['input'], $result['usage']['output']);
+                $this->em->persist($message);
+                $conversation->touch();
+                $this->em->flush();
+                if ($result['questions']) {
+                    $emit('questions', ['questions' => $result['questions']]);
+                }
+                $emit('done', []);
+            } catch (\Throwable $e) {
+                // Not worth bothering the pet parent: the chat simply opens without it.
+                $logger->warning('Chat opener failed', ['exception' => $e]);
+                if ($isNew && $conversation->getMessages()->isEmpty()) {
+                    $this->em->remove($conversation);
+                    $this->em->flush();
+                }
+                $emit('error', ['message' => '']);
+            }
+        });
+        $response->headers->set('Content-Type', 'text/event-stream; charset=utf-8');
+        $response->headers->set('Cache-Control', 'no-cache, no-transform');
+        $response->headers->set('X-Accel-Buffering', 'no');
+        return $response;
     }
 
     /** Old links from when there were several chats per person. */
@@ -192,7 +286,11 @@ class ChatController extends AbstractController
                 $result = $agent->reply($conversation, static fn (string $delta) => $emit('delta', ['text' => $delta]));
                 $reply = $result['text'];
                 if ($reply === '' && !$result['questions']) {
-                    $reply = 'Sorry, I couldn’t come up with an answer. Could you rephrase that?';
+                    // Treated like a failed call below: nothing is saved and the message doesn't count.
+                    throw new \RuntimeException('Empty reply from Claude (stop_reason: ' . ($result['stop_reason'] ?? 'none') . ')');
+                }
+                if (($result['stop_reason'] ?? null) === 'max_tokens') {
+                    $logger->warning('Chat reply hit max_tokens and was trimmed', ['usage' => $result['usage']]);
                 }
 
                 $assistant = (new ChatMessage($conversation, ChatMessage::ROLE_ASSISTANT, $reply))
@@ -207,6 +305,9 @@ class ChatController extends AbstractController
                 }
                 if ($result['food']) {
                     $emit('note', ['text' => $translator->trans('Saved to your dog’s profile: %food%', ['%food%' => trim($result['food']['brand'] . ' ' . $result['food']['product'])])]);
+                }
+                if ($result['remembered'] ?? []) {
+                    $emit('note', ['text' => $translator->trans('Added to your dog’s profile: %facts%', ['%facts%' => implode('; ', $result['remembered'])])]);
                 }
                 $emit('done', []);
             } catch (\Throwable $e) {

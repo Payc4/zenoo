@@ -127,6 +127,17 @@ If you update the quiz from the handoff, copy the files over and update the hash
   the dog's profile and check-in answers beside it, and "Download as text" for reviewing tester
   feedback and improving `config/chatbot/system_prompt.md`.
 
+## Logged in vs. visitors
+
+- `/` is the welcome page for visitors; logged-in pet parents are sent to `/dashboard` (the logo
+  links there too).
+- The quiz skips the name/email step for logged-in pet parents and saves straight to their dashboard.
+- The email step links to the app's own privacy policy and has an **unticked** "tips and offers"
+  box. Only a ticked box subscribes the profile to the Klaviyo list (marketing); the "Completed Dog
+  Quiz" event is always sent with the profile and plan, so the plan email should be triggered by
+  that event rather than by the list.
+- The "data sent to Klaviyo" panel under the result only appears in debug mode.
+
 ## Photos and files (vet partner feedback)
 
 - **Chat attachments** (`src/Chat/ChatFiles.php`): up to 3 photos or PDFs per message (camera button
@@ -219,7 +230,20 @@ If you update the quiz from the handoff, copy the files over and update the hash
   prompt caching, so the long course text is mostly read from Claude's cache (about 19,000 tokens).
 - **Switching it on:** set `ANTHROPIC_API_KEY` (from the Claude Console). Without it, the Chat
   tab says the chat isn't switched on yet.
-- **Model:** `claude-haiku-5-5` by default. Set `ANTHROPIC_MODEL` to change it.
+- **Model:** `claude-haiku-5-5` by default. Set `ANTHROPIC_MODEL` to change it. Haiku 5.5 "thinks"
+  before answering unless told not to, and that thinking counts toward `max_tokens`, so
+  `ClaudeClient` sends `thinking: {type: disabled}` for it (replies used to stop mid-sentence or come
+  back empty). Replies get up to 4,096 tokens; one that still hits the limit is cut back to its last
+  full sentence, and an empty reply is retried once, then reported as an error that doesn't use a message.
+- **The dog's profile grows:** the profile part of the prompt (Bowl Score, breakdown, plan, food,
+  check-ins) is rebuilt from the database for every message and cached too. The coach saves what the
+  pet parent tells it with the `update_dog_profile` tool (a new weight, symptoms, vet diagnoses,
+  treats, routine, likes): `DogProfile::getNotes()`, up to 30, kept when the quiz is retaken. They show
+  on the dashboard ("What the coach knows about Bella") and on the admin conversation page.
+- **Proactive coach:** when a pet parent opens the chat 2+ days after the last message
+  (`ChatController::OPENER_AFTER_DAYS`), or for the first time once the food is known, the page calls
+  `POST /chat/opener` and the coach starts the conversation with one specific question from the
+  profile. It doesn't use one of their messages, and replaces the check-in cards that visit.
 - **Daily limit:** `CHAT_DAILY_LIMIT` (default `60`) messages per pet parent per calendar day in
   `CHAT_TIMEZONE` (default `Europe/Vilnius`). Counts are stored separately from the chats, so
   clearing the chat doesn't give messages back. A reply that fails doesn't count. Admins have no

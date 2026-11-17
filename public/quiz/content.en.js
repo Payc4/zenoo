@@ -244,6 +244,8 @@ window.ZQ_CONTENT = {
       ok: '<p>{name} sounds just right. Keep checking monthly: run your hands along the ribs and look for the waist from above.</p>',
       // {ideal} = ideal weight in kg
       heavy: '<p>Extra weight is really common, especially in small dogs, where a few treats a day can be a big share of their energy. From the shape you picked, {poss} ideal weight is around <b>{ideal} kg</b>.</p><p>Every point on the scale matters for joints and energy, and it’s one of the easiest things to change.</p>',
+      // Medium, large and giant dogs (the text above is for toy and small dogs)
+      heavyBig: '<p>Extra weight is really common, and it creeps up slowly: a slightly generous scoop or a few treats a day soon add up. From the shape you picked, {poss} ideal weight is around <b>{ideal} kg</b>.</p><p>For a bigger dog, every kilo counts for the joints and energy, and it’s one of the easiest things to change.</p>',
       thin: '<p>From the shape you picked, {name} may be on the lean side. Ideal is around <b>{ideal} kg</b>. Some dogs are naturally slim, so a quick check with your vet is a good idea if you’re unsure.</p>',
     },
     activity: { title: 'HOW ACTIVE IS {NAME} ON A TYPICAL DAY?', band: 'Walks and play, all added up', type: 'Mostly…' },
@@ -290,7 +292,8 @@ window.ZQ_CONTENT = {
       lead: 'We’ll email you {poss} Bowl Score and daily plan, plus our <b>free ZENOO feeding guide</b>.',
       firstName: 'Your first name', email: 'Your email', submit: 'SEND MY PLAN',
       // consent is also stored on the Klaviyo profile as consent_text_shown
-      consent: 'By submitting your email, you agree to receive {poss} plan, the feeding guide and tips from ZENOO.',
+      consent: 'We’ll email you {poss} plan and the free feeding guide.',
+      marketing: 'Also send me feeding tips and offers from ZENOO (optional).',
       unsubscribe: 'Unsubscribe anytime.', privacy: 'Privacy policy',
     },
     profile: {

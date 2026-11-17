@@ -80,3 +80,11 @@
 .dash-coach__photo { grid-column: 1 / -1; display: flex; gap: 14px; align-items: center; padding: 14px 16px; border-radius: 16px; background: rgba(255, 255, 255, .1); color: #fff; text-decoration: none; }
 .dash-coach__photo:hover { background: rgba(255, 255, 255, .16); }
 .dash-coach__photo > span:first-child { font-size: 1.6rem; }
+
+/* What the coach has learned about the dog in the chat */
+.dash-knows { margin-top: 24px; }
+.dash-knows ul { list-style: none; margin: 12px 0 0; padding: 0; }
+.dash-knows li { padding: 8px 0; border-top: 1px solid rgba(0, 0, 0, .08); }
+.dash-knows li:first-child { border-top: 0; }
+.dash-knows__topic { display: inline-block; min-width: 92px; font-size: 13px; opacity: .65; }
+.dash-knows__hint { margin: 12px 0 0; font-size: 14px; opacity: .75; }

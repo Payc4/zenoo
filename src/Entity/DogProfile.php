@@ -132,6 +132,58 @@ class DogProfile
         return $this;
     }
 
+    /** How many facts the coach keeps about a dog (oldest drop off first). */
+    public const MAX_NOTES = 30;
+
+    /**
+     * What the pet parent told the coach about their dog, newest last:
+     * [ { "topic": "health", "text": "Itchy paws since spring", "at": "2026-11-17" }, … ]. Kept when the quiz is retaken.
+     *
+     * @return list<array{topic: string, text: string, at: string}>
+     */
+    public function getNotes(): array
+    {
+        return array_values(array_filter((array) ($this->data['notes'] ?? []), 'is_array'));
+    }
+
+    /**
+     * Add a fact, or replace the one it updates (same topic and the old text given in $replaces).
+     * Returns false for an empty or duplicate fact.
+     */
+    public function addNote(string $topic, string $text, \DateTimeImmutable $at, ?string $replaces = null): bool
+    {
+        $text = mb_substr(trim(strip_tags($text)), 0, 240);
+        $topic = mb_substr(trim(strip_tags($topic)), 0, 30) ?: 'other';
+        if ($text === '') {
+            return false;
+        }
+        $notes = $this->getNotes();
+        $norm = fn (string $s) => mb_strtolower(trim(preg_replace('/\s+/u', ' ', $s)));
+        foreach ($notes as $n) {
+            if ($norm($n['text']) === $norm($text)) {
+                return false;
+            }
+        }
+        if ($replaces !== null && trim($replaces) !== '') {
+            $notes = array_values(array_filter($notes, fn ($n) => $norm($n['text']) !== $norm($replaces)));
+        }
+        $notes[] = ['topic' => $topic, 'text' => $text, 'at' => $at->format('Y-m-d')];
+        $this->data['notes'] = \array_slice($notes, -self::MAX_NOTES);
+        return true;
+    }
+
+    /** The weight the pet parent told the coach since the quiz, if newer: { "kg": 31.5, "at": "2026-11-17" }. */
+    public function getWeightUpdate(): ?array
+    {
+        return \is_array($this->data['weight'] ?? null) ? $this->data['weight'] : null;
+    }
+
+    public function setWeightUpdate(float $kg, \DateTimeImmutable $at): static
+    {
+        $this->data['weight'] = ['kg' => round($kg, 1), 'at' => $at->format('Y-m-d')];
+        return $this;
+    }
+
     /** File name of the dog's photo in public/uploads/dogs (see DogPhotoUploader), if one was added. */
     public function getPhoto(): ?string
     {

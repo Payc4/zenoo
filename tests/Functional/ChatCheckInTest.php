@@ -18,7 +18,13 @@ final class ChatCheckInTest extends AppTestCase
         // Check-ins start once the coach knows the food (until then the chat asks for the label).
         $dog->setFood('Orijen', 'Original', 'dry', '', 'chat', new \DateTimeImmutable());
         $this->em->persist($dog);
+        // A chat from today: the coach doesn't open it again, so the check-in shows.
+        $conversation = new \App\Entity\ChatConversation($user);
+        $this->em->persist($conversation);
+        $this->em->persist(new ChatMessage($conversation, ChatMessage::ROLE_ASSISTANT, 'Hi Maria!'));
         $this->em->flush();
+        $this->em->clear(); // the page loads the conversation fresh, with its message
+        $user = $this->em->getRepository(User::class)->find($user->getId());
         $this->client->loginUser($user);
         return $user;
     }
@@ -69,7 +75,7 @@ final class ChatCheckInTest extends AppTestCase
         $checkins = $this->dog()->getCheckins();
         $this->assertSame('soft', $checkins['stools'][0]['value']);
         $this->assertSame('Sleeps a lot lately', $checkins['energy'][0]['text']);
-        $this->assertSame(0, $this->em->getRepository(ChatMessage::class)->count([]), 'no chat message');
+        $this->assertSame(1, $this->em->getRepository(ChatMessage::class)->count([]), 'no new chat message');
         $this->assertSame([], FakeClaude::$requests, 'no AI call');
     }
 

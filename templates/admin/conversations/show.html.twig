@@ -44,7 +44,10 @@
           {% endfor %}
           {% if dog.get('signs') %}Signs: {{ dog.get('signs') is iterable ? dog.get('signs')|join(', ') : dog.get('signs') }}<br>{% endif %}
           {% if dog.food %}Food: {{ dog.food.brand }} {{ dog.food.product }}{% if dog.food.format %} ({{ dog.food.format }}){% endif %} · from {{ dog.food.source }}, {{ dog.food.at }}{% if dog.food.notes %}<br><span class="cs-muted">{{ dog.food.notes }}</span>{% endif %}{% else %}Food brand: not known yet{% endif %}
+          {% if dog.weightUpdate %}<br>Weight told in chat: {{ dog.weightUpdate.kg }} kg ({{ dog.weightUpdate.at }}){% endif %}
         </p>
+        <h2 class="cs-label">Saved by the coach</h2>
+        {% if dog.notes %}<ul class="cs-small">{% for n in dog.notes %}<li>{{ n.at }} · {{ n.topic }} · {{ n.text }}</li>{% endfor %}</ul>{% else %}<p class="cs-muted cs-small">Nothing yet.</p>{% endif %}
         <h2 class="cs-label">Check-in answers</h2>
         {% if checkins %}<pre class="cv-pre">{{ checkins }}</pre>{% else %}<p class="cs-muted cs-small">None yet.</p>{% endif %}
       {% else %}

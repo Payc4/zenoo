@@ -18,6 +18,10 @@ class HomeController extends AbstractController
     #[Route('/', name: 'app_homepage', methods: ['GET'])]
     public function index(ProductRepository $products): Response
     {
+        // The home page is the welcome for visitors; logged-in pet parents go to their dog's dashboard.
+        if ($this->getUser() !== null) {
+            return $this->redirectToRoute('app_dashboard');
+        }
         return $this->render('home/index.html.twig', [
             'products' => $products->findActive(),
         ]);
@@ -66,7 +70,10 @@ class HomeController extends AbstractController
                 'klaviyoCompanyId' => $company,
                 'klaviyoListId' => $list,
                 'sendToKlaviyo' => $sendToKlaviyo && $company !== '' && $list !== '',
-                'privacyUrl' => 'https://myzenoo.com/policies/privacy-policy',
+                // The app's own policy (quiz, account, coach, photos), not the shop's.
+                'privacyUrl' => $this->generateUrl('app_privacy_policy', [], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL),
+                // The "data sent to Klaviyo" panel on the result is for local testing only.
+                'debug' => (bool) $this->getParameter('kernel.debug'),
                 'emailPhotoBase' => 'https://cdn.shopify.com/s/files/1/0863/5265/8779/files/zq-email-',
                 'quizVersion' => 'site-1',
                 // Quiz → account (QuizAccountController)

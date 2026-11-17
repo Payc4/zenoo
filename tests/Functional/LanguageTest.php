@@ -119,7 +119,7 @@ final class LanguageTest extends AppTestCase
         $this->assertSelectorTextContains('h1', 'Sveiki sugrįžę');
         $this->loginViaForm('maria@example.com', 'Password123');
 
-        foreach (['/', '/dashboard', '/account', '/shop', '/courses', '/chat', '/privacy-policy', '/register'] as $url) {
+        foreach (['/dashboard', '/account', '/shop', '/courses', '/chat', '/privacy-policy', '/register', '/'] as $url) {
             if ($url === '/register') {
                 $this->client->request('GET', '/logout');
             }

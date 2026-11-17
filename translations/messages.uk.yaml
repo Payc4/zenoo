@@ -381,3 +381,8 @@
 'Describe what you see and add a photo…': 'Опишіть, що бачите, і додайте фото…'
 'Reading labels isn’t available right now. Please type the numbers in.': 'Читання етикеток зараз недоступне. Впишіть цифри самостійно.'
 'That was your free try. Type the numbers in, and after the quiz the coach can read labels for you any time.': 'Це була ваша безкоштовна спроба. Впишіть цифри самостійно, а після тесту помічник читатиме етикетки для вас будь-коли.'
+
+# Coach: profile notes
+'Added to your dog’s profile: %facts%': 'Додано до профілю собаки: %facts%'
+'What the coach knows about %dog%': 'Що помічник знає: %dog%'
+'Tell the coach when something changes, and it’s added here.': 'Розкажіть помічнику, коли щось зміниться, і це з’явиться тут.'

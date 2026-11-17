@@ -381,3 +381,8 @@
 'Describe what you see and add a photo…': 'Opisz, co widzisz, i dodaj zdjęcie…'
 'Reading labels isn’t available right now. Please type the numbers in.': 'Odczytywanie etykiet jest teraz niedostępne. Wpisz wartości samodzielnie.'
 'That was your free try. Type the numbers in, and after the quiz the coach can read labels for you any time.': 'To była Twoja darmowa próba. Wpisz wartości samodzielnie, a po quizie asystent odczyta etykiety dla Ciebie w każdej chwili.'
+
+# Coach: profile notes
+'Added to your dog’s profile: %facts%': 'Dodano do profilu psa: %facts%'
+'What the coach knows about %dog%': 'Co asystent wie: %dog%'
+'Tell the coach when something changes, and it’s added here.': 'Powiedz asystentowi, gdy coś się zmieni, a pojawi się to tutaj.'

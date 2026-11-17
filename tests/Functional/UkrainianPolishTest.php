@@ -88,7 +88,7 @@ final class UkrainianPolishTest extends AppTestCase
         $this->assertSelectorTextContains('h1', $this->t('Welcome back', $l));
         $this->loginViaForm('maria@example.com', 'Password123');
 
-        foreach (['/', '/dashboard', '/account', '/shop', '/courses', '/chat', '/privacy-policy', '/register'] as $url) {
+        foreach (['/dashboard', '/account', '/shop', '/courses', '/chat', '/privacy-policy', '/register', '/'] as $url) {
             if ($url === '/register') {
                 $this->client->request('GET', '/logout');
             }

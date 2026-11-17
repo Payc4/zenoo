@@ -69,7 +69,7 @@ final class QuizLabelController extends AbstractController
 
         try {
             $result = $this->claude->stream([
-                'max_tokens' => 600,
+                'max_tokens' => 2048,
                 'system' => self::PROMPT . "\n\nWrite \"take\" in " . Locale::ENGLISH_NAMES[$locale] . '.',
                 'messages' => [['role' => 'user', 'content' => [
                     ['type' => 'image', 'source' => ['type' => 'base64', 'media_type' => 'image/jpeg', 'data' => base64_encode($jpeg)]],

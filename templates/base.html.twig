@@ -18,7 +18,7 @@
     {% set route = app.request.attributes.get('_route') %}
     <header class="site-header">
         <div class="wrap">
-            <a class="brand" href="{{ path('app_homepage') }}"><img src="/images/logo-white.png" alt="{{ 'ZENOO home'|trans }}" width="94" height="26"></a>
+            <a class="brand" href="{{ app.user ? path('app_dashboard') : path('app_homepage') }}"><img src="/images/logo-white.png" alt="{{ 'ZENOO home'|trans }}" width="94" height="26"></a>
             {% set lang = app.locale %}
             {# Language menu: the current flag opens a list of the four languages (works without JavaScript). #}
             <details class="lang-switch">
@@ -39,12 +39,12 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
             </button>
             <nav class="nav" id="site-nav" aria-label="{{ 'Main'|trans }}">
+                {% if app.user %}<a href="{{ path('app_dashboard') }}" {{ route == 'app_dashboard' ? 'aria-current="page"' }}>{{ 'My dog'|trans }}</a>{% endif %}
                 <a href="{{ path('app_shop') }}" {{ route starts with 'app_shop' or route == 'app_product' ? 'aria-current="page"' }}>{{ 'Shop'|trans }}</a>
                 <a href="{{ path('app_quiz') }}">{{ 'Bowl Score quiz'|trans }}</a>
                 <a href="{{ path('app_courses') }}" {{ route starts with 'app_course' ? 'aria-current="page"' }}>{{ 'Courses'|trans }}</a>
                 <a href="{{ path('app_chat') }}" {{ route starts with 'app_chat' ? 'aria-current="page"' }}>{{ 'Chat'|trans }}</a>
                 {% if app.user %}
-                    <a href="{{ path('app_dashboard') }}" {{ route == 'app_dashboard' ? 'aria-current="page"' }}>{{ 'My dog'|trans }}</a>
                     {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin') }}">{{ 'Admin'|trans }}</a>{% endif %}
                     <a class="nav-avatar" href="{{ path('app_account') }}" title="{{ 'My account'|trans }}" {{ route starts with 'app_account' ? 'aria-current="page"' }}>
                         {{ include('account/_avatar.html.twig', {user: app.user, size: 'sm'}) }} <span class="nav-avatar__label">{{ 'My account'|trans }}</span>

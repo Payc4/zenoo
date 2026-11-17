@@ -151,6 +151,13 @@ class CourseKnowledge
             ? '- Food they feed (saved ' . $food['at'] . ', from the ' . $food['source'] . '): ' . trim($food['brand'] . ' ' . $food['product'])
                 . ($food['format'] ? ' (' . $food['format'] . ')' : '') . ($food['notes'] ? '. Label notes: ' . $this->oneLine($food['notes']) : '')
             : '- Food brand: not known yet. When it fits, early in the chat, invite them once to snap a photo of the food label with the camera button next to the message box, or to type the food\'s name, and offer to check it. Then save it with save_food.';
+        if ($w = $dog->getWeightUpdate()) {
+            $lines[] = '- Weight they told you later (' . $w['at'] . '): ' . $w['kg'] . ' kg. Use this instead of the quiz weight.';
+        }
+        $notes = $dog->getNotes();
+        $lines[] = $notes
+            ? "- What they have told you in the chat (from your update_dog_profile notes, oldest first):\n" . implode("\n", array_map(fn ($n) => '  - ' . $n['at'] . ' [' . $n['topic'] . '] ' . $n['text'], $notes))
+            : '- Nothing saved from the chat yet. When they tell you something lasting about the dog, save it with update_dog_profile.';
         $lines[] = $dog->getPhoto()
             ? '- They added a photo of ' . $dog->getName() . ' to the profile.'
             : '- No photo of ' . $dog->getName() . ' yet; they can add one on the dashboard ("Finish the profile").';

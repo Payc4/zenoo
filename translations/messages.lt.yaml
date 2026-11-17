@@ -381,3 +381,8 @@
 'Describe what you see and add a photo…': 'Aprašykite, ką matote, ir pridėkite nuotrauką…'
 'Reading labels isn’t available right now. Please type the numbers in.': 'Etikečių skaitymas šiuo metu neveikia. Įrašykite skaičius patys.'
 'That was your free try. Type the numbers in, and after the quiz the coach can read labels for you any time.': 'Tai buvo jūsų nemokamas bandymas. Įrašykite skaičius patys, o po testo patarėjas etiketes jums perskaitys bet kada.'
+
+# Coach: profile notes
+'Added to your dog’s profile: %facts%': 'Pridėta prie šuns profilio: %facts%'
+'What the coach knows about %dog%': 'Ką patarėjas žino: %dog%'
+'Tell the coach when something changes, and it’s added here.': 'Papasakokite patarėjui, kai kas nors pasikeičia, ir tai atsiras čia.'

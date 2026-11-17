@@ -470,6 +470,43 @@ if (app) {
   const checkinCards = $('chat-checkin') ? JSON.parse($('chat-checkin').textContent) : null;
   if (!pending && checkinCards) openCards(checkinCards, false, true);
 
+  // ───────── The coach opens the chat (after a few days away, or a first chat) ─────────
+  const openChat = async () => {
+    if (!app.dataset.openerUrl || busy || q) return;
+    busy = true;
+    updateSend();
+    const reply = addBotMessage();
+    let raw = '';
+    let cards = null;
+    let failed = false;
+    try {
+      const res = await fetch(app.dataset.openerUrl, { method: 'POST', headers: { Accept: 'text/event-stream', 'X-CSRF-Token': app.dataset.csrf } });
+      if (res.status !== 200 || !(res.headers.get('content-type') || '').includes('text/event-stream')) throw new Error('');
+      await readStream(res, {
+        delta: (d) => { if (!raw) $('chat-empty')?.remove(); raw += d.text; renderInto(reply.answer, raw); },
+        questions: (d) => { cards = d.questions; },
+        done: () => {},
+        error: () => { failed = true; },
+      });
+      if (failed || (!raw.trim() && !cards)) throw new Error('');
+      if (cards) {
+        if (frame) cancelAnimationFrame(frame);
+        reply.answer.innerHTML = (raw.trim() ? render(raw) : '') + askedList(cards);
+        openCards(cards, false);
+      }
+    } catch (e) {
+      // Not worth an error message: the chat just opens without the greeting.
+      if (frame) cancelAnimationFrame(frame);
+      reply.el.remove();
+    } finally {
+      reply.el.classList.remove('is-pending');
+      busy = false;
+      updateSend();
+      scrollToBottom();
+    }
+  };
+  openChat();
+
   scrollToBottom(true);
   window.addEventListener('load', () => scrollToBottom(true), { once: true });
   resize();

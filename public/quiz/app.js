@@ -99,7 +99,7 @@
     { id: 'appetite', valid: () => !!a.appetite },
     { id: 'signs', valid: () => true },
     { id: 'slideSigns', slide: true, when: () => a.signs.length > 0 },
-    { id: 'gate', valid: () => (a.parentName || '').trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email || '') },
+    { id: 'gate', when: () => !CFG.user, valid: () => (a.parentName || '').trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email || '') },
     { id: 'result' },
   ];
   const active = () => steps.filter((s) => !s.when || s.when());
@@ -178,8 +178,10 @@
       </div>${nav()}`,
 
     slideAge: () => {
-      const st = stage(); const copy = U.slideAge[st];
-      return slide(U.slideAge.tag, copy.title, `<p>${tx(copy.text)}</p>`, `stage-${st}`, copy.alt);
+      // The pet parent's own breed (or mixed-size) photo, not a stock dog of another breed.
+      const st = stage(); const copy = U.slideAge[st]; const b = breed();
+      const file = b && !b.mixed ? `breed-${b.id}` : `mixed-${size()}`;
+      return slide(U.slideAge.tag, copy.title, `<p>${tx(copy.text)}</p>`, file, b && !b.mixed ? b.name : copy.alt);
     },
 
     sex: () => `${qhead(tx(U.sex.title))}
@@ -205,7 +207,8 @@ ${nav()}`,
 
     slideBody: () => {
       const iw = Math.round(S.idealWeight(+a.weight, a.bcs) * 10) / 10;
-      const body = tx(a.bcs === 5 ? U.slideBody.ok : a.bcs > 5 ? U.slideBody.heavy : U.slideBody.thin, { ideal: dec(iw) });
+      const small = ['toy', 'small'].includes(size());
+      const body = tx(a.bcs === 5 ? U.slideBody.ok : a.bcs > 5 ? (small ? U.slideBody.heavy : U.slideBody.heavyBig) : U.slideBody.thin, { ideal: dec(iw) });
       return slide(U.slideBody.tag, U.slideBody.title, body, 'body-check', U.slideBody.alt);
     },
 
@@ -301,7 +304,8 @@ ${nav()}`,
         <input type="text" data-input="parentName" value="${esc(a.parentName)}" autocomplete="given-name">
         <label class="zq-label">${T.email}</label>
         <input type="email" data-input="email" value="${esc(a.email)}" autocomplete="email" inputmode="email">
-        <button class="zq-btn block" data-action="next" style="margin-top:20px">${T.submit}</button>
+        <label class="zq-optin"><input type="checkbox" data-check="marketing" ${a.marketing ? 'checked' : ''}> <span>${T.marketing}</span></label>
+        <button class="zq-btn block" data-action="next" style="margin-top:16px">${T.submit}</button>
         <p class="zq-small" style="margin-top:12px">${tx(T.consent)} ${T.unsubscribe} <a href="${CFG.privacyUrl}" target="_blank" rel="noopener">${T.privacy}</a>.</p>
       </div></div>
       <div class="zq-nav"><button class="zq-back" data-action="back">${U.back}</button><span></span></div>`;
@@ -361,11 +365,11 @@ ${nav()}`,
         ${plan}
         ${vets.map((v) => `<div class="zq-vet">${v}</div>`).join('')}
         <h2 style="margin-top:20px">${T.breakdown}</h2>${cards.join('')}
-        <div class="zq-sent"><h3 style="font-family:var(--font-display);margin:0 0 6px">${T.inboxTitle}</h3>
-          <p style="margin:0">${tx(T.inboxText, { email: `<b>${esc(a.email)}</b>` })}</p></div>
+        ${CFG.user ? '' : `<div class="zq-sent"><h3 style="font-family:var(--font-display);margin:0 0 6px">${T.inboxTitle}</h3>
+          <p style="margin:0">${tx(T.inboxText, { email: `<b>${esc(a.email)}</b>` })}</p></div>`}
         ${CFG.accountSubmitUrl ? `<div class="zq-sent zq-account" id="zq-account">${accountBox()}</div>` : ''}
         <div class="zq-nav"><button class="zq-btn forest" data-action="share">${T.share}</button><button class="zq-back" data-action="restart">${T.restart}</button></div>
-        <details class="zq-demo"><summary>${CFG.sendToKlaviyo ? T.demoSent : T.demoUnsent}</summary><pre>${esc(JSON.stringify(payload, null, 2))}</pre></details>`;
+        ${CFG.debug ? `<details class="zq-demo"><summary>${CFG.sendToKlaviyo ? T.demoSent : T.demoUnsent}</summary><pre>${esc(JSON.stringify(payload, null, 2))}</pre></details>` : ''}`;
     },
   };
 
@@ -416,7 +420,8 @@ ${nav()}`,
     const fixes = r.topFixes.map((k) => fill(text(k).fix, vars)).filter(Boolean);
     return {
       email: a.email, first_name: (a.parentName || '').trim(),
-      consent_text_shown: tx(U.gate.consent),
+      consent_text_shown: CFG.user ? '' : tx(U.gate.consent) + ' [' + (a.marketing ? '✓' : ' ') + '] ' + U.gate.marketing,
+      marketing: !CFG.user && !!a.marketing,
       properties: {
         quiz_dog_name: a.name, quiz_breed: b.mixed ? 'mixed' : b.name, quiz_breed_size: size(),
         quiz_breed_photo_url: CFG.emailPhotoBase + (b.mixed ? `mixed-${size()}` : `breed-${a.breedId}`) + '.jpg',
@@ -548,12 +553,13 @@ ${nav()}`,
       render();
     } else if (t.dataset.action === 'next') {
       if (t.disabled) return;
-      if (active()[step].id === 'gate') submit();
-      step = Math.min(step + 1, active().length - 1); render();
+      step = Math.min(step + 1, active().length - 1);
+      if (active()[step].id === 'result' && !submitted) { submitted = true; submit(); }
+      render();
     } else if (t.dataset.action === 'back') { step = Math.max(0, step - 1); render(); }
     else if (t.dataset.action === 'scanLabel') { document.getElementById('zq-scanfile')?.click(); }
     else if (t.dataset.action === 'skipLabel') { a.labelSkipped = true; step += 1; render(); }
-    else if (t.dataset.action === 'restart') { a = blank(); step = 0; render(); }
+    else if (t.dataset.action === 'restart') { a = blank(); step = 0; submitted = false; render(); }
     else if (t.dataset.action === 'share') {
       const url = location.origin + location.pathname;
       if (navigator.share) navigator.share({ title: U.result.shareTitle, url }).catch(() => {});
@@ -588,6 +594,7 @@ ${nav()}`,
 
   app.addEventListener('change', (e) => {
     if (e.target.id === 'zq-scanfile' && e.target.files[0]) scanLabel(e.target.files[0]);
+    if (e.target.dataset.check) { a[e.target.dataset.check] = e.target.checked; save(); }
   });
 
   app.addEventListener('keydown', (e) => {
@@ -622,7 +629,7 @@ ${nav()}`,
     fetch(CFG.accountSubmitUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CFG.accountToken },
-      body: JSON.stringify({ email: p.email, first_name: p.first_name, locale: CFG.locale, properties: p.properties }),
+      body: JSON.stringify({ email: p.email, first_name: p.first_name, locale: CFG.locale, properties: { ...p.properties, quiz_marketing_consent: p.marketing } }),
     }).then((res) => res.json().then((data) => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
         if (!ok) throw new Error(data.error || '');
@@ -641,14 +648,15 @@ ${nav()}`,
     }).then((res) => { if (!res.ok) throw new Error(`Klaviyo ${path}: ${res.status}`); });
   }
 
+  let submitted = false;
   function submit() {
     const r = S.evaluate(answers());
     const p = klaviyoPayload(r);
     submitAccount(p);
     if (!CFG.sendToKlaviyo) { console.info('[ZENOO quiz] Klaviyo payload (not sent):', p); return; }
-    const profile = { email: p.email, first_name: p.first_name, locale: CFG.locale, properties: p.properties };
+    const profile = { email: p.email, first_name: p.first_name, locale: CFG.locale, properties: { ...p.properties, quiz_marketing_consent: p.marketing } };
     Promise.all([
-      klaviyo('subscriptions', {
+      p.marketing && klaviyo('subscriptions', {
         type: 'subscription',
         attributes: {
           custom_source: `Dog Quiz (${CFG.locale})`,
@@ -659,9 +667,9 @@ ${nav()}`,
       klaviyo('events', {
         type: 'event',
         attributes: {
-          properties: { ...p.properties, consent_text_shown: p.consent_text_shown },
+          properties: { ...p.properties, consent_text_shown: p.consent_text_shown, marketing_consent: p.marketing },
           metric: { data: { type: 'metric', attributes: { name: 'Completed Dog Quiz' } } },
-          profile: { data: { type: 'profile', attributes: { email: p.email } } },
+          profile: { data: { type: 'profile', attributes: profile } },
         },
       }),
     ]).catch((err) => {

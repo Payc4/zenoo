@@ -28,7 +28,7 @@
         <ul class="dash-facts">
           {% if dog.get('breed') %}<li>{{ dog.get('breed') == 'mixed' ? 'Mixed breed'|trans : dog.get('breed') }}</li>{% endif %}
           {% if dog.get('age_years') is not null %}<li>{{ '%n% years'|trans({'%n%': dog.get('age_years')|number_format(1, decimal_sep(), '')|replace({'.0': '', ',0': ''})}) }}{% if stages[dog.get('life_stage')] is defined %} · {{ stages[dog.get('life_stage')]|trans }}{% endif %}</li>{% endif %}
-          {% if dog.get('weight_kg') %}<li>{{ dog.get('weight_kg') }} kg</li>{% endif %}
+          {% if dog.weightUpdate %}<li>{{ dog.weightUpdate.kg }} kg</li>{% elseif dog.get('weight_kg') %}<li>{{ dog.get('weight_kg') }} kg</li>{% endif %}
         </ul>
       {% endif %}
     </div>
@@ -158,6 +158,18 @@
   {% endif %}
 
   {# ---------- Coach ---------- #}
+  {% if dog and (dog.notes or dog.food) %}
+    {# What the coach has learned in the chat: the profile grows with every conversation. #}
+    <section class="card dash-knows" aria-labelledby="knows-h">
+      <h2 id="knows-h">{{ 'What the coach knows about %dog%'|trans({'%dog%': dog.name}) }}</h2>
+      <ul>
+        {% if dog.food %}<li><span class="dash-knows__topic">{{ 'Food'|trans }}</span> {{ (dog.food.brand ~ ' ' ~ dog.food.product)|trim }}</li>{% endif %}
+        {% for n in dog.notes|reverse|slice(0, 8) %}<li><span class="dash-knows__topic">{{ n.at|date('Y-m-d') }}</span> {{ n.text }}</li>{% endfor %}
+      </ul>
+      <p class="dash-knows__hint">{{ 'Tell the coach when something changes, and it’s added here.'|trans }}</p>
+    </section>
+  {% endif %}
+
   <section class="card card-forest dash-coach" aria-labelledby="coach-h">
     <div>
       <p class="kicker">{{ 'AI coach'|trans }}</p>

@@ -10,6 +10,7 @@
 <div class="chat-app" id="chat"
      data-send-url="{{ path('app_chat_send') }}"
      data-checkin-url="{{ path('app_chat_checkin') }}"
+     {% if openerUrl %}data-opener-url="{{ openerUrl }}"{% endif %}
      data-csrf="{{ csrf_token('chat') }}"
      data-max-chars="{{ maxChars }}"
      data-max-files="{{ maxFiles }}"

@@ -46,6 +46,39 @@ class PagesTest extends AppTestCase
         }
     }
 
+    public function testLoggedInHomeIsTheDashboard(): void
+    {
+        $this->client->request('GET', '/');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorExists('section.hero');
+
+        $this->client->loginUser($this->createUser());
+        $this->client->request('GET', '/');
+        $this->assertResponseRedirects('/dashboard');
+        $crawler = $this->client->request('GET', '/dashboard');
+        $this->assertSame('/dashboard', $crawler->filter('a.brand')->attr('href'));
+    }
+
+    public function testQuizUsesTheAppsPrivacyPageAndSkipsTheGateWhenLoggedIn(): void
+    {
+        $config = function (): array {
+            $html = $this->client->request('GET', '/quiz/')->html();
+            preg_match('/window\.ZQ_CONFIG = (\{.*?\});/s', $html, $m);
+            return json_decode($m[1], true);
+        };
+        $cfg = $config();
+        $this->assertStringEndsWith('/privacy-policy', $cfg['privacyUrl']);
+        $this->assertNull($cfg['user']);
+
+        $this->client->loginUser($this->createUser());
+        $this->assertSame('maria@example.com', $config()['user']['email']);
+        // The email step is skipped for them, and the opt-in is unticked by default.
+        $app = (string) file_get_contents(dirname(__DIR__, 2) . '/public/quiz/app.js');
+        $this->assertStringContainsString("{ id: 'gate', when: () => !CFG.user", $app);
+        $this->assertStringContainsString("data-check=\"marketing\" \${a.marketing ? 'checked' : ''}", $app);
+        $this->assertStringContainsString('p.marketing && klaviyo(\'subscriptions\'', $app);
+    }
+
     public function testUnknownPageIs404(): void
     {
         $this->client->request('GET', '/no-such-page');

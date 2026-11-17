@@ -248,6 +248,8 @@ window.ZQ_CONTENT = {
       tag: 'SPRAWDZENIE SYLWETKI', title: 'TEST ŻEBER I TALII', alt: 'Dłonie delikatnie wyczuwają żebra psa',
       ok: '<p>Wygląda na to, że {name} ma idealną sylwetkę. Sprawdzaj co miesiąc: przesuń dłońmi wzdłuż żeber i spójrz z góry, czy widać talię.</p>',
       heavy: '<p>Nadwaga zdarza się naprawdę często, zwłaszcza u małych psów, u których kilka przysmaków dziennie może stanowić dużą część energii. Na podstawie wybranej sylwetki idealna waga twojego psa ({name}) to około <b>{ideal} kg</b>.</p><p>Każdy kilogram na wadze ma znaczenie dla stawów i energii, a waga to jedna z rzeczy, które najłatwiej zmienić.</p>',
+      // Medium, large and giant dogs (the text above is for toy and small dogs)
+      heavyBig: '<p>Nadwaga zdarza się naprawdę często i narasta powoli: trochę hojniejsza porcja albo kilka przysmaków dziennie szybko się sumują. Na podstawie wybranej sylwetki idealna waga twojego psa ({name}) to około <b>{ideal} kg</b>.</p><p>U większego psa każdy kilogram ma znaczenie dla stawów i energii, a waga to jedna z rzeczy, które najłatwiej zmienić.</p>',
       thin: '<p>Na podstawie wybranej sylwetki {name} może mieć nieco za niską wagę. Idealna to około <b>{ideal} kg</b>. Niektóre psy są z natury szczupłe, więc jeśli masz wątpliwości, warto krótko skonsultować się z weterynarzem.</p>',
     },
     activity: { title: 'ILE RUCHU MA {NAME} W ZWYKŁY DZIEŃ?', band: 'Spacery i zabawa, wszystko razem', type: 'Głównie…' },
@@ -291,7 +293,8 @@ window.ZQ_CONTENT = {
       title: 'GDZIE GO WYSŁAĆ?',
       lead: 'Wyślemy ci e-mailem Wynik miski i plan dnia twojego psa ({name}), a do tego <b>darmowy poradnik żywienia ZENOO</b>.',
       firstName: 'Twoje imię', email: 'Twój e-mail', submit: 'WYŚLIJ MÓJ PLAN',
-      consent: 'Podając adres e-mail, zgadzasz się na otrzymywanie planu twojego psa ({name}), poradnika żywienia i porad od ZENOO.',
+      consent: 'Wyślemy Ci plan dla Twojego psa ({name}) i darmowy poradnik żywienia.',
+      marketing: 'Wysyłajcie mi też porady żywieniowe i oferty ZENOO (opcjonalnie).',
       unsubscribe: 'Możesz zrezygnować w każdej chwili.', privacy: 'Polityka prywatności',
     },
     profile: {

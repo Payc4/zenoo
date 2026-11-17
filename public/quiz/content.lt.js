@@ -247,6 +247,8 @@ window.ZQ_CONTENT = {
       tag: 'KŪNO PATIKRA', title: 'ŠONKAULIŲ IR JUOSMENS TESTAS', alt: 'Rankos švelniai čiuopia šuns šonkaulius',
       ok: '<p>Panašu, kad {name} sveria kaip tik tiek, kiek reikia. Tikrinkite kas mėnesį: perbraukite rankomis per šonkaulius ir pažiūrėkite iš viršaus, ar matyti juosmuo.</p>',
       heavy: '<p>Antsvoris labai dažnas, ypač mažiems šunims: keli skanėstai per dieną jiems gali sudaryti didelę energijos dalį. Pagal pasirinktą formą {name} idealiai turėtų sverti apie <b>{ideal} kg</b>.</p><p>Kiekvienas kilogramas svarbus sąnariams ir energijai, o svorį pakeisti – vienas lengviausių dalykų.</p>',
+      // Medium, large and giant dogs (the text above is for toy and small dogs)
+      heavyBig: '<p>Antsvoris labai dažnas ir atsiranda pamažu: kiek didesnė porcija ar keli skanėstai per dieną greitai susideda. Pagal pasirinktą formą {name} idealiai turėtų sverti apie <b>{ideal} kg</b>.</p><p>Didesniam šuniui kiekvienas kilogramas svarbus sąnariams ir energijai, o svorį pakeisti – vienas lengviausių dalykų.</p>',
       thin: '<p>Pagal pasirinktą formą {name} gali sverti kiek per mažai. Idealus svoris – apie <b>{ideal} kg</b>. Kai kurie šunys iš prigimties liekni, tad jei abejojate, verta trumpai pasitarti su veterinaru.</p>',
     },
     activity: { title: 'KIEK {NAME} JUDA ĮPRASTĄ DIENĄ?', band: 'Pasivaikščiojimai ir žaidimai, viską sudėjus', type: 'Daugiausia…' },
@@ -290,7 +292,8 @@ window.ZQ_CONTENT = {
       title: 'KUR JĮ ATSIŲSTI?',
       lead: 'El. paštu atsiųsime jūsų šuns ({name}) Dubenėlio balą ir dienos planą, o kartu – <b>nemokamą ZENOO šėrimo gidą</b>.',
       firstName: 'Jūsų vardas', email: 'Jūsų el. paštas', submit: 'SIŲSTI MANO PLANĄ',
-      consent: 'Pateikdami el. pašto adresą sutinkate gauti jūsų šuns ({name}) planą, šėrimo gidą ir ZENOO patarimus.',
+      consent: 'Atsiųsime jūsų šuns ({name}) planą ir nemokamą šėrimo gidą.',
+      marketing: 'Taip pat siųskite man ZENOO šėrimo patarimus ir pasiūlymus (nebūtina).',
       unsubscribe: 'Atsisakyti galite bet kada.', privacy: 'Privatumo politika',
     },
     profile: {

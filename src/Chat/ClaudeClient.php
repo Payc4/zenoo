@@ -36,10 +36,25 @@ class ClaudeClient
      *
      * @return array{text: string, tool_uses: list<array{id: string, name: string, input: array}>, stop_reason: ?string, usage: array{input: int, output: int}}
      */
+    /**
+     * Models that accept thinking: {type: disabled}. Haiku 5.5 does; Opus/Sonnet 5.5 refuse it
+     * (400), and older models without thinking ignore the default anyway.
+     */
+    public static function canDisableThinking(string $model): bool
+    {
+        return (bool) preg_match('/^claude-haiku-5/', $model) || (bool) preg_match('/^claude-(haiku|sonnet|opus)-4/', $model);
+    }
+
     public function stream(array $payload, callable $onText): array
     {
         $payload['model'] = $this->model;
         $payload['stream'] = true;
+        // Claude Haiku 5.5 thinks before answering unless told not to, and the thinking counts
+        // toward max_tokens: a short limit then ends the reply mid-sentence or before any text.
+        // The coach and the label reader don't need it, and replies come back faster without.
+        if (!isset($payload['thinking']) && self::canDisableThinking($this->model)) {
+            $payload['thinking'] = ['type' => 'disabled'];
+        }
 
         try {
             $response = $this->http->request('POST', rtrim($this->baseUrl, '/') . '/v1/messages', [

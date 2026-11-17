@@ -17,7 +17,9 @@ final class FakeClaude
      * Replies for the next requests, in order: {text, tool?: {name, input}}. Once used up, the
      * default reply above is used.
      *
-     * @var list<array{text: string, tool?: array{name: string, input: array}}>
+     * stop overrides the stop_reason (e.g. "max_tokens").
+     *
+     * @var list<array{text: string, tool?: array{name: string, input: array}, stop?: string}>
      */
     public static array $script = [];
 
@@ -39,10 +41,12 @@ final class FakeClaude
 
         $reply = self::$reply;
         $tool = self::$askQuestions !== null ? ['name' => 'ask_questions', 'input' => self::$askQuestions] : null;
+        $stop = null;
         if (self::$script) {
             $next = array_shift(self::$script);
             $reply = $next['text'];
             $tool = $next['tool'] ?? null;
+            $stop = $next['stop'] ?? null;
         }
 
         $events = [
@@ -59,7 +63,7 @@ final class FakeClaude
             }
             $events[] = ['content_block_stop', ['type' => 'content_block_stop', 'index' => 1]];
         }
-        $events[] = ['message_delta', ['type' => 'message_delta', 'delta' => ['stop_reason' => $tool !== null ? 'tool_use' : 'end_turn'], 'usage' => ['output_tokens' => 42]]];
+        $events[] = ['message_delta', ['type' => 'message_delta', 'delta' => ['stop_reason' => $stop ?? ($tool !== null ? 'tool_use' : 'end_turn')], 'usage' => ['output_tokens' => 42]]];
         $events[] = ['message_stop', ['type' => 'message_stop']];
 
         $body = '';
