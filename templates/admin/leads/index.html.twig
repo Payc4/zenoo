@@ -1,0 +1,29 @@
+{% extends 'admin/course_studio/_layout.html.twig' %}
+{% block title %}Leads{% endblock %}
+{% block brand %}<a class="cs-top__brand" href="{{ path('admin_leads') }}">Leads</a>{% endblock %}
+
+{% block body %}
+<main class="cs-wrap">
+  <h1 class="cs-h1">Leads and scores</h1>
+  <p class="cs-muted">Everyone who took the Bowl Score quiz, newest first: pet parents with an account, and leads who haven’t confirmed their email yet (kept for 7 days). “Source” is where they first came from (Admin → Funnel has the totals).</p>
+  <p><a class="cs-btn" href="{{ path('admin_leads', {format: 'csv'}) }}">Download as CSV</a></p>
+  {% if rows is empty %}<p class="cv-empty">No one yet.</p>{% else %}
+  <table class="cv-table">
+    <thead><tr><th>Date</th><th>Pet parent</th><th>Dog</th><th>Score</th><th>Source</th><th>Status</th><th>Plan clicks</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td class="cs-small">{{ r.date|date('Y-m-d H:i') }}</td>
+        <td><strong>{{ r.name ?: '—' }}</strong><br><span class="cs-small cs-muted">{{ r.email }} · {{ locale_name(r.locale) }}{{ r.marketing ? ' · ✓ marketing' }}</span></td>
+        <td>{{ r.dog }}<br><span class="cs-small cs-muted">{{ r.breed }}</span></td>
+        <td><strong>{{ r.score }}</strong></td>
+        <td class="cs-small">{{ r.source }}</td>
+        <td>{{ r.status == 'account' ? 'Account' : 'Not confirmed' }}</td>
+        <td>{{ r.plan_clicks ?: '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</main>
+{% endblock %}

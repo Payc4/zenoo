@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ 'How the Bowl Score works'|trans }} · ZENOO{% endblock %}
+{% block description %}{{ 'The open method behind the ZENOO Bowl Score: what it measures, how many points each part is worth, and its limits.'|trans }}{% endblock %}
+
+{% block body %}
+<section class="section">
+<div class="wrap prose method">
+  <p class="kicker">{{ 'Open method'|trans }}</p>
+  <h1>{{ 'How the Bowl Score works'|trans }}</h1>
+  <p class="lead">{{ 'The Bowl Score is a quick check of a dog’s food and routine, out of 100. Here is exactly how it’s worked out, so you can judge it for yourself.'|trans }}</p>
+  {% if reviewedBy %}<p class="method-reviewed">{{ 'Method reviewed by %vet%.'|trans({'%vet%': reviewedBy}) }}</p>{% endif %}
+
+  <h2>{{ 'The seven parts'|trans }}</h2>
+  <table class="method-table">
+    <thead><tr><th>{{ 'Part'|trans }}</th><th>{{ 'Points'|trans }}</th><th>{{ 'What counts'|trans }}</th></tr></thead>
+    <tbody>
+      <tr><td>{{ 'Protein'|trans }}</td><td>18</td><td>{{ 'Protein in the main food, on a dry-matter basis: 35% or more scores full marks, under 25% the least.'|trans }}</td></tr>
+      <tr><td>{{ 'Carbohydrates'|trans }}</td><td>18</td><td>{{ 'Carbohydrates worked out from the label (100 minus protein, fat, fibre, ash and moisture), on a dry-matter basis: 15% or less scores full marks, over 45% the least.'|trans }}</td></tr>
+      <tr><td>{{ 'Freshness'|trans }}</td><td>14</td><td>{{ 'How processed the main food is: dry food, then wet, then fresh or home-cooked, then raw or freeze-dried. Adding a fresher food to the bowl adds a little.'|trans }}</td></tr>
+      <tr><td>{{ 'Body shape'|trans }}</td><td>16</td><td>{{ 'The 9-point body condition score from the shape you pick: 5 (ideal) scores full marks, 4 and 6 a little less, further from 5 less again.'|trans }}</td></tr>
+      <tr><td>{{ 'Activity'|trans }}</td><td>14</td><td>{{ 'Daily walks and play compared with what the breed typically needs (a step less for puppies and seniors).'|trans }}</td></tr>
+      <tr><td>{{ 'Signs'|trans }}</td><td>10</td><td>{{ 'Appetite and everyday signs such as itching, soft stools or a dull coat: each sign takes a point off.'|trans }}</td></tr>
+      <tr><td>{{ 'Portions and routine'|trans }}</td><td>10</td><td>{{ 'How close the daily amount is to the dog’s energy needs, a regular meal pattern, and how many treats.'|trans }}</td></tr>
+    </tbody>
+  </table>
+  <p>{{ 'Scores of 80 and above are “great”, 60–79 “good”, 40–59 “worth a closer look” and under 40 “easy wins ahead”.'|trans }}</p>
+
+  <h2>{{ 'Energy and portions'|trans }}</h2>
+  <p>{{ 'Daily energy follows the usual veterinary formula: a factor by activity level (95 to 200 kcal) times the ideal weight to the power of 0.75, 10% less for neutered dogs, a level lower for seniors and for dogs carrying extra weight. Puppies get 2–3 times their resting energy. The ideal weight comes from the current weight and body shape: each point above 5 means about 10% extra weight.'|trans }}</p>
+  <p>{{ 'Energy in the food is worked out from the label with the modified Atwater factors (3.5 kcal per gram of protein and carbohydrate, 8.5 per gram of fat). The coach and the ZENOO plan use the same maths.'|trans }}</p>
+
+  <h2>{{ 'Its limits'|trans }}</h2>
+  <ul>
+    <li>{{ 'If you skip the label, the quiz uses typical values for the type of food. With typical dry-food values the highest possible score is 69 (“good”): dry food can only reach the top band when its label shows high protein and few carbohydrates. That is a feature of the method, not a verdict on a particular brand.'|trans }}</li>
+    <li>{{ 'Protein and carbohydrates say a lot, but not everything: ingredient quality, digestibility and what suits one dog aren’t in the score.'|trans }}</li>
+    <li>{{ 'The Bowl Score is a starting point for better feeding, not a diagnosis. For health problems, puppies, pregnancy and dogs with a medical condition, please talk to your vet.'|trans }}</li>
+  </ul>
+
+  <h2>{{ 'Sources'|trans }}</h2>
+  <p>{{ 'Energy and nutrient guidance follows the FEDIAF Nutritional Guidelines, the NRC Nutrient Requirements of Dogs and Cats and the WSAVA Global Nutrition Guidelines. The points for each part are ZENOO’s own weighting, published here so it can be checked.'|trans }}</p>
+  <p><a class="btn" href="{{ path('app_quiz') }}">{{ 'Take the Bowl Score quiz'|trans }}</a></p>
+</div>
+</section>
+{% endblock %}

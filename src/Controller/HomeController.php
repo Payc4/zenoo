@@ -27,6 +27,13 @@ class HomeController extends AbstractController
         ]);
     }
 
+    /** Roadmap 10: the open method. METHOD_REVIEWED_BY names the vet who reviewed it, once there is one. */
+    #[Route('/how-the-bowl-score-works', name: 'app_method', methods: ['GET'])]
+    public function method(#[Autowire('%env(default::METHOD_REVIEWED_BY)%')] ?string $reviewedBy): Response
+    {
+        return $this->render('legal/method.html.twig', ['reviewedBy' => $reviewedBy ?: null]);
+    }
+
     #[Route('/privacy-policy', name: 'app_privacy_policy', methods: ['GET'])]
     public function privacy(Request $request): Response
     {

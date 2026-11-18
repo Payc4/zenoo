@@ -189,6 +189,28 @@ Every message goes: **safety check → coach (AI) → tools and data**.
 - After 30 days the dashboard invites a quiz retake; earlier scores are kept, so it shows "Bella went
   from 44 to 61" and the coach sees the scores over time.
 
+## Phone, trust and sharing (roadmap part 2: 08–12)
+
+- **Installable app (08):** `public/manifest.webmanifest`, icons in `public/icons/`, a service
+  worker (`public/sw.js`) that only caches static files and an offline page (never personal pages).
+  "Add to home screen" opens the dashboard; shortcuts for the coach and "snap a food label". Push
+  notifications are not built yet (they need VAPID keys and a decision on what to send).
+- **Sharing (09):** on the dashboard, "Make a share link" gives `/s/{code}`: the dog's name, photo
+  and Bowl Score only, with a 1200×630 picture for social posts (`/s/{code}.png`, drawn with GD and
+  the DejaVu fonts in `resources/fonts/`). Visitors who take the quiz from it count as
+  `share / referral` in the funnel. "Stop sharing" makes the link stop working. A give-and-get
+  reward needs a decision on the reward first.
+- **Open method (10):** `/how-the-bowl-score-works` (footer link) explains the seven parts and their
+  points, the energy maths and the limits, including that typical dry-food values top out at 69. Set
+  `METHOD_REVIEWED_BY` (e.g. "Dr. Jane Doe, DVM") to show the vet reviewer once there is one.
+- **Partner channel (11):** "Report for the vet" (`/dashboard/vet-report`) is a one-page summary to
+  print or save as PDF: the dog, food, energy, Bowl Score and its parts, trackers, notes and
+  check-in answers. Partner links: any page with `?ref=<code>` (e.g. `?ref=vetklinika`) tags the
+  visitor; the funnel and the leads list show "partner: vetklinika".
+- **Back office (12):** Admin → Leads and scores (everyone who took the quiz, with dog, score,
+  source, plan clicks; CSV download), Admin → Funnel, Coach conversations with the vet review sample,
+  Store catalogue. Lessons are edited in the Course studio.
+
 ## Measurement (roadmap part 2: 03)
 
 - **Where people come from** (`src/Tracking/Attribution.php`): campaign tags (`utm_*`), ad click IDs

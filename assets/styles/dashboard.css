@@ -126,3 +126,28 @@
 .dash-tracker__add { display: flex; gap: 8px; margin-top: 6px; }
 .dash-tracker__add input, .dash-tracker__add select { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid rgba(0, 0, 0, .2); border-radius: 10px; font: inherit; }
 .dash-tracker__help { margin: 8px 0 0; font-size: 13px; opacity: .7; }
+
+/* Report for the vet (print-friendly) */
+.vet-report__head { display: flex; gap: 16px; align-items: center; margin-bottom: 8px; }
+.vet-report__head img { border-radius: 16px; object-fit: cover; }
+.vet-report__head h1 { margin: 0; }
+.vet-report__table { width: 100%; border-collapse: collapse; }
+.vet-report__table th, .vet-report__table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(0, 0, 0, .1); vertical-align: top; }
+.vet-report__table th { width: 30%; font-weight: 600; }
+.vet-report__pre { white-space: pre-wrap; font: inherit; }
+.vet-report__note { margin-top: 24px; font-size: 13px; opacity: .7; }
+.vet-report__actions { display: flex; gap: 16px; align-items: center; }
+@media print {
+  .site-header, .site-footer, .no-print, #zn-consent, .flashes { display: none !important; }
+  .vet-report { padding: 0; }
+  body { background: #fff; }
+}
+
+/* Share the score */
+.dash-share { margin-top: 24px; }
+.dash-share__row { display: flex; gap: 8px; margin: 10px 0; }
+.dash-share__row input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid rgba(0, 0, 0, .2); border-radius: 10px; font: inherit; }
+.dash-share__stop { border: 0; background: none; padding: 0; font: inherit; font-size: 13px; text-decoration: underline; opacity: .7; cursor: pointer; }
+.share-card__inner { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.share-card__photo { border-radius: 20px; object-fit: cover; }
+.share-card__score { color: var(--sun, #f7a223); }

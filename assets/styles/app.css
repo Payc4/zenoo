@@ -293,3 +293,9 @@ input[aria-invalid="true"], .has-error input { border-color: var(--danger); }
 .error-page .code { font: 800 96px/1 var(--font-display); color: var(--sun); margin-bottom: 8px; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+
+/* How the Bowl Score works */
+.method-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+.method-table th, .method-table td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid rgba(0, 0, 0, .1); }
+.method-table td:nth-child(2) { font-weight: 800; white-space: nowrap; }
+.method-reviewed { font-weight: 600; }

@@ -1,4 +1,4 @@
-{# Measurement (src/Tracking): the cookie banner and GA4 / Meta pixel, only after consent. Included in every page's <head>. #}
+{# In every page's <head>: measurement (src/Tracking: the cookie banner, GA4 / Meta pixel only after consent) and the installable app. #}
 {% set tc = tracking_config() %}
 <script>
   window.ZN_TRACKING = {{ (tc|merge({
@@ -18,3 +18,7 @@
   }))|json_encode|raw }};
 </script>
 <script src="/consent.js" defer></script>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ZENOO">
+<script src="/pwa.js" defer></script>

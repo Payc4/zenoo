@@ -16,6 +16,8 @@ needs no manual steps.
    store's products and prices every morning (or press Sync in Admin → Store catalogue). Optional
    variables: `SHOPIFY_STORE_URL` (default `https://zenoo.lt`), `PLAN_DAILY_BUDGET` (default 4,
    euros a day) and `SHOPIFY_STARTER_CODE` (a Shopify discount code added to the starter cart).
+   `METHOD_REVIEWED_BY` (optional) names the vet who reviewed the Bowl Score method on
+   /how-the-bowl-score-works.
    Measurement (optional): `TRACKING_GA4_ID` (G-…) and `TRACKING_META_PIXEL_ID` turn on the cookie
    banner and the tags; without them only the first-party funnel counts run.
    Before changing the coach's prompt or model, run `php bin/console app:coach:eval` in the app's

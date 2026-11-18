@@ -176,6 +176,31 @@
     </section>
   {% endif %}
 
+  {# ---------- Share the score (roadmap 09) ---------- #}
+  {% if dog %}
+    <section class="card dash-share" aria-labelledby="share-h">
+      <h2 id="share-h">{{ 'Share %dog%’s score'|trans({'%dog%': dog.name}) }}</h2>
+      {% if dog.shareCode %}
+        {% set shareUrl = url('app_share', {code: dog.shareCode}) %}
+        <p>{{ 'Anyone with this link sees %dog%’s name, photo and Bowl Score, nothing else.'|trans({'%dog%': dog.name}) }}</p>
+        <div class="dash-share__row">
+          <input readonly value="{{ shareUrl }}" aria-label="{{ 'Share link'|trans }}" onclick="this.select()">
+          <button class="btn btn-small" type="button" data-share="{{ shareUrl }}" data-share-title="{{ '%dog%’s Bowl Score: %score%/100'|trans({'%dog%': dog.name, '%score%': dog.bowlScore}) }}">{{ 'Share'|trans }}</button>
+        </div>
+        <form method="post" action="{{ path('app_share_toggle') }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('share') }}"><input type="hidden" name="stop" value="1">
+          <button class="dash-share__stop" type="submit">{{ 'Stop sharing (the link stops working)'|trans }}</button>
+        </form>
+      {% else %}
+        <p>{{ 'Make a card with %dog%’s photo and Bowl Score to share with friends: they can check their own dog’s score.'|trans({'%dog%': dog.name}) }}</p>
+        <form method="post" action="{{ path('app_share_toggle') }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('share') }}">
+          <button class="btn btn-small btn-outline" type="submit">{{ 'Make a share link'|trans }}</button>
+        </form>
+      {% endif %}
+    </section>
+  {% endif %}
+
   {# ---------- Personal ZENOO plan (PlanBuilder): topper, half or full bowl, with a cart link ---------- #}
   {% if zenooPlan %}
     {% set zp = zenooPlan %}
@@ -261,7 +286,8 @@
         <input id="dog-note" name="text" maxlength="240" required placeholder="{{ 'Add something about %dog%, e.g. “allergic to chicken”'|trans({'%dog%': dog.name}) }}">
         <button class="btn btn-small" type="submit">{{ 'Add'|trans }}</button>
       </form>
-      <p class="dash-knows__hint">{{ 'Tell the coach when something changes, and it’s added here.'|trans }}</p>
+      <p class="dash-knows__hint">{{ 'Tell the coach when something changes, and it’s added here.'|trans }}
+        <a href="{{ path('app_vet_report') }}">{{ 'Report for the vet (print or PDF)'|trans }}</a></p>
     </section>
   {% endif %}
 

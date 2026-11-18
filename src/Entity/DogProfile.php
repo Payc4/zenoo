@@ -257,6 +257,22 @@ class DogProfile
         $this->data['followups'] = array_values(array_merge($done, $open));
     }
 
+    /** The public share link's code (/s/{code}); made when they first share, null after "stop sharing". */
+    public function getShareCode(): ?string
+    {
+        return \is_string($this->data['share_code'] ?? null) ? $this->data['share_code'] : null;
+    }
+
+    public function startSharing(): string
+    {
+        return $this->data['share_code'] ??= bin2hex(random_bytes(6));
+    }
+
+    public function stopSharing(): void
+    {
+        unset($this->data['share_code']);
+    }
+
     /** Tracker types (roadmap 05) and the values each takes. */
     public const TRACKERS = [
         'weight' => ['min' => 0.5, 'max' => 110, 'step' => 0.1],   // kg

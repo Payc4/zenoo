@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+{% set title = '%dog%’s Bowl Score: %score%/100'|trans({'%dog%': dog.name, '%score%': dog.bowlScore}) %}
+{% block title %}{{ title }} · ZENOO{% endblock %}
+{% block description %}{{ 'How does your dog’s bowl score? Take the free 3-minute ZENOO quiz.'|trans }}{% endblock %}
+{% block robots %}
+  <meta name="robots" content="noindex">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ 'How does your dog’s bowl score? Take the free 3-minute ZENOO quiz.'|trans }}">
+  <meta property="og:image" content="{{ url('app_share_image', {code: code}) }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
+{% block body %}
+<section class="section share-card">
+  <div class="wrap">
+    <div class="card share-card__inner">
+      {% if photo %}<img class="share-card__photo" src="{{ photo }}" alt="{{ dog.name }}" width="220" height="220">{% endif %}
+      <div>
+        <p class="kicker">{{ 'Bowl Score'|trans }}</p>
+        <h1>{{ dog.name }}: <span class="share-card__score">{{ dog.bowlScore }}</span>/100</h1>
+        <p>{{ 'How does your dog’s bowl score? Take the free 3-minute ZENOO quiz.'|trans }}</p>
+        <a class="btn" href="{{ path('app_quiz') }}?utm_source=share&amp;utm_medium=referral&amp;utm_content={{ code }}">{{ 'Check my dog’s Bowl Score'|trans }}</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -139,6 +139,27 @@ final class DashboardController extends AbstractController
         return $this->redirect($plan['options'][$option]['cart_url']);
     }
 
+    /** Roadmap 11: a one-page summary to print or save as PDF and take to the vet. */
+    #[Route('/dashboard/vet-report', name: 'app_vet_report', methods: ['GET'])]
+    public function vetReport(\App\Chat\CheckIns $checkIns): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $dog = $this->dogs->findForUser($user);
+        if (!$dog) {
+            return $this->redirectToRoute('app_dashboard');
+        }
+        $facts = \App\Chat\Calculators::dogFacts($dog);
+        return $this->render('dashboard/vet_report.html.twig', [
+            'user' => $user,
+            'dog' => $dog,
+            'facts' => $facts,
+            'energy' => $facts['weight_kg'] ? \App\Chat\Calculators::run(['operation' => 'daily_energy'], $dog) : null,
+            'checkins' => $checkIns->forCoach($dog),
+            'photo' => $this->photo($dog),
+        ]);
+    }
+
     /** Adds today's value to one of the trackers (weight, body shape, stool, itch). */
     #[Route('/dashboard/tracker', name: 'app_dog_tracker', methods: ['POST'])]
     public function tracker(Request $request): Response

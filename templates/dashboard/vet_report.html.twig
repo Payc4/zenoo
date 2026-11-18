@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ 'Report for the vet: %dog%'|trans({'%dog%': dog.name}) }} · ZENOO{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+
+{% block body %}
+{% set subLabels = {protein: 'Protein', carbs: 'Carb load', freshness: 'Freshness', body: 'Body shape', activity: 'Activity', signals: 'Bowl signals', routine: 'Portions & routine'} %}
+<section class="section vet-report">
+<div class="wrap">
+  <p class="vet-report__actions no-print">
+    <button class="btn" type="button" onclick="window.print()">{{ 'Print or save as PDF'|trans }}</button>
+    <a href="{{ path('app_dashboard') }}">{{ 'Back to the dashboard'|trans }}</a>
+  </p>
+
+  <header class="vet-report__head">
+    {% if photo %}<img src="{{ photo }}" alt="" width="96" height="96">{% endif %}
+    <div>
+      <p class="kicker">{{ 'Feeding summary for the vet'|trans }}</p>
+      <h1>{{ dog.name }}</h1>
+      <p>{{ 'Prepared on %date% from %owner%’s answers in the ZENOO app.'|trans({'%date%': 'now'|date('Y-m-d'), '%owner%': user.displayName}) }}</p>
+    </div>
+  </header>
+
+  <h2>{{ 'The dog'|trans }}</h2>
+  <table class="vet-report__table">
+    <tr><th>{{ 'Breed'|trans }}</th><td>{{ dog.get('breed') ?: '—' }}</td></tr>
+    <tr><th>{{ 'Age'|trans }}</th><td>{{ dog.get('age_years') ? dog.get('age_years') ~ ' ' ~ 'years'|trans : '—' }} ({{ dog.get('life_stage')|default('—')|trans }})</td></tr>
+    <tr><th>{{ 'Sex'|trans }}</th><td>{{ dog.get('sex')|default('—')|trans }}{% if dog.get('neutered') %} · {{ dog.get('neutered') == 'yes' ? 'neutered'|trans : 'not neutered'|trans }}{% endif %}</td></tr>
+    <tr><th>{{ 'Weight'|trans }}</th><td>{{ facts.weight_kg ? facts.weight_kg ~ ' kg' : '—' }}{% if dog.latestLog('weight') %} ({{ dog.latestLog('weight').d }}){% endif %}</td></tr>
+    <tr><th>{{ 'Body shape'|trans }}</th><td>{{ facts.bcs }}/9{% if energy %} · {{ 'ideal weight about %kg% kg'|trans({'%kg%': energy.ideal_weight_kg}) }}{% endif %}</td></tr>
+    <tr><th>{{ 'Food'|trans }}</th><td>{% if dog.food %}{{ (dog.food.brand ~ ' ' ~ dog.food.product)|trim }} ({{ dog.food.format }}){% else %}{{ dog.get('food_main')|default('—') }}{% endif %}</td></tr>
+    {% if energy %}<tr><th>{{ 'Energy'|trans }}</th><td>{{ 'about %kcal% kcal a day'|trans({'%kcal%': energy.kcal_per_day}) }}</td></tr>{% endif %}
+    {% if dog.get('plan_food') %}<tr><th>{{ 'Plan'|trans }}</th><td>{{ dog.get('plan_food') }} · {{ dog.get('plan_meals') }}</td></tr>{% endif %}
+  </table>
+
+  <h2>{{ 'Bowl Score: %score%/100'|trans({'%score%': dog.bowlScore}) }}</h2>
+  <p class="vet-report__scores">{% for s in dog.subScores %}{{ subLabels[s.key]|trans }} {{ s.score }}/{{ s.max }}{{ not loop.last ? ' · ' }}{% endfor %}</p>
+  {% if dog.scoreHistory|length > 1 %}<p>{{ 'Over time:'|trans }} {{ dog.scoreHistory|map(h => h.score ~ ' (' ~ h.at ~ ')')|join(' → ') }}</p>{% endif %}
+
+  {% set trackerNames = {weight: 'Weight (kg)', body: 'Body shape (1–9)', stool: 'Stool (1–7)', itch: 'Itching (0–10)'} %}
+  {% set anyLog = false %}{% for t in trackerNames|keys %}{% if dog.log(t)|length > 1 %}{% set anyLog = true %}{% endif %}{% endfor %}
+  {% if anyLog %}
+    <h2>{{ 'What the owner tracked'|trans }}</h2>
+    <table class="vet-report__table">
+      {% for t, label in trackerNames %}{% set log = dog.log(t)|slice(-8) %}{% if log %}
+        <tr><th>{{ label|trans }}</th><td>{{ log|map(e => e.v ~ ' (' ~ e.d|date('j M') ~ ')')|join(', ') }}</td></tr>
+      {% endif %}{% endfor %}
+    </table>
+  {% endif %}
+
+  {% if dog.notes or dog.get('signs') %}
+    <h2>{{ 'What the owner told us'|trans }}</h2>
+    <ul>
+      {% if dog.get('signs') %}<li>{{ 'Signs noted in the quiz:'|trans }} {{ dog.get('signs')|join(', ') }}</li>{% endif %}
+      {% for n in dog.notes %}<li>{{ n.at }}: {{ n.text }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+  {% if checkins %}<h2>{{ 'Check-in answers'|trans }}</h2><pre class="vet-report__pre">{{ checkins }}</pre>{% endif %}
+
+  <p class="vet-report__note">{{ 'This summary comes from the owner’s own answers and the ZENOO app’s calculations. It is not a medical record or a diagnosis. Questions about the method: zenoo.lt · How the Bowl Score works.'|trans }}</p>
+</div>
+</section>
+{% endblock %}
