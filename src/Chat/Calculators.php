@@ -75,11 +75,18 @@ final class Calculators
     public static function dogFacts(?DogProfile $dog, array $in = []): array
     {
         $num = static fn ($v) => is_numeric($v) ? (float) $v : null;
-        $weight = $num($in['weight_kg'] ?? null) ?? $num($dog?->getWeightUpdate()['kg'] ?? null) ?? $num($dog?->get('weight_kg'));
+        $w = $dog?->latestLog('weight');
+        $b = $dog?->latestLog('body');
+        $weight = $num($in['weight_kg'] ?? null) ?? $num($w['v'] ?? null) ?? $num($dog?->getWeightUpdate()['kg'] ?? null) ?? $num($dog?->get('weight_kg'));
+        $bcs = (int) ($num($b['v'] ?? null) ?? $num($dog?->get('bcs')) ?? 5);
+        // A newer weight without a newer body check: the ideal weight stays what the quiz worked out.
+        $newerBody = $b && ($b['src'] ?? 'quiz') !== 'quiz' && (!$w || $b['d'] >= $w['d']);
+        $ideal = $newerBody || isset($in['weight_kg']) ? null : $num($dog?->get('ideal_weight_kg'));
         $level = (int) round($num($dog?->get('activity_band')) ?? 3);
         return [
             'weight_kg' => $weight,
-            'bcs' => (int) ($num($dog?->get('bcs')) ?? 5),
+            'ideal_kg' => $ideal,
+            'bcs' => $bcs,
             'level' => max(1, min(5, $level ?: 3)),
             'neutered' => \in_array($dog?->get('neutered'), [true, 'yes', 1, '1'], true),
             'stage' => (string) ($dog?->get('life_stage') ?: 'adult'),
@@ -95,9 +102,9 @@ final class Calculators
     }
 
     /** Same as dailyKcal() in the quiz. */
-    public static function dailyKcal(float $weightKg, int $bcs, int $level, bool $neutered, string $stage, float $ageYears): array
+    public static function dailyKcal(float $weightKg, int $bcs, int $level, bool $neutered, string $stage, float $ageYears, ?float $idealKg = null): array
     {
-        $ideal = self::idealWeight($weightKg, $bcs);
+        $ideal = $idealKg ?? self::idealWeight($weightKg, $bcs);
         if ($stage === 'puppy') {
             return ['kcal' => 70 * $weightKg ** 0.75 * ($ageYears < 0.34 ? 3 : 2), 'ideal_kg' => $weightKg];
         }
@@ -122,7 +129,7 @@ final class Calculators
     private static function dailyEnergy(array $in, ?DogProfile $dog): array
     {
         $f = self::dogFacts($dog, $in);
-        $r = self::dailyKcal(self::needWeight($f), $f['bcs'], $f['level'], $f['neutered'], $f['stage'], $f['age_years']);
+        $r = self::dailyKcal(self::needWeight($f), $f['bcs'], $f['level'], $f['neutered'], $f['stage'], $f['age_years'], $f['ideal_kg']);
         $treats = $r['kcal'] * (self::TREAT_SHARE[$f['treats']] ?? 0.05);
         return [
             'kcal_per_day' => (int) round($r['kcal'], -1),
@@ -137,7 +144,7 @@ final class Calculators
     private static function portion(array $in, ?DogProfile $dog): array
     {
         $f = self::dogFacts($dog, $in);
-        $energy = self::dailyKcal(self::needWeight($f), $f['bcs'], $f['level'], $f['neutered'], $f['stage'], $f['age_years']);
+        $energy = self::dailyKcal(self::needWeight($f), $f['bcs'], $f['level'], $f['neutered'], $f['stage'], $f['age_years'], $f['ideal_kg']);
         if (is_numeric($in['kcal_per_100g'] ?? null) && $in['kcal_per_100g'] > 0) {
             $k100 = (float) $in['kcal_per_100g'];
             $source = 'the pack\'s energy value';
@@ -170,7 +177,7 @@ final class Calculators
     {
         $f = self::dogFacts($dog, $in);
         $now = self::needWeight($f);
-        $target = is_numeric($in['target_kg'] ?? null) ? (float) $in['target_kg'] : self::idealWeight($now, $f['bcs']);
+        $target = is_numeric($in['target_kg'] ?? null) ? (float) $in['target_kg'] : ($f['ideal_kg'] ?? self::idealWeight($now, $f['bcs']));
         if ($target >= $now) {
             return ['current_kg' => $now, 'target_kg' => round($target, 1), 'note' => 'No weight loss needed for this target.'];
         }

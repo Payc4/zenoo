@@ -179,6 +179,16 @@ Every message goes: **safety check → coach (AI) → tools and data**.
   `public/quiz/app.js`), on the dashboard ("Bella's ZENOO plan", clicks counted on the dog profile)
   and through the coach's `zenoo_plan` tool, with the selling rules in the prompt.
 
+## Trackers and the monthly re-score (roadmap part 2: 05)
+
+- On the dashboard: weight (kg), body shape (1–9), stool (1–7) and itching (0–10), each with a small
+  chart and "Add today". Stored as a diary on the dog (`DogProfile::getLog()`, one value per tracker
+  a day; the quiz and a weight told to the coach are added too). The calculators and the plan use
+  the newest weight and body shape (the quiz's ideal weight stays until a newer body shape is
+  logged), and the coach sees the diary.
+- After 30 days the dashboard invites a quiz retake; earlier scores are kept, so it shows "Bella went
+  from 44 to 61" and the coach sees the scores over time.
+
 ## Measurement (roadmap part 2: 03)
 
 - **Where people come from** (`src/Tracking/Attribution.php`): campaign tags (`utm_*`), ad click IDs

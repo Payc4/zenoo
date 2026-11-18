@@ -158,6 +158,21 @@ class CourseKnowledge
         $lines[] = $notes
             ? "- What they have told you in the chat (from your update_dog_profile notes, oldest first):\n" . implode("\n", array_map(fn ($n) => '  - ' . $n['at'] . ' [' . $n['topic'] . (($n['source'] ?? 'chat') === 'owner' ? ', added by the pet parent' : '') . '] ' . $n['text'], $notes))
             : '- Nothing saved from the chat yet. When they tell you something lasting about the dog, save it with update_dog_profile.';
+        $names = ['weight' => 'weight (kg)', 'body' => 'body condition (1–9, 5 ideal)', 'stool' => 'stool score (1–7, 2 ideal)', 'itch' => 'itching (0–10)'];
+        $tracked = [];
+        foreach ($names as $type => $label) {
+            $log = \array_slice($dog->getLog($type), -4);
+            if ($log && !(\count($log) === 1 && ($log[0]['src'] ?? '') === 'quiz')) {
+                $tracked[] = '  - ' . $label . ': ' . implode(', ', array_map(fn ($e) => $e['d'] . ' ' . $e['v'], $log));
+            }
+        }
+        if ($tracked) {
+            $lines[] = "- Their tracker diary (oldest to newest; use the newest values):\n" . implode("\n", $tracked);
+        }
+        $history = $dog->getScoreHistory();
+        if (\count($history) > 1) {
+            $lines[] = '- Bowl Score over time: ' . implode(' → ', array_map(fn ($h) => $h['score'] . ' (' . $h['at'] . ')', $history)) . '.';
+        }
         $open = array_filter($dog->getFollowUps(), fn ($f) => !$f['done']);
         if ($open) {
             $lines[] = '- Check-ins you planned: ' . implode('; ', array_map(fn ($f) => $f['due'] . ' (' . $f['topic'] . '): "' . $f['question'] . '"', $open)) . '.';

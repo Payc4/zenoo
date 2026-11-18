@@ -139,6 +139,25 @@ final class DashboardController extends AbstractController
         return $this->redirect($plan['options'][$option]['cart_url']);
     }
 
+    /** Adds today's value to one of the trackers (weight, body shape, stool, itch). */
+    #[Route('/dashboard/tracker', name: 'app_dog_tracker', methods: ['POST'])]
+    public function tracker(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $dog = $this->dogs->findForUser($user);
+        if ($dog && $this->isCsrfTokenValid('tracker', (string) $request->request->get('_token'))) {
+            $value = str_replace(',', '.', (string) $request->request->get('value', ''));
+            if (is_numeric($value) && $dog->addLog((string) $request->request->get('type'), (float) $value, new \DateTimeImmutable(), 'owner')) {
+                $this->em->flush();
+                $this->addFlash('success', 'Saved. Thank you!');
+            } else {
+                $this->addFlash('error', 'That value doesn’t look right. Please check it.');
+            }
+        }
+        return $this->redirect($this->generateUrl('app_dashboard') . '#trackers-h');
+    }
+
     /** The owner adds a fact about their dog, or removes one the coach saved (the dog record is theirs to edit). */
     #[Route('/dashboard/dog-notes', name: 'app_dog_notes', methods: ['POST'])]
     public function dogNotes(Request $request): Response

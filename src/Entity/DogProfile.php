@@ -93,8 +93,21 @@ class DogProfile
      */
     public function fillFromQuiz(array $data, string $locale): static
     {
+        // A retake: keep the earlier score for "Bella went from 44 to 61".
+        if (isset($this->data['quiz_bowl_score'])) {
+            $history = (array) ($this->data['score_history'] ?? []);
+            $history[] = ['at' => ($this->updatedAt ?? new \DateTimeImmutable())->format('Y-m-d'), 'score' => (int) $this->data['quiz_bowl_score']];
+            $this->data['score_history'] = \array_slice($history, -24);
+        }
         $kept = array_filter($this->data, fn ($k) => !str_starts_with((string) $k, 'quiz_'), ARRAY_FILTER_USE_KEY);
         $this->data = $data + $kept;
+        $today = new \DateTimeImmutable();
+        if (is_numeric($data['quiz_weight_kg'] ?? null)) {
+            $this->addLog('weight', (float) $data['quiz_weight_kg'], $today, 'quiz');
+        }
+        if (is_numeric($data['quiz_bcs'] ?? null)) {
+            $this->addLog('body', (float) $data['quiz_bcs'], $today, 'quiz');
+        }
         $this->name = mb_substr(trim((string) ($data['quiz_dog_name'] ?? '')) ?: 'Your dog', 0, 60);
         $this->bowlScore = max(0, min(100, (int) ($data['quiz_bowl_score'] ?? 0)));
         $this->locale = $locale;
@@ -244,6 +257,58 @@ class DogProfile
         $this->data['followups'] = array_values(array_merge($done, $open));
     }
 
+    /** Tracker types (roadmap 05) and the values each takes. */
+    public const TRACKERS = [
+        'weight' => ['min' => 0.5, 'max' => 110, 'step' => 0.1],   // kg
+        'body' => ['min' => 1, 'max' => 9, 'step' => 1],           // body condition score, 5 = ideal
+        'stool' => ['min' => 1, 'max' => 7, 'step' => 1],          // faecal score, 2 = ideal
+        'itch' => ['min' => 0, 'max' => 10, 'step' => 1],          // 0 = none, 10 = constant
+    ];
+
+    /**
+     * The tracker diary, oldest first: [ { "d": "2026-11-19", "t": "weight", "v": 30.5, "src": "owner|chat|quiz" } ].
+     * One value per tracker per day (a new one replaces it). Kept when the quiz is retaken.
+     */
+    public function getLog(?string $type = null): array
+    {
+        $log = array_values(array_filter((array) ($this->data['log'] ?? []), fn ($e) => \is_array($e) && ($type === null || $e['t'] === $type)));
+        usort($log, fn ($a, $b) => strcmp($a['d'], $b['d']));
+        return $log;
+    }
+
+    public function latestLog(string $type): ?array
+    {
+        $log = $this->getLog($type);
+        return $log ? end($log) : null;
+    }
+
+    public function addLog(string $type, float $value, \DateTimeImmutable $at, string $source = 'owner'): bool
+    {
+        $range = self::TRACKERS[$type] ?? null;
+        if ($range === null || $value < $range['min'] || $value > $range['max']) {
+            return false;
+        }
+        $day = $at->format('Y-m-d');
+        $log = array_values(array_filter((array) ($this->data['log'] ?? []), fn ($e) => \is_array($e) && !($e['t'] === $type && $e['d'] === $day)));
+        $log[] = ['d' => $day, 't' => $type, 'v' => $range['step'] < 1 ? round($value, 1) : (int) round($value), 'src' => $source];
+        $this->data['log'] = \array_slice($log, -400);
+        return true;
+    }
+
+    /** Earlier Bowl Scores and today's: [ { at, score } ], oldest first. */
+    public function getScoreHistory(): array
+    {
+        $history = (array) ($this->data['score_history'] ?? []);
+        $history[] = ['at' => ($this->updatedAt ?? $this->createdAt)->format('Y-m-d'), 'score' => $this->bowlScore];
+        return $history;
+    }
+
+    /** Days since the Bowl Score was last taken. */
+    public function daysSinceScore(\DateTimeInterface $now): int
+    {
+        return (int) floor(($now->getTimestamp() - ($this->updatedAt ?? $this->createdAt)->getTimestamp()) / 86400);
+    }
+
     /** Clicks on the personal plan's starter links: {topper: n, half: n, full: n, last: "2026-11-18"}. */
     public function recordPlanClick(string $option, \DateTimeImmutable $at): void
     {
@@ -267,6 +332,7 @@ class DogProfile
     public function setWeightUpdate(float $kg, \DateTimeImmutable $at): static
     {
         $this->data['weight'] = ['kg' => round($kg, 1), 'at' => $at->format('Y-m-d')];
+        $this->addLog('weight', $kg, $at, 'chat');
         return $this;
     }
 

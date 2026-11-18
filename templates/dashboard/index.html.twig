@@ -129,6 +129,53 @@
     </div>
   {% endif %}
 
+  {# ---------- Trackers (roadmap 05) and the monthly re-score ---------- #}
+  {% if dog %}
+    {% set history = dog.scoreHistory %}
+    {% if dog.daysSinceScore(date()) >= 30 or history|length > 1 %}
+      <section class="card card-sun-border dash-rescore" aria-labelledby="rescore-h">
+        <h2 id="rescore-h">{{ history|length > 1 ? '%dog% went from %from% to %to%'|trans({'%dog%': dog.name, '%from%': history|first.score, '%to%': history|last.score}) : 'Time for %dog%’s monthly check'|trans({'%dog%': dog.name}) }}</h2>
+        {% if history|length > 1 %}<p class="dash-rescore__line">{{ history|map(h => h.score)|join(' → ') }}</p>{% endif %}
+        {% if dog.daysSinceScore(date()) >= 30 %}
+          <p>{{ 'It’s been a month since %dog%’s Bowl Score. Take it again (2 minutes) to see what has changed.'|trans({'%dog%': dog.name}) }}</p>
+          <a class="btn btn-small" href="{{ path('app_quiz') }}">{{ 'Re-check the Bowl Score'|trans }}</a>
+        {% endif %}
+      </section>
+    {% endif %}
+
+    {% set trackers = {
+      weight: {label: 'Weight'|trans, unit: 'kg', min: 0, max: 0, help: 'Weigh on the same scale, at the same time of day.'|trans},
+      body: {label: 'Body shape'|trans, unit: '/9', min: 1, max: 9, help: '5 is ideal: ribs easy to feel, a waist seen from above.'|trans},
+      stool: {label: 'Stool'|trans, unit: '/7', min: 1, max: 7, help: '2 is ideal: firm, segmented, easy to pick up. 7 is watery.'|trans},
+      itch: {label: 'Itching'|trans, unit: '/10', min: 0, max: 10, help: '0 is none, 10 is scratching all the time.'|trans},
+    } %}
+    <section class="dash-section" aria-labelledby="trackers-h">
+      <h2 id="trackers-h">{{ '%dog%’s trackers'|trans({'%dog%': dog.name}) }}</h2>
+      <div class="dash-trackers">
+        {% for type, t in trackers %}
+          {% set log = dog.log(type) %}
+          {% set last = log ? log|last : null %}
+          <div class="card dash-tracker">
+            <h3>{{ t.label }}</h3>
+            <p class="dash-tracker__value">{% if last %}{{ last.v|replace({'.': decimal_sep()}) }}<small>{{ t.unit != 'kg' ? t.unit : ' kg' }}</small> <span>{{ last.d|date('j M') }}</span>{% else %}—{% endif %}</p>
+            {{ tracker_chart(log, t.min, t.max, t.label) }}
+            <form method="post" action="{{ path('app_dog_tracker') }}" class="dash-tracker__add">
+              <input type="hidden" name="_token" value="{{ csrf_token('tracker') }}">
+              <input type="hidden" name="type" value="{{ type }}">
+              {% if type == 'weight' %}
+                <input name="value" inputmode="decimal" required placeholder="{{ last ? last.v : 'kg' }}" aria-label="{{ t.label }} (kg)">
+              {% else %}
+                <select name="value" aria-label="{{ t.label }}">{% for v in t.min..t.max %}<option value="{{ v }}" {{ last and last.v == v ? 'selected' }}>{{ v }}</option>{% endfor %}</select>
+              {% endif %}
+              <button class="btn btn-small btn-outline" type="submit">{{ 'Add today'|trans }}</button>
+            </form>
+            <p class="dash-tracker__help">{{ t.help }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
   {# ---------- Personal ZENOO plan (PlanBuilder): topper, half or full bowl, with a cart link ---------- #}
   {% if zenooPlan %}
     {% set zp = zenooPlan %}
