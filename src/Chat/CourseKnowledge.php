@@ -156,8 +156,12 @@ class CourseKnowledge
         }
         $notes = $dog->getNotes();
         $lines[] = $notes
-            ? "- What they have told you in the chat (from your update_dog_profile notes, oldest first):\n" . implode("\n", array_map(fn ($n) => '  - ' . $n['at'] . ' [' . $n['topic'] . '] ' . $n['text'], $notes))
+            ? "- What they have told you in the chat (from your update_dog_profile notes, oldest first):\n" . implode("\n", array_map(fn ($n) => '  - ' . $n['at'] . ' [' . $n['topic'] . (($n['source'] ?? 'chat') === 'owner' ? ', added by the pet parent' : '') . '] ' . $n['text'], $notes))
             : '- Nothing saved from the chat yet. When they tell you something lasting about the dog, save it with update_dog_profile.';
+        $open = array_filter($dog->getFollowUps(), fn ($f) => !$f['done']);
+        if ($open) {
+            $lines[] = '- Check-ins you planned: ' . implode('; ', array_map(fn ($f) => $f['due'] . ' (' . $f['topic'] . '): "' . $f['question'] . '"', $open)) . '.';
+        }
         $lines[] = $dog->getPhoto()
             ? '- They added a photo of ' . $dog->getName() . ' to the profile.'
             : '- No photo of ' . $dog->getName() . ' yet; they can add one on the dashboard ("Finish the profile").';

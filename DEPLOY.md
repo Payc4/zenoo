@@ -9,7 +9,12 @@ needs no manual steps.
 
 1. **Database:** in Coolify, add a **MySQL 8** resource. Note its internal URL, user and password.
 2. **Application:** add this GitHub repository with the **Dockerfile** build pack (not Docker Compose). The port is **80**.
-3. **Persistent storage:** mount a volume at `/var/www/html/public/uploads` so profile
+3. **Daily coach check-ins:** in Coolify, add a scheduled task on the app:
+   command `php bin/console app:coach:followups`, frequency `0 9 * * *` (09:00 every day). It emails
+   the check-ins the coach planned once they're due. `--dry-run` lists them without sending.
+   Before changing the coach's prompt or model, run `php bin/console app:coach:eval` in the app's
+   terminal (it calls the real model, a few cents per run).
+4. **Persistent storage:** mount a volume at `/var/www/html/public/uploads` so profile
    photos, dog photos and chat attachments survive deploys. Chat attachments are under
    `uploads/private/`, which nginx refuses to serve directly (the app serves them to their owner).
 
@@ -99,6 +104,7 @@ and set the subject line to `{{ event.subject }}`.
 | ZENOO Password Changed | Password changed | `account_url`, `forgot_password_url` |
 | ZENOO Order Confirmation | Payment received | `order_id`, `product_name`, `amount`, `discount`, `currency`, `order_date`, `order_url`, `test_order` |
 | ZENOO Quiz Confirmation | Quiz finished, when the link isn't already in the quiz flow (Lithuanian, Ukrainian or Polish quiz, or `QUIZ_SITE_CONFIRM_EMAIL=true`) | `confirm_link` (button), `dog_name`, `bowl_score` |
+| ZENOO Coach Check-in | A check-in the coach planned is due (`app:coach:followups`, daily) | `question` (in the pet parent's language), `chat_url` (button), `off_url` (switch them off), `dog_name` |
 
 To make every metric appear in Klaviyo before building its flow (a metric only exists after its
 first event), run in Coolify's terminal: `php bin/console app:klaviyo:sample-events you@example.com`

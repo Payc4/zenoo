@@ -75,6 +75,8 @@ final class ChatMarkdownExtension extends AbstractExtension
     {
         $s = htmlspecialchars(trim($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $s = (string) preg_replace('/\*\*(.+?)\*\*/su', '<strong>$1</strong>', $s);
+        // Links to pages inside the app only (e.g. [Lesson 15, Safe Weight Loss](/courses/lesson/15)).
+        $s = (string) preg_replace('~\[([^\]\n]+)\]\((/(?!/)[A-Za-z0-9/_\-.?=#]*)\)~u', '<a href="$2">$1</a>', $s);
 
         return (string) preg_replace('/(?<![*\w])\*(?!\s)(.+?)(?<!\s)\*(?![*\w])/su', '<em>$1</em>', $s);
     }

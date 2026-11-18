@@ -261,7 +261,10 @@ if (app) {
         },
         delta: (d) => { raw += d.text; renderInto(reply.answer, raw); },
         questions: (d) => { cards = d.questions; },
-        done: () => {},
+        done: (d) => {
+          // A red flag: the safety check answered ("call your vet now"), and the message didn't count.
+          if (d && d.urgent) { reply.el.classList.add('is-urgent'); setRemaining(d.remaining); }
+        },
         error: (d) => {
           setRemaining(d.remaining);
           throw new Error(d.message);
@@ -522,6 +525,8 @@ function escapeHtml(s) {
 function inline(s) {
   return escapeHtml(s.trim())
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // Links to pages inside the app only, as in ChatMarkdownExtension.
+    .replace(/\[([^\]\n]+)\]\((\/(?!\/)[A-Za-z0-9/_\-.?=#]*)\)/g, '<a href="$2">$1</a>')
     .replace(/(^|[^*\w])\*(?!\s)(.+?)(?<!\s)\*(?![*\w])/g, '$1<em>$2</em>');
 }
 

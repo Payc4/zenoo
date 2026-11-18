@@ -158,14 +158,30 @@
   {% endif %}
 
   {# ---------- Coach ---------- #}
-  {% if dog and (dog.notes or dog.food) %}
-    {# What the coach has learned in the chat: the profile grows with every conversation. #}
+  {% if dog %}
+    {# The dog record: what the coach has learned in the chat, plus what the owner added. Theirs to edit. #}
     <section class="card dash-knows" aria-labelledby="knows-h">
       <h2 id="knows-h">{{ 'What the coach knows about %dog%'|trans({'%dog%': dog.name}) }}</h2>
       <ul>
-        {% if dog.food %}<li><span class="dash-knows__topic">{{ 'Food'|trans }}</span> {{ (dog.food.brand ~ ' ' ~ dog.food.product)|trim }}</li>{% endif %}
-        {% for n in dog.notes|reverse|slice(0, 8) %}<li><span class="dash-knows__topic">{{ n.at|date('Y-m-d') }}</span> {{ n.text }}</li>{% endfor %}
+        {% if dog.food %}<li><span class="dash-knows__topic">{{ 'Food'|trans }}</span> <span class="dash-knows__text">{{ (dog.food.brand ~ ' ' ~ dog.food.product)|trim }}</span></li>{% endif %}
+        {% if dog.weightUpdate %}<li><span class="dash-knows__topic">{{ dog.weightUpdate.at|date('Y-m-d') }}</span> <span class="dash-knows__text">{{ 'Weight: %kg% kg'|trans({'%kg%': dog.weightUpdate.kg}) }}</span></li>{% endif %}
+        {% for i, n in dog.notes|reverse(true) %}{# newest first; i is the fact's position for removing it #}
+          <li>
+            <span class="dash-knows__topic">{{ n.at|date('Y-m-d') }}</span>
+            <span class="dash-knows__text">{{ n.text }}{% if (n.source ?? 'chat') == 'owner' %} <small>{{ '(you added this)'|trans }}</small>{% endif %}</span>
+            <form method="post" action="{{ path('app_dog_notes') }}" class="dash-knows__remove">
+              <input type="hidden" name="_token" value="{{ csrf_token('dog-notes') }}">
+              <button type="submit" name="remove" value="{{ i }}" title="{{ 'Remove'|trans }}" aria-label="{{ 'Remove'|trans }}">×</button>
+            </form>
+          </li>
+        {% endfor %}
       </ul>
+      <form method="post" action="{{ path('app_dog_notes') }}" class="dash-knows__add">
+        <input type="hidden" name="_token" value="{{ csrf_token('dog-notes') }}">
+        <label class="visually-hidden" for="dog-note">{{ 'Add something about %dog%'|trans({'%dog%': dog.name}) }}</label>
+        <input id="dog-note" name="text" maxlength="240" required placeholder="{{ 'Add something about %dog%, e.g. “allergic to chicken”'|trans({'%dog%': dog.name}) }}">
+        <button class="btn btn-small" type="submit">{{ 'Add'|trans }}</button>
+      </form>
       <p class="dash-knows__hint">{{ 'Tell the coach when something changes, and it’s added here.'|trans }}</p>
     </section>
   {% endif %}

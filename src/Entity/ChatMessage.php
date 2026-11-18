@@ -48,6 +48,14 @@ class ChatMessage
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $attachments = null;
 
+    /** Set by the system: "red_flag:<key>" when SafetyCheck answered instead of the coach. */
+    #[ORM\Column(length: 40, nullable: true)]
+    private ?string $flag = null;
+
+    /** An admin's note when the reply is marked for vet review (the review sample in the admin). */
+    #[ORM\Column(length: 500, nullable: true)]
+    private ?string $review = null;
+
     #[ORM\Column(nullable: true)]
     private ?int $inputTokens = null;
 
@@ -64,6 +72,28 @@ class ChatMessage
         $this->role = $role;
         $this->content = $content;
         $this->createdAt = new \DateTimeImmutable();
+    }
+
+    public function getFlag(): ?string
+    {
+        return $this->flag;
+    }
+
+    public function setFlag(?string $flag): static
+    {
+        $this->flag = $flag;
+        return $this;
+    }
+
+    public function getReview(): ?string
+    {
+        return $this->review;
+    }
+
+    public function setReview(?string $review): static
+    {
+        $this->review = $review !== null && trim($review) !== '' ? mb_substr(trim($review), 0, 500) : null;
+        return $this;
     }
 
     public function getId(): ?int

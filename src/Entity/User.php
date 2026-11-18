@@ -68,6 +68,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => true])]
     private bool $hasPassword = true;
 
+    /** Coach follow-up emails ("two weeks in, how is Bella?"); switched off in the account. */
+    #[ORM\Column(options: ['default' => true])]
+    private bool $coachEmails = true;
+
+    public function wantsCoachEmails(): bool
+    {
+        return $this->coachEmails;
+    }
+
+    public function setCoachEmails(bool $on): static
+    {
+        $this->coachEmails = $on;
+        return $this;
+    }
+
     /** @var Collection<int, Purchase> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Purchase::class)]
     #[ORM\OrderBy(['createdAt' => 'DESC'])]

@@ -179,6 +179,122 @@ final class ChatReliabilityTest extends AppTestCase
         $this->assertCount(0, FakeClaude::$requests);
     }
 
+    public function testARedFlagGetsTheVetMessageAndNotTheCoach(): void
+    {
+        $this->userWithDog();
+        FakeClaude::$redFlag = 'toxin';
+        $body = $this->send('Bella just ate a handful of raisins, what should I feed her tonight?');
+
+        // The check saw the message (with the dog's name); the coach was never asked.
+        $this->assertStringContainsString('handful of raisins', json_encode(FakeClaude::$triage[0]['messages'], JSON_UNESCAPED_UNICODE));
+        $this->assertCount(0, FakeClaude::$requests);
+        $this->assertStringContainsString('"urgent":true', $body);
+        $this->assertStringContainsString('"remaining":2', $body);
+
+        $saved = $this->messages();
+        $this->assertSame('red_flag:toxin', $saved[1]->getFlag());
+        $this->assertStringContainsString('call your vet', $saved[1]->getContent());
+        $this->assertStringContainsString('Don’t make Bella vomit', $saved[1]->getContent());
+        $this->client->request('GET', '/chat');
+        $this->assertSelectorExists('.chat-msg--bot.is-urgent');
+        $this->assertSelectorExists('a.chat-human[href^="mailto:support@myzenoo.com"]');
+
+        // An ordinary message goes on to the coach.
+        FakeClaude::$redFlag = 'none';
+        $this->send('Thanks, she is fine now. How much should she eat?');
+        $this->assertCount(1, FakeClaude::$requests);
+    }
+
+    public function testTheCoachGetsNumbersFromTheCalculators(): void
+    {
+        $this->userWithDog();
+        FakeClaude::$script = [
+            ['text' => '', 'tool' => ['name' => 'calculate', 'input' => ['operation' => 'portion', 'kcal_per_100g' => 160, 'share' => 0.25]]],
+            ['text' => 'As a topper, give Bella about 170 g a day.'],
+        ];
+        $this->send('How much raw food should I add as a topper?');
+        $this->assertContains('calculate', array_column(FakeClaude::$requests[0]['tools'], 'name'));
+        $result = FakeClaude::$requests[1]['messages'][array_key_last(FakeClaude::$requests[1]['messages'])]['content'][0];
+        $this->assertSame('tool_result', $result['type']);
+        $this->assertSame(185, json_decode($result['content'], true)['grams_per_day']); // not neutered here
+        $this->assertSame('As a topper, give Bella about 170 g a day.', $this->messages()[1]->getContent());
+    }
+
+    public function testTheOwnerCanAddAndRemoveFacts(): void
+    {
+        $this->userWithDog();
+        $crawler = $this->client->request('GET', '/dashboard');
+        $form = $crawler->filter('.dash-knows__add')->form(['text' => 'Allergic to chicken']);
+        $this->client->submit($form);
+        $crawler = $this->client->followRedirect();
+        $this->assertSelectorTextContains('.dash-knows', 'Allergic to chicken');
+        $this->assertSelectorTextContains('.dash-knows', '(you added this)');
+
+        // The coach sees who added it.
+        $this->send('What treats are OK?');
+        $this->assertStringContainsString('added by the pet parent] Allergic to chicken', FakeClaude::$requests[0]['system'][1]['text']);
+
+        $crawler = $this->client->request('GET', '/dashboard');
+        $this->client->submit($crawler->filter('.dash-knows__remove')->first()->selectButton('×')->form());
+        $this->client->followRedirect();
+        $this->assertSelectorTextNotContains('.dash-knows', 'Allergic to chicken');
+    }
+
+    public function testLessonLinksOpenTheLessonInTheReadersLanguage(): void
+    {
+        (new \Symfony\Component\Console\Tester\CommandTester((new \Symfony\Bundle\FrameworkBundle\Console\Application(static::$kernel))->find('app:course:import')))->execute(['--publish' => true]);
+        $this->userWithDog();
+        $this->client->request('GET', '/courses/lesson/2');
+        $this->assertResponseRedirects();
+        $this->assertMatchesRegularExpression('~/courses/[a-z0-9-]+/lesson/\d+$~', $this->client->getResponse()->headers->get('Location'));
+        $this->client->request('GET', '/courses/lesson/999');
+        $this->assertResponseRedirects('/courses');
+
+        FakeClaude::$script = [['text' => 'See [Lesson 2, Reading Labels](/courses/lesson/2) or [this](https://evil.example).']];
+        $this->send('How do I read a label?');
+        $this->client->request('GET', '/chat');
+        $this->assertSelectorExists('.chat-answer a[href="/courses/lesson/2"]');
+        $this->assertSelectorNotExists('.chat-answer a[href^="https://evil"]');
+    }
+
+    public function testAdminsSeeAlertsAndCanMarkRepliesForReview(): void
+    {
+        $this->userWithDog();
+        FakeClaude::$redFlag = 'bloat';
+        $this->send('Her belly is swollen and she keeps trying to vomit.');
+        FakeClaude::$redFlag = 'none';
+        $this->send('She is fine now, the vet saw her. What should she eat?');
+
+        $this->client->loginUser($this->createUser('admin@example.com', 'Password123', ['ROLE_ADMIN']));
+        $crawler = $this->client->request('GET', '/admin/conversations');
+        $this->assertStringContainsString('⚠ 1', $crawler->filter('.cv-table tbody tr')->text());
+
+        $crawler = $this->client->request('GET', '/admin/conversations/sample');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('.cv-alert', 'bloat');
+        $this->assertCount(2, $crawler->filter('form.cv-review'));
+
+        // A note on the coach's reply to the second question.
+        $form = $crawler->filter('form.cv-review')->last()->form(['note' => 'OK, good portion advice']);
+        $this->client->submit($form);
+        $this->assertResponseRedirects('/admin/conversations/sample');
+        $this->assertSame('OK, good portion advice', $this->messages()[3]->getReview());
+        $crawler = $this->client->request('GET', '/admin/conversations');
+        $this->assertStringContainsString('1', $crawler->filter('.cv-table tbody tr td')->eq(5)->text());
+    }
+
+    public function testTheVetMessagesExistInEveryLanguage(): void
+    {
+        foreach (['en', 'lt', 'uk', 'pl'] as $l) {
+            foreach (array_keys(\App\Chat\SafetyCheck::FLAGS) as $flag) {
+                $text = \App\Chat\SafetyCheck::reply($flag, $l, 'Bella');
+                $this->assertStringContainsString('support@myzenoo.com', $text, "$l $flag");
+                $this->assertStringNotContainsString('%dog%', $text, "$l $flag");
+                $this->assertGreaterThan(3, substr_count($text, "\n") + 1, "$l $flag has head, reason and tail");
+            }
+        }
+    }
+
     public function testLastFullSentence(): void
     {
         $this->assertSame('One. Two!', ChatAgent::lastFullSentence("One. Two!\n\nNext step: send a photo of"));

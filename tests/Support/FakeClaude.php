@@ -23,6 +23,10 @@ final class FakeClaude
      */
     public static array $script = [];
 
+    /** What the safety check (SafetyCheck, tool "triage") gets back; its calls go to $triage, not $requests. */
+    public static string $redFlag = 'none';
+    public static array $triage = [];
+
     public static function reset(): void
     {
         self::$reply = 'Hello! **Weigh** the food.';
@@ -30,11 +34,18 @@ final class FakeClaude
         self::$askQuestions = null;
         self::$requests = [];
         self::$script = [];
+        self::$redFlag = 'none';
+        self::$triage = [];
     }
 
     public static function respond(array $options): MockResponse
     {
-        self::$requests[] = json_decode((string) ($options['body'] ?? '{}'), true);
+        $request = json_decode((string) ($options['body'] ?? '{}'), true);
+        if (($request['tool_choice']['name'] ?? null) === 'triage') {
+            self::$triage[] = $request;
+            return self::stream('', ['name' => 'triage', 'input' => ['red_flag' => self::$redFlag]], null);
+        }
+        self::$requests[] = $request;
         if (self::$fail) {
             return new MockResponse(json_encode(['type' => 'error', 'error' => ['type' => 'overloaded_error', 'message' => 'Overloaded']]), ['http_code' => 529]);
         }
@@ -49,6 +60,11 @@ final class FakeClaude
             $stop = $next['stop'] ?? null;
         }
 
+        return self::stream($reply, $tool, $stop);
+    }
+
+    private static function stream(string $reply, ?array $tool, ?string $stop): MockResponse
+    {
         $events = [
             ['message_start', ['type' => 'message_start', 'message' => ['usage' => ['input_tokens' => 300, 'output_tokens' => 1]]]],
             ['content_block_start', ['type' => 'content_block_start', 'index' => 0, 'content_block' => ['type' => 'text', 'text' => '']]],
@@ -57,7 +73,7 @@ final class FakeClaude
             $events[] = ['content_block_delta', ['type' => 'content_block_delta', 'index' => 0, 'delta' => ['type' => 'text_delta', 'text' => $piece]]];
         }
         if ($tool !== null) {
-            $events[] = ['content_block_start', ['type' => 'content_block_start', 'index' => 1, 'content_block' => ['type' => 'tool_use', 'id' => 'toolu_' . \count(self::$requests), 'name' => $tool['name'], 'input' => new \stdClass()]]];
+            $events[] = ['content_block_start', ['type' => 'content_block_start', 'index' => 1, 'content_block' => ['type' => 'tool_use', 'id' => 'toolu_' . \count(self::$requests) . '_' . \count(self::$triage), 'name' => $tool['name'], 'input' => new \stdClass()]]];
             foreach (str_split(json_encode($tool['input']), 30) as $piece) {
                 $events[] = ['content_block_delta', ['type' => 'content_block_delta', 'index' => 1, 'delta' => ['type' => 'input_json_delta', 'partial_json' => $piece]]];
             }

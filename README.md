@@ -127,6 +127,38 @@ If you update the quiz from the handoff, copy the files over and update the hash
   the dog's profile and check-in answers beside it, and "Download as text" for reviewing tester
   feedback and improving `config/chatbot/system_prompt.md`.
 
+## How the coach is built (roadmap part 1)
+
+Every message goes: **safety check → coach (AI) → tools and data**.
+
+- **Safety runs first** (`src/Chat/SafetyCheck.php`): a small, separate AI call sorts the message
+  against a fixed red-flag list (bloat, toxins, black stool or blood, repeated vomiting, sick
+  puppy, breathing, collapse or seizure, heatstroke, can't pee). A match gets an approved "call
+  your vet now" reply in the pet parent's language and nothing else; it doesn't use a message and
+  is marked as a safety alert in the admin. General questions ("can dogs eat grapes?") aren't red
+  flags. If the check fails, the coach answers (its prompt has the same rules).
+- **Code does the maths** (`src/Chat/Calculators.php`, the `calculate` tool): calories, grams a
+  day and per meal (typical, from the pack's kcal or from the label; whole bowl or a topper share),
+  weight-loss pace, switching schedule, cost per day, label energy. Same formulas as the quiz
+  (`public/quiz/scoring.js`); the prompt says every number comes from the tool.
+- **One dog record** (`DogProfile`): the quiz, the food, check-in answers, a newer weight and dated
+  facts with their source (the coach's `update_dog_profile`, or added by the owner). The owner sees
+  them on the dashboard ("What the coach knows about Bella") and can add or remove facts.
+- **Approved content:** the 30 lessons are in the prompt; the coach links them as
+  `/courses/lesson/15`, which opens lesson 15 in the reader's language. The chat only shows links
+  to pages inside the app. (The product catalogue comes with the Shopify connection.)
+- **It follows up** (`schedule_followup` tool): the coach plans a check-in ("two weeks in, what does
+  Bella weigh?"). When it's due, `php bin/console app:coach:followups` (daily) emails the question
+  in their language (`ZENOO Coach Check-in`, SMTP or Klaviyo like the other site emails), and the
+  coach asks it when they next open the chat. Pet parents switch these off in their account or with
+  the signed link in the email.
+- **Tested and watched:** `php bin/console app:coach:eval` runs the fixed test questions in
+  `config/chatbot/eval.yaml` (emergencies, numbers, health limits, ZENOO questions, all four
+  languages) against the real model; run it before changing the prompt, model or coach code. In the
+  admin, **Coach conversations → Vet review sample** shows random recent replies with the question
+  before each, every safety alert and every marked reply, with a note field for the vet. Under the
+  chat, "Talk to a person" opens an email to support@myzenoo.com.
+
 ## Logged in vs. visitors
 
 - `/` is the welcome page for visitors; logged-in pet parents are sent to `/dashboard` (the logo

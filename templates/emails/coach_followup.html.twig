@@ -1,0 +1,11 @@
+{% extends 'emails/_layout.html.twig' %}
+{% block title %}{{ 'How is %dog% doing?'|trans({'%dog%': dogName}) }}{% endblock %}
+{% block content %}
+<h1 style="font-family:'Inter Tight',Inter,Helvetica,Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">{{ 'How is %dog% doing?'|trans({'%dog%': dogName}) }}</h1>
+<p style="margin:0 0 12px;">{{ user.firstName ? 'Hi %name%,'|trans({'%name%': user.firstName}) : 'Hi,'|trans }}</p>
+<p style="margin:0 0 12px;">{{ 'Your ZENOO coach wanted to check in:'|trans }}</p>
+<p style="margin:0 0 12px;padding:14px 18px;border-left:4px solid #f7a223;background:#f6f3ea;font-size:17px;">{{ question }}</p>
+{{ include('emails/_button.html.twig', {url: chatUrl, label: 'Answer in the chat'|trans}) }}
+<p style="margin:0 0 12px;">{{ 'Your answer helps the coach keep the advice right for your dog.'|trans }}</p>
+<p style="margin:16px 0 0;font-size:13px;color:#7c8a7b;"><a href="{{ offUrl }}" style="color:#7c8a7b;">{{ 'Don’t want these check-ins? Switch them off'|trans }}</a></p>
+{% endblock %}

@@ -121,7 +121,7 @@
                             {% if m.content %}<div class="chat-bubble">{{ m.content|nl2br }}</div>{% endif %}
                         </div>
                     {% else %}
-                        <div class="chat-msg chat-msg--bot">
+                        <div class="chat-msg chat-msg--bot{{ m.flag starts with 'red_flag' ? ' is-urgent' }}">
                             <img class="chat-avatar" src="/favicon.png" alt="" width="32" height="32">
                             <div class="chat-answer">
                                 {{ m.content ? m.content|chat_markdown : '<p>' ~ ('I have a few quick questions for you.'|trans|e) ~ '</p>' }}
@@ -160,6 +160,7 @@
             </div>
             <p class="chat-composer__meta">
                 <span id="chat-limit-note">{% if not unlimited and remaining == 0 %}{{ 'You’ve used all %limit% messages for today. You can chat again after %time%.'|trans({'%limit%': limit, '%time%': resetLabel|trans}) }}{% else %}{{ 'The assistant can make mistakes. For health questions, please ask your vet.'|trans }}{% endif %}</span>
+                <a class="chat-human" href="mailto:support@myzenoo.com?subject={{ 'Question for the ZENOO team'|trans|url_encode }}">{{ 'Talk to a person'|trans }}</a>
                 <span id="chat-counter"></span>
             </p>
         </form>

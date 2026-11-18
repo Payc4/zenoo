@@ -27,6 +27,7 @@
           {% if m.questions %}
             <ul class="cv-cards">{% for q in m.questions %}<li><strong>{{ q.question }}</strong>{% if q.options %} — {{ q.options|map(o => o.label)|join(' / ') }}{% endif %}</li>{% endfor %}</ul>
           {% endif %}
+          {% if not m.fromUser %}{{ include('admin/conversations/_review.html.twig', {m: m, back: app.request.requestUri}) }}{% endif %}
         </article>
       {% else %}
         <p class="cs-muted">No messages.</p>

@@ -88,3 +88,10 @@
 .dash-knows li:first-child { border-top: 0; }
 .dash-knows__topic { display: inline-block; min-width: 92px; font-size: 13px; opacity: .65; }
 .dash-knows__hint { margin: 12px 0 0; font-size: 14px; opacity: .75; }
+.dash-knows li { display: flex; gap: 8px; align-items: baseline; }
+.dash-knows__text { flex: 1; }
+.dash-knows__text small { opacity: .6; }
+.dash-knows__remove button { border: 0; background: none; font-size: 20px; line-height: 1; cursor: pointer; opacity: .45; padding: 0 4px; }
+.dash-knows__remove button:hover, .dash-knows__remove button:focus-visible { opacity: 1; }
+.dash-knows__add { display: flex; gap: 8px; margin-top: 14px; }
+.dash-knows__add input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid rgba(0, 0, 0, .2); border-radius: 10px; font: inherit; }

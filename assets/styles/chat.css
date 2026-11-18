@@ -170,3 +170,7 @@
 .qcard__kind { color: var(--forest, #445942); font-weight: 700; }
 .chat-note { align-self: center; margin: 4px auto 12px; padding: 6px 14px; border-radius: 999px; background: rgba(68, 89, 66, .08); color: var(--forest, #445942); font-size: 14px; text-align: center; max-width: 90%; }
 .chat-note.is-error { background: #fdecea; color: #a12a1b; }
+
+/* The safety check's "call your vet now" reply */
+.chat-msg--bot.is-urgent .chat-answer { border: 2px solid #b4432f; background: #fdf1ee; border-radius: 16px; padding: 12px 16px; }
+.chat-human { margin-left: 6px; white-space: nowrap; color: inherit; text-decoration: underline; }

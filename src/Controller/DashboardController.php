@@ -113,6 +113,28 @@ final class DashboardController extends AbstractController
     }
 
     /** The course in the page's language (English as a fallback), if pet parents can see it. */
+    /** The owner adds a fact about their dog, or removes one the coach saved (the dog record is theirs to edit). */
+    #[Route('/dashboard/dog-notes', name: 'app_dog_notes', methods: ['POST'])]
+    public function dogNotes(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $dog = $this->dogs->findForUser($user);
+        if (!$dog || !$this->isCsrfTokenValid('dog-notes', (string) $request->request->get('_token'))) {
+            return $this->redirectToRoute('app_dashboard');
+        }
+        if ($request->request->has('remove')) {
+            if ($dog->removeNote((int) $request->request->get('remove'))) {
+                $this->em->flush();
+                $this->addFlash('success', 'Removed from your dog’s profile.');
+            }
+        } elseif ($dog->addNote('other', (string) $request->request->get('text', ''), new \DateTimeImmutable(), null, 'owner')) {
+            $this->em->flush();
+            $this->addFlash('success', 'Added to your dog’s profile.');
+        }
+        return $this->redirect($this->generateUrl('app_dashboard') . '#knows-h');
+    }
+
     private function courseFor(string $locale): ?Course
     {
         foreach ([$locale, 'en'] as $lang) {

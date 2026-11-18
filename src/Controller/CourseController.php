@@ -63,6 +63,24 @@ final class CourseController extends AbstractController
         ]);
     }
 
+    /**
+     * "Lesson 15" in the reader's language: the coach links lessons by number (/courses/lesson/15),
+     * because each language's course has its own lesson addresses.
+     */
+    #[Route('/lesson/{n}', name: 'app_course_lesson_number', requirements: ['n' => '\d+'], methods: ['GET'])]
+    public function lessonNumber(int $n, Request $request): Response
+    {
+        $courses = $this->courses->findAllOrdered(true);
+        $in = fn (string $locale) => array_values(array_filter($courses, fn (Course $c) => $c->getLocale() === $locale));
+        foreach ([$in($request->getLocale()), $in('en')] as $list) {
+            $lessons = $list ? $list[0]->getLessons()->toArray() : [];
+            if (isset($lessons[$n - 1])) {
+                return $this->redirectToRoute('app_course_lesson', ['slug' => $list[0]->getSlug(), 'id' => $lessons[$n - 1]->getId()]);
+            }
+        }
+        return $this->redirectToRoute('app_courses');
+    }
+
     #[Route('/{slug}/lesson/{id}', name: 'app_course_lesson', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function lesson(string $slug, Lesson $lesson): Response
     {

@@ -137,9 +137,10 @@ class DogProfile
 
     /**
      * What the pet parent told the coach about their dog, newest last:
-     * [ { "topic": "health", "text": "Itchy paws since spring", "at": "2026-11-17" }, … ]. Kept when the quiz is retaken.
+     * [ { "topic": "health", "text": "Itchy paws since spring", "at": "2026-11-17", "source": "chat" }, … ].
+     * source: "chat" (saved by the coach) or "owner" (added on the dashboard). Kept when the quiz is retaken.
      *
-     * @return list<array{topic: string, text: string, at: string}>
+     * @return list<array{topic: string, text: string, at: string, source?: string}>
      */
     public function getNotes(): array
     {
@@ -150,7 +151,7 @@ class DogProfile
      * Add a fact, or replace the one it updates (same topic and the old text given in $replaces).
      * Returns false for an empty or duplicate fact.
      */
-    public function addNote(string $topic, string $text, \DateTimeImmutable $at, ?string $replaces = null): bool
+    public function addNote(string $topic, string $text, \DateTimeImmutable $at, ?string $replaces = null, string $source = 'chat'): bool
     {
         $text = mb_substr(trim(strip_tags($text)), 0, 240);
         $topic = mb_substr(trim(strip_tags($topic)), 0, 30) ?: 'other';
@@ -167,9 +168,80 @@ class DogProfile
         if ($replaces !== null && trim($replaces) !== '') {
             $notes = array_values(array_filter($notes, fn ($n) => $norm($n['text']) !== $norm($replaces)));
         }
-        $notes[] = ['topic' => $topic, 'text' => $text, 'at' => $at->format('Y-m-d')];
+        $notes[] = ['topic' => $topic, 'text' => $text, 'at' => $at->format('Y-m-d'), 'source' => \in_array($source, ['chat', 'owner'], true) ? $source : 'chat'];
         $this->data['notes'] = \array_slice($notes, -self::MAX_NOTES);
         return true;
+    }
+
+    /** Removes the fact at this position (as in getNotes()); the owner does this on the dashboard. */
+    public function removeNote(int $index): bool
+    {
+        $notes = $this->getNotes();
+        if (!isset($notes[$index])) {
+            return false;
+        }
+        array_splice($notes, $index, 1);
+        $this->data['notes'] = $notes;
+        return true;
+    }
+
+    /**
+     * Check-ins the coach planned ("two weeks in, what does Bella weigh?"), oldest first:
+     * [ { "id": "a1b2c3", "due": "2026-12-01", "question": "…", "topic": "weight", "sent": null|"2026-12-01", "done": false } ].
+     * Sent by email when due (app:coach:followups) and asked by the coach when they next open the chat.
+     *
+     * @return list<array{id: string, due: string, question: string, topic: string, sent: ?string, done: bool}>
+     */
+    public function getFollowUps(): array
+    {
+        return array_values(array_filter((array) ($this->data['followups'] ?? []), 'is_array'));
+    }
+
+    public const MAX_FOLLOWUPS = 3;
+
+    /** Plans a check-in; one per topic (a new one replaces it), at most three open. */
+    public function addFollowUp(string $question, int $inDays, string $topic, \DateTimeImmutable $now): array
+    {
+        $question = mb_substr(trim(strip_tags($question)), 0, 300);
+        if ($question === '') {
+            throw new \InvalidArgumentException('Empty question.');
+        }
+        $inDays = max(2, min(60, $inDays));
+        $topic = mb_substr(trim($topic), 0, 30) ?: 'other';
+        $open = array_values(array_filter($this->getFollowUps(), fn ($f) => !$f['done'] && $f['topic'] !== $topic));
+        $item = ['id' => bin2hex(random_bytes(4)), 'due' => $now->modify("+$inDays days")->format('Y-m-d'), 'question' => $question, 'topic' => $topic, 'sent' => null, 'done' => false];
+        $open[] = $item;
+        $this->data['followups'] = \array_slice($open, -self::MAX_FOLLOWUPS);
+        return $item;
+    }
+
+    /** The open check-in that is due (the oldest), if any. */
+    public function dueFollowUp(\DateTimeImmutable $now): ?array
+    {
+        foreach ($this->getFollowUps() as $f) {
+            if (!$f['done'] && $f['due'] <= $now->format('Y-m-d')) {
+                return $f;
+            }
+        }
+        return null;
+    }
+
+    public function markFollowUp(string $id, ?\DateTimeImmutable $sent = null, bool $done = false): void
+    {
+        $list = $this->getFollowUps();
+        foreach ($list as &$f) {
+            if ($f['id'] === $id) {
+                if ($sent) {
+                    $f['sent'] = $sent->format('Y-m-d');
+                }
+                $f['done'] = $f['done'] || $done;
+            }
+        }
+        unset($f);
+        // Keep the open ones and the last few done ones.
+        $open = array_filter($list, fn ($f) => !$f['done']);
+        $done = \array_slice(array_filter($list, fn ($f) => $f['done']), -5);
+        $this->data['followups'] = array_values(array_merge($done, $open));
     }
 
     /** The weight the pet parent told the coach since the quiz, if newer: { "kg": 31.5, "at": "2026-11-17" }. */

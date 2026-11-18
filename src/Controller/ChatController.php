@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Chat\ChatAgent;
+use App\Chat\SafetyCheck;
 use App\Chat\ChatFiles;
 use App\Chat\CheckIns;
 use App\Chat\ChatQuota;
@@ -118,14 +119,19 @@ class ChatController extends AbstractController
      */
     private function openerDue(array $messages, ?DogProfile $dog): ?int
     {
-        if ($dog === null || $dog->getFood() === null) {
-            return null; // no quiz yet, or the "snap the food label" step comes first
+        if ($dog === null) {
+            return null; // no quiz yet
+        }
+        $days = $messages ? (int) floor(((new \DateTimeImmutable())->getTimestamp() - end($messages)->getCreatedAt()->getTimestamp()) / 86400) : 0;
+        if ($dog->dueFollowUp(new \DateTimeImmutable()) !== null && (!$messages || !end($messages)->isFromUser())) {
+            return $days; // a check-in the coach planned is due: ask it whenever they come
+        }
+        if ($dog->getFood() === null) {
+            return null; // the "snap the food label" step comes first
         }
         if (!$messages) {
             return 0;
         }
-        $last = end($messages)->getCreatedAt();
-        $days = (int) floor(((new \DateTimeImmutable())->getTimestamp() - $last->getTimestamp()) / 86400);
         return $days >= self::OPENER_AFTER_DAYS ? $days : null;
     }
 
@@ -137,7 +143,9 @@ class ChatController extends AbstractController
             return new JsonResponse(['error' => 'csrf'], 403);
         }
         $conversation = $this->conversations->findForUser($user);
-        $days = $claude->isConfigured() ? $this->openerDue($conversation ? $conversation->getMessages()->toArray() : [], $dogs->findForUser($user)) : null;
+        $dog = $dogs->findForUser($user);
+        $days = $claude->isConfigured() ? $this->openerDue($conversation ? $conversation->getMessages()->toArray() : [], $dog) : null;
+        $followUp = $dog?->dueFollowUp(new \DateTimeImmutable());
         if ($days === null) {
             return new Response('', 204);
         }
@@ -152,7 +160,7 @@ class ChatController extends AbstractController
         }
 
         $stream = $this->environment !== 'test';
-        $response = new StreamedResponse(function () use ($agent, $conversation, $isNew, $days, $logger, $stream) {
+        $response = new StreamedResponse(function () use ($agent, $conversation, $isNew, $days, $dog, $followUp, $logger, $stream) {
             ignore_user_abort(true);
             if ($stream) {
                 while (ob_get_level() > 0) {
@@ -166,7 +174,7 @@ class ChatController extends AbstractController
                 }
             };
             try {
-                $result = $agent->opener($conversation, $days, static fn (string $d) => $emit('delta', ['text' => $d]));
+                $result = $agent->opener($conversation, $days, static fn (string $d) => $emit('delta', ['text' => $d]), $followUp);
                 if ($result['text'] === '' && !$result['questions']) {
                     throw new \RuntimeException('Empty opener');
                 }
@@ -175,6 +183,9 @@ class ChatController extends AbstractController
                     ->setUsage($result['usage']['input'], $result['usage']['output']);
                 $this->em->persist($message);
                 $conversation->touch();
+                if ($followUp !== null) {
+                    $dog->markFollowUp($followUp['id'], null, true); // asked: done
+                }
                 $this->em->flush();
                 if ($result['questions']) {
                     $emit('questions', ['questions' => $result['questions']]);
@@ -204,7 +215,7 @@ class ChatController extends AbstractController
     }
 
     #[Route('/send', name: 'app_chat_send', methods: ['POST'])]
-    public function send(Request $request, ClaudeClient $claude, ChatAgent $agent, LoggerInterface $logger): Response
+    public function send(Request $request, ClaudeClient $claude, ChatAgent $agent, SafetyCheck $safety, DogProfileRepository $dogs, LoggerInterface $logger): Response
     {
         $user = $this->currentUser();
 
@@ -266,7 +277,16 @@ class ChatController extends AbstractController
         $stream = $this->environment !== 'test';
         $quota = $this->quota;
         $translator = $this->translator;
-        $response = new StreamedResponse(function () use ($agent, $conversation, $userMessage, $isNew, $remaining, $logger, $stream, $quota, $user, $translator) {
+        $dog = $dogs->findForUser($user);
+        $locale = $request->getLocale();
+        $earlier = null;
+        foreach (array_reverse($conversation->getMessages()->toArray()) as $m) {
+            if ($m->isFromUser() && $m !== $userMessage) {
+                $earlier = $m->getContent();
+                break;
+            }
+        }
+        $response = new StreamedResponse(function () use ($agent, $safety, $dog, $locale, $earlier, $text, $conversation, $userMessage, $isNew, $remaining, $logger, $stream, $quota, $user, $translator) {
             ignore_user_abort(true); // finish and save the reply even if the tab is closed
             if ($stream) {
                 while (ob_get_level() > 0) {
@@ -281,6 +301,19 @@ class ChatController extends AbstractController
             };
 
             $emit('meta', ['remaining' => $remaining, 'files' => $this->fileUrls($userMessage)]);
+
+            // Safety first: a red flag gets the approved "call your vet now" reply and nothing else.
+            // It doesn't use up a message.
+            if ($flag = $safety->check($text, $dog?->getName(), $earlier)) {
+                $reply = SafetyCheck::reply($flag, $locale, $dog?->getName());
+                $emit('delta', ['text' => $reply]);
+                $this->em->persist((new ChatMessage($conversation, ChatMessage::ROLE_ASSISTANT, $reply))->setFlag('red_flag:' . $flag));
+                $conversation->touch();
+                $this->em->flush();
+                $quota->refund($user);
+                $emit('done', ['remaining' => $remaining === null ? null : $remaining + 1, 'urgent' => true]);
+                return;
+            }
 
             try {
                 $result = $agent->reply($conversation, static fn (string $delta) => $emit('delta', ['text' => $delta]));
@@ -305,6 +338,9 @@ class ChatController extends AbstractController
                 }
                 if ($result['food']) {
                     $emit('note', ['text' => $translator->trans('Saved to your dog’s profile: %food%', ['%food%' => trim($result['food']['brand'] . ' ' . $result['food']['product'])])]);
+                }
+                if ($result['followup'] ?? null) {
+                    $emit('note', ['text' => $translator->trans('The coach will check in on %date%.', ['%date%' => (new \DateTimeImmutable($result['followup']['due']))->format('Y-m-d')])]);
                 }
                 if ($result['remembered'] ?? []) {
                     $emit('note', ['text' => $translator->trans('Added to your dog’s profile: %facts%', ['%facts%' => implode('; ', $result['remembered'])])]);

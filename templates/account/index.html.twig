@@ -84,6 +84,18 @@
             </form>
         </section>
 
+        {# ---------- Coach check-in emails ---------- #}
+        <section class="card" id="coach-emails">
+            <h2>{{ 'Coach check-ins'|trans }}</h2>
+            <p class="panel-intro">{{ 'When the coach plans to check in (for example two weeks into a weight plan), it sends you a short email with its question.'|trans }}</p>
+            <form method="post" action="{{ path('app_account_coach_emails') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('coach-emails') }}">
+                <input type="hidden" name="on" value="{{ app.user.wantsCoachEmails ? '0' : '1' }}">
+                <p>{{ app.user.wantsCoachEmails ? 'Check-in emails are on.'|trans : 'Check-in emails are off.'|trans }}</p>
+                <button class="btn btn-outline btn-small" type="submit">{{ app.user.wantsCoachEmails ? 'Switch them off'|trans : 'Switch them on'|trans }}</button>
+            </form>
+        </section>
+
         {# ---------- Password ---------- #}
         <section class="card" id="password">
             <h2>{{ 'Password'|trans }}</h2>

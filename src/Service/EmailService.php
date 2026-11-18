@@ -37,6 +37,7 @@ class EmailService
         'login' => 'ZENOO Login Link',
         'changed' => 'ZENOO Password Changed',
         'quiz' => 'ZENOO Quiz Confirmation',
+        'followup' => 'ZENOO Coach Check-in',
     ];
 
     public function __construct(
@@ -151,6 +152,30 @@ class EmailService
             'intro' => ['Hi %name%, the password for your ZENOO account was just changed.', ['%name%' => $user->getDisplayName()]],
             'text' => 'If that was you, there’s nothing else to do. If it wasn’t, reset it now and write to support@myzenoo.com.',
             'button' => 'Reset my password',
+        ]), $user);
+    }
+
+    /**
+     * A check-in the coach planned ("two weeks in, what does Bella weigh?"): the question and a
+     * button into the chat, where the coach asks it again. Switched off with $offUrl.
+     */
+    public function sendCoachFollowUp(User $user, string $dogName, string $question, string $chatUrl, string $offUrl): void
+    {
+        $locale = $user->getLocale();
+        $this->send($user->getEmail(), 'A quick question about %dog%', ['%dog%' => $dogName], 'emails/coach_followup.html.twig', [
+            'user' => $user, 'dogName' => $dogName, 'question' => $question, 'chatUrl' => $chatUrl, 'offUrl' => $offUrl,
+        ], $locale, 'followup', [
+            'dog_name' => $dogName,
+            'question' => $question,
+            'chat_url' => $chatUrl,
+            'off_url' => $offUrl,
+        ] + $this->copy($locale, [
+            'heading' => ['How is %dog% doing?', ['%dog%' => $dogName]],
+            'greeting' => $user->getFirstName() ? ['Hi %name%,', ['%name%' => $user->getFirstName()]] : 'Hi,',
+            'intro' => 'Your ZENOO coach wanted to check in:',
+            'button' => 'Answer in the chat',
+            'note' => 'Your answer helps the coach keep the advice right for your dog.',
+            'off' => 'Don’t want these check-ins? Switch them off',
         ]), $user);
     }
 

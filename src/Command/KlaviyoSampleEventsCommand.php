@@ -39,7 +39,7 @@ final class KlaviyoSampleEventsCommand extends Command
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'Where the sample events go (a Klaviyo profile)')
             ->addOption('lang', null, InputOption::VALUE_REQUIRED, 'en, lt, uk or pl', 'en')
-            ->addOption('only', null, InputOption::VALUE_REQUIRED, 'Comma-separated: welcome,order,reset,login,changed,quiz');
+            ->addOption('only', null, InputOption::VALUE_REQUIRED, 'Comma-separated: welcome,order,reset,login,changed,quiz,followup');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -67,6 +67,7 @@ final class KlaviyoSampleEventsCommand extends Command
             'login' => fn () => $this->emails->sendMagicLoginLink($user, $site . '/login?sample=1', new \DateTimeImmutable('+10 minutes')),
             'changed' => fn () => $this->emails->sendPasswordChangedNotice($user),
             'quiz' => fn () => $this->emails->sendQuizConfirmation($quiz, $site . '/quiz/?sample=1'),
+            'followup' => fn () => $this->emails->sendCoachFollowUp($user, 'Bella', 'Two weeks in: what does Bella weigh now?', $site . '/chat', $site . '/coach-emails/off?sample=1'),
         ];
         foreach ($only as $key) {
             if (!isset($send[$key])) {

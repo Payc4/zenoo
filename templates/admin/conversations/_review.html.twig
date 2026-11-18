@@ -1,0 +1,9 @@
+{# A coach reply's safety alert and review note (admin only). #}
+{% if m.flag %}<p class="cv-alert">⚠ Safety check answered: {{ m.flag|replace({'red_flag:': ''}) }} (the coach didn’t reply)</p>{% endif %}
+<form class="cv-review" method="post" action="{{ path('admin_message_review', {id: m.id}) }}">
+  <input type="hidden" name="_token" value="{{ csrf_token('review' ~ m.id) }}">
+  <input type="hidden" name="back" value="{{ back }}">
+  <label class="cs-small cs-muted" for="review-{{ m.id }}">Review note</label>
+  <input id="review-{{ m.id }}" name="note" maxlength="500" value="{{ m.review }}" placeholder="e.g. OK / wrong portion / should have said: see a vet">
+  <button class="cs-btn cs-btn--small" type="submit">Save</button>
+</form>

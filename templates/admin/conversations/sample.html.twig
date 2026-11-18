@@ -1,0 +1,29 @@
+{% extends 'admin/course_studio/_layout.html.twig' %}
+{% block title %}Vet review sample{% endblock %}
+{% block brand %}<a class="cs-top__brand" href="{{ path('admin_conversations') }}">Coach conversations</a>{% endblock %}
+
+{% macro pair(p, back) %}
+  <article class="cv-msg cv-msg--bot">
+    <header class="cs-small cs-muted">
+      {{ p.reply.createdAt|date('Y-m-d H:i') }} · {{ locale_name(p.reply.conversation.user.locale) }} ·
+      <a href="{{ path('admin_conversation', {id: p.reply.conversation.id}) }}">whole conversation →</a>
+    </header>
+    {% if p.question %}<div class="cv-q"><strong>Pet parent:</strong> {{ p.question.content|nl2br }}{% if p.question.attachments %} <em>(+ {{ p.question.attachments|length }} file(s))</em>{% endif %}</div>{% endif %}
+    <div class="cv-body">{{ p.reply.content|chat_markdown }}</div>
+    {{ include('admin/conversations/_review.html.twig', {m: p.reply, back: back}) }}
+  </article>
+{% endmacro %}
+
+{% block body %}
+<main class="cs-wrap">
+  <h1 class="cs-h1">Vet review sample</h1>
+  <p class="cs-muted">For the vet reviewer: read each coach reply with the question before it and write a short note (“OK”, “wrong amount”, “should have sent them to a vet”). Notes are saved on the reply and shown in the conversation. Fix patterns in <code>config/chatbot/system_prompt.md</code>.</p>
+
+  <h2 class="cs-label">Safety alerts and marked replies (last 30 days)</h2>
+  {% for p in marked %}{{ _self.pair(p, app.request.requestUri) }}{% else %}<p class="cs-muted">None.</p>{% endfor %}
+
+  <h2 class="cs-label">{{ random|length }} random replies</h2>
+  <p class="cs-small"><a href="{{ path('admin_conversations_sample', {n: n}) }}">Another sample</a> · <a href="{{ path('admin_conversations_sample', {n: 50}) }}">50 at a time</a></p>
+  {% for p in random %}{{ _self.pair(p, app.request.requestUri) }}{% else %}<p class="cs-muted">No coach replies in the last 30 days.</p>{% endfor %}
+</main>
+{% endblock %}

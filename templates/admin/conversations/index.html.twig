@@ -6,12 +6,13 @@
 <main class="cs-wrap">
   <h1 class="cs-h1">Coach conversations</h1>
   <p class="cs-muted">Every pet parent’s chat with the AI coach, newest first. Open one to read it with their dog’s profile and check-in answers, or download it as text to improve the coach’s instructions.</p>
+  <p><a class="cs-btn" href="{{ path('admin_conversations_sample') }}">Vet review sample →</a> <span class="cs-muted cs-small">Random recent replies, safety alerts and marked replies, with a note field for the vet.</span></p>
 
   {% if rows is empty %}
     <p class="cv-empty">No conversations yet.</p>
   {% else %}
   <table class="cv-table">
-    <thead><tr><th>Pet parent</th><th>Dog</th><th>Questions asked</th><th>Last message</th><th>Tokens (in / out)</th><th></th></tr></thead>
+    <thead><tr><th>Pet parent</th><th>Dog</th><th>Questions asked</th><th>Last message</th><th>Safety alerts</th><th>Marked</th><th>Tokens (in / out)</th><th></th></tr></thead>
     <tbody>
     {% for r in rows %}
       {% set c = r.conversation %}
@@ -21,6 +22,8 @@
         <td>{{ dog ? dog.name ~ ' (' ~ dog.bowlScore ~ '/100)' : '—' }}</td>
         <td>{{ r.questions }}</td>
         <td>{{ c.updatedAt|date('Y-m-d H:i') }}</td>
+        <td>{{ r.alerts ? '⚠ ' ~ r.alerts : '—' }}</td>
+        <td>{{ r.reviews ?: '—' }}</td>
         <td class="cs-small">{{ r.inputTokens|number_format(0, '.', ' ') }} / {{ r.outputTokens|number_format(0, '.', ' ') }}</td>
         <td><a href="{{ path('admin_conversation', {id: c.id}) }}">Read →</a></td>
       </tr>
