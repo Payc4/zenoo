@@ -330,6 +330,8 @@ window.ZQ_CONTENT = {
     // Values for the {breed} and {signs} placeholders in subCopy and bands
     vars: { breedMixed: 'Dogs like {name}', noSigns: 'a fussy appetite' },
     result: {
+      // The personal ZENOO plan on the result (from the store catalogue; {product} links to it)
+      zenoo: { title: 'FRESHER FOOD FOR {NAME}', text: 'Our pick: {product} {option}, about <b>{grams} g a day</b> (around €{cost} a day).', options: { topper: 'as a topper', half: 'as half the bowl', full: 'as the whole bowl' }, cta: 'Order a 2-week starter (€{price})', code: 'Starter offer: the code {code} is added at checkout.', note: 'An estimate from the pack’s energy value. Switch over gradually across about a week.', dashboard: 'All options in your dashboard' },
       scoreTitle: '{POSS} BOWL SCORE',
       firstTitle: 'WHAT WE’D DO FIRST', keepGoing: 'Keep doing what you’re doing!',
       breakdown: 'THE BREAKDOWN',

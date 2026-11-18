@@ -12,6 +12,10 @@ needs no manual steps.
 3. **Daily coach check-ins:** in Coolify, add a scheduled task on the app:
    command `php bin/console app:coach:followups`, frequency `0 9 * * *` (09:00 every day). It emails
    the check-ins the coach planned once they're due. `--dry-run` lists them without sending.
+   Add a second task `php bin/console app:catalogue:sync`, frequency `30 5 * * *`, to copy the
+   store's products and prices every morning (or press Sync in Admin → Store catalogue). Optional
+   variables: `SHOPIFY_STORE_URL` (default `https://zenoo.lt`), `PLAN_DAILY_BUDGET` (default 4,
+   euros a day) and `SHOPIFY_STARTER_CODE` (a Shopify discount code added to the starter cart).
    Before changing the coach's prompt or model, run `php bin/console app:coach:eval` in the app's
    terminal (it calls the real model, a few cents per run).
 4. **Persistent storage:** mount a volume at `/var/www/html/public/uploads` so profile

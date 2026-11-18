@@ -21,6 +21,8 @@ final class FakeStripe
     public static bool $klaviyoDown = false;
     /** @var list<array{url: string, headers: array, body: array}> ElevenLabs text-to-speech calls */
     public static array $elevenlabs = [];
+    /** What the fake Shopify store's /products.json returns (see FakeShop). */
+    public static array $shopProducts = [];
     public static ?string $elevenlabsError = null;
 
     public static function reset(): void
@@ -31,6 +33,7 @@ final class FakeStripe
         self::$klaviyo = [];
         self::$klaviyoDown = false;
         self::$elevenlabs = [];
+        self::$shopProducts = [];
         self::$elevenlabsError = null;
     }
 
@@ -38,6 +41,10 @@ final class FakeStripe
     {
         if (str_ends_with($url, '/v1/messages')) {
             return FakeClaude::respond($options);
+        }
+        if (str_contains($url, '/products.json')) {
+            parse_str((string) parse_url($url, PHP_URL_QUERY), $q);
+            return new MockResponse(json_encode(['products' => (int) ($q['page'] ?? 1) === 1 ? self::$shopProducts : []]));
         }
         if (str_contains($url, 'api.elevenlabs.io/')) {
             self::$elevenlabs[] = ['url' => $url, 'headers' => $options['headers'] ?? [], 'body' => json_decode((string) ($options['body'] ?? ''), true) ?? []];

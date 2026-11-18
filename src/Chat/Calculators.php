@@ -196,7 +196,7 @@ final class Calculators
         foreach ($steps as $i => $new) {
             $from = (int) round($i * $per) + 1;
             $to = (int) round(($i + 1) * $per);
-            $out[] = ['days' => $from === $to ? "day $from" : "days {$from}–{$to}", 'old_food_percent' => 100 - $new, 'new_food_percent' => $new];
+            $out[] = ['days' => $from === $to ? "day $from" : "days {$from}–{$to}", 'from' => $from, 'to' => $to, 'old_food_percent' => 100 - $new, 'new_food_percent' => $new];
         }
         return ['schedule' => $out, 'note' => 'Go back a step for a couple of days if the stool gets soft. Sensitive tummies: use 14 days.'];
     }

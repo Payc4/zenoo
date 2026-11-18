@@ -49,6 +49,7 @@ class HomeController extends AbstractController
         #[Autowire('%app.quiz.klaviyo_lt_list_id%')] ?string $klaviyoLtListId,
         #[Autowire('%app.quiz.send_to_klaviyo%')] bool $sendToKlaviyo,
         \App\Chat\ClaudeClient $claude,
+        \App\Catalogue\PlanBuilder $plans,
         CsrfTokenManagerInterface $csrf,
     ): Response {
         $user = $this->getUser();
@@ -72,6 +73,8 @@ class HomeController extends AbstractController
                 'sendToKlaviyo' => $sendToKlaviyo && $company !== '' && $list !== '',
                 // The app's own policy (quiz, account, coach, photos), not the shop's.
                 'privacyUrl' => $this->generateUrl('app_privacy_policy', [], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL),
+                // The personal ZENOO plan on the result (roadmap 01), when the catalogue has a food.
+                'zenoo' => $plans->forQuiz(),
                 // The "data sent to Klaviyo" panel on the result is for local testing only.
                 'debug' => (bool) $this->getParameter('kernel.debug'),
                 'emailPhotoBase' => 'https://cdn.shopify.com/s/files/1/0863/5265/8779/files/zq-email-',

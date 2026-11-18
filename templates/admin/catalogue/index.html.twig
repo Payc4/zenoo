@@ -1,0 +1,55 @@
+{% extends 'admin/course_studio/_layout.html.twig' %}
+{% block title %}Store catalogue{% endblock %}
+{% block brand %}<a class="cs-top__brand" href="{{ path('admin_catalogue') }}">Store catalogue</a>{% endblock %}
+
+{% block body %}
+<main class="cs-wrap">
+  <h1 class="cs-h1">Store catalogue</h1>
+  <p class="cs-muted">The products of <a href="{{ store }}" target="_blank" rel="noopener">{{ store|replace({'https://': ''}) }}</a>, copied from Shopify with prices and pack sizes. The energy value and analysis are read from each description; check them, and set the kind and species where the guess is wrong. Only <strong>usable</strong> products ({{ usable }} now: for dogs, in the store, with an energy value and a pack size) go into the personal plan and the coach’s answers. Your settings survive the next sync.</p>
+
+
+  <form method="post" action="{{ path('admin_catalogue_sync') }}" style="margin:12px 0 20px">
+    <input type="hidden" name="_token" value="{{ csrf_token('catalogue-sync') }}">
+    <button class="cs-btn" type="submit">Sync from the store now</button>
+    <span class="cs-muted cs-small">Also runs every day (Coolify task <code>app:catalogue:sync</code>).</span>
+  </form>
+
+  {% if products is empty %}
+    <p class="cv-empty">Nothing synced yet. Press “Sync from the store now”.</p>
+  {% else %}
+  <table class="cv-table cat-table">
+    <thead><tr><th>Product</th><th>Packs</th><th>Energy and analysis</th><th>Settings</th></tr></thead>
+    <tbody>
+    {% for p in products %}
+      <tr id="p{{ p.id }}" class="{{ not p.active ? 'cat-gone' }}">
+        <td>
+          {% if p.image %}<img src="{{ p.image }}" alt="" width="56" height="56" loading="lazy" class="cat-img">{% endif %}
+          <a href="{{ store }}/products/{{ p.handle }}" target="_blank" rel="noopener"><strong>{{ p.title }}</strong></a>
+          <br><span class="cs-small cs-muted">{{ p.productType ?: '—' }}{% if not p.active %} · no longer in the store{% endif %}</span>
+          <br>{% if p.usable %}<span class="cat-ok">usable</span>{% else %}<span class="cat-no">not used{% if p.kcal100 is null %}: no energy value{% elseif not p.forDogs %}: not for dogs{% elseif p.hidden %}: hidden{% elseif p.cheapestPerGram is null %}: no pack size{% endif %}</span>{% endif %}
+        </td>
+        <td class="cs-small">
+          {% for v in p.variants %}{{ v.title != 'Default Title' ? v.title ~ ': ' }}€{{ v.price|number_format(2) }}{% if v.packGrams %} · {{ v.packGrams }} g{% endif %}{% if not v.available %} (sold out){% endif %}<br>{% endfor %}
+        </td>
+        <td class="cs-small">
+          {% if p.kcalParsed %}{{ p.kcalParsed }} kcal/100 g{{ p.analysis.kcal_estimated ?? false ? ' (estimated from the analysis)' : ' (from the description)' }}{% else %}<span class="cat-no">no energy value found</span>{% endif %}
+          {% if p.analysis %}<br>P {{ p.analysis.protein }} % · F {{ p.analysis.fat }} %{% if p.analysis.fibre is defined %} · Fi {{ p.analysis.fibre }} %{% endif %}{% if p.analysis.ash is defined %} · A {{ p.analysis.ash }} %{% endif %}{% if p.analysis.moisture is defined %} · M {{ p.analysis.moisture }} %{% endif %}{% endif %}
+        </td>
+        <td>
+          <form method="post" action="{{ path('admin_catalogue_save', {id: p.id}) }}" class="cat-form">
+            <input type="hidden" name="_token" value="{{ csrf_token('catalogue' ~ p.id) }}">
+            <label>kcal/100 g <input name="kcal" inputmode="decimal" size="6" value="{{ p.kcalOverride }}" placeholder="{{ p.kcalParsed }}"></label>
+            <label>Kind <select name="kind"><option value="">{{ kinds[p.kind] }} (guess)</option>{% for k, label in kinds %}<option value="{{ k }}" {{ p.kindOverride == k ? 'selected' }}>{{ label }}</option>{% endfor %}</select></label>
+            <label>For <select name="species"><option value="">{{ species[p.species] }} (guess)</option>{% for k, label in species %}<option value="{{ k }}" {{ p.speciesOverride == k ? 'selected' }}>{{ label }}</option>{% endfor %}</select></label>
+            <label><input type="checkbox" name="hidden" value="1" {{ p.hidden ? 'checked' }}> Hide from plans and the coach</label>
+            <label class="cat-notes">Note for the coach <input name="notes" maxlength="500" value="{{ p.notes }}" placeholder="e.g. rich, high fat: not for dogs on a low-fat diet"></label>
+            <button class="cs-btn cs-btn--small" type="submit">Save</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</main>
+{% endblock %}

@@ -38,6 +38,7 @@ final class DashboardController extends AbstractController
         private readonly LessonProgressRepository $progress,
         private readonly LessonRecommender $recommender,
         private readonly DogPhotoUploader $dogPhotos,
+        private readonly \App\Catalogue\PlanBuilder $plans,
         private readonly EntityManagerInterface $em,
         #[Autowire('%kernel.project_dir%')] private readonly string $projectDir,
     ) {
@@ -84,6 +85,7 @@ final class DashboardController extends AbstractController
             'next' => $next,
             'streak' => $this->progress->getStreak($user),
             'coachQuestions' => $dog ? $this->coachQuestions($dog) : [],
+            'zenooPlan' => $dog ? $this->plans->forDog($dog) : null,
         ]);
     }
 
@@ -113,6 +115,22 @@ final class DashboardController extends AbstractController
     }
 
     /** The course in the page's language (English as a fallback), if pet parents can see it. */
+    /** "2-week starter": counts the click (for measurement), then the Shopify cart with the packs. */
+    #[Route('/dashboard/plan/{option}', name: 'app_plan_cart', requirements: ['option' => 'topper|half|full'], methods: ['GET'])]
+    public function planCart(string $option): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $dog = $this->dogs->findForUser($user);
+        $plan = $dog ? $this->plans->forDog($dog) : null;
+        if ($plan === null) {
+            return $this->redirectToRoute('app_dashboard');
+        }
+        $dog->recordPlanClick($option, new \DateTimeImmutable());
+        $this->em->flush();
+        return $this->redirect($plan['options'][$option]['cart_url']);
+    }
+
     /** The owner adds a fact about their dog, or removes one the coach saved (the dog record is theirs to edit). */
     #[Route('/dashboard/dog-notes', name: 'app_dog_notes', methods: ['POST'])]
     public function dogNotes(Request $request): Response

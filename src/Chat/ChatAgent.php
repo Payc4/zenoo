@@ -56,6 +56,7 @@ class ChatAgent
         private readonly ChatFiles $files,
         private readonly DogProfileRepository $dogs,
         private readonly EntityManagerInterface $em,
+        private readonly \App\Catalogue\PlanBuilder $plans,
         #[Autowire('%kernel.project_dir%/config/chatbot/system_prompt.md')] private readonly string $promptFile,
         #[Autowire('%kernel.project_dir%/config/chatbot/intro_questions.yaml')] private readonly string $introFile,
     ) {
@@ -92,7 +93,7 @@ class ChatAgent
     {
         $messages = $this->history($conversation);
         $system = $this->systemBlocks($conversation);
-        $tools = [Questions::toolDefinition(), self::foodTool(), self::profileTool(), Calculators::tool(), self::followUpTool()];
+        $tools = [Questions::toolDefinition(), self::foodTool(), self::profileTool(), Calculators::tool(), self::followUpTool(), self::planTool()];
         $text = '';
         $questions = null;
         $food = null;
@@ -157,6 +158,9 @@ class ChatAgent
                     [$message, $planned] = $this->scheduleFollowUp($conversation, $use['input']);
                     $followUp = $planned ?? $followUp;
                     $results[] = ['type' => 'tool_result', 'tool_use_id' => $use['id'], 'content' => $message];
+                } elseif ($use['name'] === 'zenoo_plan') {
+                    $saved = true;
+                    $results[] = ['type' => 'tool_result', 'tool_use_id' => $use['id'], 'content' => json_encode($this->zenooPlan($conversation, (string) ($use['input']['product'] ?? '')), JSON_UNESCAPED_UNICODE)];
                 } elseif ($use['name'] === 'calculate') {
                     $saved = true;
                     $out = Calculators::run($use['input'], $this->dogs->findForUser($conversation->getUser()));
@@ -304,6 +308,50 @@ class ChatAgent
                         ],
                     ],
                 ],
+            ],
+        ];
+    }
+
+    /** The zenoo_plan tool: the store's real products and a worked-out plan for this dog. */
+    public static function planTool(): array
+    {
+        return [
+            'name' => 'zenoo_plan',
+            'description' => 'ZENOO\'s real products (from the store: kind, kcal per 100 g, analysis, pack sizes, prices, notes) and a plan for this dog: '
+                . 'grams a day and cost a day as a topper, half the bowl or the whole bowl, the recommended option for their budget, a 2-week starter price '
+                . 'and the switching schedule. Call it before you name a ZENOO product, a price or an amount. Optionally give a product title to plan with that product.',
+            'input_schema' => ['type' => 'object', 'properties' => ['product' => ['type' => 'string']]],
+        ];
+    }
+
+    private function zenooPlan(ChatConversation $conversation, string $title): array
+    {
+        $catalogue = $this->plans->catalogueForCoach();
+        if (!$catalogue) {
+            return ['error' => 'The product catalogue isn\'t available. Don\'t name prices or amounts; point them to zenoo.lt or support@myzenoo.com.'];
+        }
+        $dog = $this->dogs->findForUser($conversation->getUser());
+        $product = null;
+        if ($title !== '') {
+            foreach ($this->plans->catalogueProducts() as $p) {
+                if (mb_stripos($p->getTitle(), $title) !== false && $p->getKind() !== 'treat') {
+                    $product = $p;
+                    break;
+                }
+            }
+        }
+        $plan = $dog ? $this->plans->forDog($dog, $product) : null;
+        return [
+            'products' => $catalogue,
+            'plan_for_this_dog' => $plan === null ? null : [
+                'product' => $plan['product']->getTitle(),
+                'kcal_per_day' => $plan['kcal_per_day'],
+                'options' => array_map(fn ($o) => array_intersect_key($o, array_flip(['grams_per_day', 'cost_per_day', 'cost_per_30_days', 'starter_packs', 'starter_variant', 'starter_price'])), $plan['options']),
+                'recommended' => $plan['recommended'],
+                'daily_budget_eur' => $plan['budget'],
+                'switch_schedule' => $plan['schedule'],
+                'starter_code' => $plan['starter_code'],
+                'order_link' => '/dashboard#zenoo-h',
             ],
         ];
     }

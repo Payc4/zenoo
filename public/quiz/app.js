@@ -342,6 +342,16 @@ ${nav()}`,
           <dt>${P.activity}</dt><dd>${vars.need[0].toUpperCase() + vars.need.slice(1)}</dd>
         </dl>
         <p class="zq-small" style="margin-top:12px">${tx(P.note)}</p></div>`;
+      const zp = zenooPlan(r);
+      const zenooCard = zp ? (() => {
+        const Z = U.result.zenoo;
+        return `<div class="zq-card zq-zenoo">${CFG.zenoo.image ? `<img src="${esc(CFG.zenoo.image)}" alt="" width="72" height="72">` : ''}
+          <div><h3 style="margin:0 0 6px">${tx(Z.title)}</h3>
+          <p style="margin:0 0 8px">${fill(Z.text, { product: `<a href="${esc(CFG.zenoo.url)}" target="_blank" rel="noopener">${esc(CFG.zenoo.title)}</a>`, option: Z.options[zp.option], grams: zp.grams, cost: dec(zp.cost.toFixed(2)) })}</p>
+          <a class="zq-btn" href="${esc(zp.cartUrl)}" target="_blank" rel="noopener" data-track="plan_cart">${fill(Z.cta, { price: dec(zp.starterPrice.toFixed(2)) })}</a>
+          ${CFG.zenoo.starterCode ? `<p class="zq-small" style="margin:8px 0 0">${fill(Z.code, { code: esc(CFG.zenoo.starterCode) })}</p>` : ''}
+          <p class="zq-small" style="margin:8px 0 0">${Z.note}${CFG.user ? ` <a href="/dashboard#zenoo-h">${Z.dashboard}</a>` : ''}</p></div></div>`;
+      })() : '';
       const payload = klaviyoPayload(r);
       const b = breed(); const y = Math.floor(ageYears()); const m = Math.round((ageYears() - y) * 12);
       const age = [y ? plural(y, F.years) : '', m ? plural(m, F.months) : ''].filter(Boolean).join(' ') || F.underMonth;
@@ -363,6 +373,7 @@ ${nav()}`,
           <h1>${bandC.title}</h1><p>${fill(bandC.text, vars)}</p></div>
         <div class="zq-card"><h3>${T.firstTitle}</h3><ol style="margin:0;padding-left:20px">${first || `<li>${T.keepGoing}</li>`}</ol></div>
         ${plan}
+        ${zenooCard}
         ${vets.map((v) => `<div class="zq-vet">${v}</div>`).join('')}
         <h2 style="margin-top:20px">${T.breakdown}</h2>${cards.join('')}
         ${CFG.user ? '' : `<div class="zq-sent"><h3 style="font-family:var(--font-display);margin:0 0 6px">${T.inboxTitle}</h3>
@@ -429,6 +440,7 @@ ${nav()}`,
         quiz_weight_kg: +a.weight, quiz_bcs: a.bcs, quiz_ideal_weight_kg: r.idealKg,
         quiz_activity_band: S.activityLevel(a.actBand, a.actType), quiz_recommended_activity_band: r.subs.activity.recommended,
         quiz_food_main: a.foodMain, quiz_food_types: a.foods, quiz_label_given: d.fromLabel,
+        ...(() => { const zp = zenooPlan(r); return zp ? { quiz_plan_product: CFG.zenoo.title, quiz_plan_option: zp.option, quiz_plan_grams: zp.grams, quiz_plan_cost_day: +zp.cost.toFixed(2), quiz_plan_cart_url: zp.cartUrl } : {}; })(),
         quiz_label_scanned: !!a.labelScan, quiz_food_brand: a.labelScan?.brand || null,
         quiz_food_product: a.labelScan?.product || null, quiz_food_format: a.labelScan?.format || null,
         quiz_carbs_dm: Math.round(d.cDm), quiz_protein_dm: Math.round(d.pDm), quiz_appetite: a.appetite, quiz_signs: a.signs,
@@ -535,6 +547,28 @@ ${nav()}`,
       scan = { state: 'error', error: err.message || '' };
     }
     refreshScan();
+  }
+
+  // The personal ZENOO plan, as PlanBuilder works it out: the biggest share of the bowl (whole,
+  // half, topper) that stays under the daily budget, grams from the pack's energy, a 2-week starter.
+  function zenooPlan(r) {
+    const Z = CFG.zenoo;
+    if (!Z || !r || !r.kcal) return null;
+    const foodKcal = r.kcal * 0.95;
+    const perGram = Z.variant.price / Z.variant.packGrams;
+    const opt = (share) => {
+      const g = foodKcal * share / Z.kcal100 * 100;
+      return { grams: g >= 100 ? Math.round(g / 5) * 5 : Math.round(g), cost: g * perGram, need: g * Z.starterDays };
+    };
+    // The cheapest way to buy two weeks' worth in one pack size (as PlanBuilder::starter()).
+    const starter = (need) => (Z.packs || [Z.variant]).map((v) => ({ v, qty: Math.max(1, Math.ceil(need / v.packGrams)) }))
+      .sort((x, y) => x.qty * x.v.price - y.qty * y.v.price || x.qty * x.v.packGrams - y.qty * y.v.packGrams)[0];
+    const shares = { full: 1, half: 0.5, topper: 0.25 };
+    const option = ['full', 'half'].find((k) => opt(shares[k]).cost <= Z.budget) || 'topper';
+    const o = opt(shares[option]);
+    const s = starter(o.need);
+    const cartUrl = `${Z.cartBase}${s.v.id}:${s.qty}${Z.starterCode ? `?discount=${encodeURIComponent(Z.starterCode)}` : ''}`;
+    return { option, grams: o.grams, cost: o.cost, starterPrice: s.qty * s.v.price, cartUrl };
   }
 
   function setPath(key, val) {

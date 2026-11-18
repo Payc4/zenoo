@@ -1,5 +1,7 @@
 parameters:
     app.url: '%env(APP_URL)%'
+    # The personal plan recommends the biggest ZENOO share (full, half, topper) that stays under this many euros a day.
+    plan_budget_default: '4'
     app.turnstile.site_key: '%env(default::TURNSTILE_SITE_KEY)%'
     app.turnstile.secret_key: '%env(default::TURNSTILE_SECRET_KEY)%'
     app.mail.from_email: '%env(MAIL_FROM_EMAIL)%'

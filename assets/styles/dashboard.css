@@ -95,3 +95,20 @@
 .dash-knows__remove button:hover, .dash-knows__remove button:focus-visible { opacity: 1; }
 .dash-knows__add { display: flex; gap: 8px; margin-top: 14px; }
 .dash-knows__add input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid rgba(0, 0, 0, .2); border-radius: 10px; font: inherit; }
+
+/* Personal ZENOO plan */
+.dash-zenoo { margin-top: 24px; }
+.dash-zenoo__lead { display: flex; gap: 12px; align-items: center; }
+.dash-zenoo__lead img { border-radius: 12px; object-fit: cover; flex: none; }
+.dash-zenoo__options { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 16px 0; }
+.dash-zenoo__option { position: relative; padding: 18px 16px 16px; border: 1px solid rgba(0, 0, 0, .12); border-radius: 16px; display: flex; flex-direction: column; gap: 6px; }
+.dash-zenoo__option.is-recommended { border: 2px solid var(--sun, #f7a223); }
+.dash-zenoo__option h3 { margin: 0; font-size: 17px; }
+.dash-zenoo__option p { margin: 0; }
+.dash-zenoo__grams { font-size: 22px; font-weight: 800; }
+.dash-zenoo__cost { opacity: .75; }
+.dash-zenoo__option .btn { margin-top: auto; text-align: center; }
+.dash-zenoo__badge { position: absolute; top: -10px; left: 14px; background: var(--sun, #f7a223); color: #fff; font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 99px; }
+.dash-zenoo__code { font-weight: 600; }
+.dash-zenoo__switch { margin: 8px 0; }
+.dash-zenoo__switch summary { cursor: pointer; font-weight: 600; }

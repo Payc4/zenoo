@@ -159,6 +159,26 @@ Every message goes: **safety check → coach (AI) → tools and data**.
   before each, every safety alert and every marked reply, with a note field for the vet. Under the
   chat, "Talk to a person" opens an email to support@myzenoo.com.
 
+## Store catalogue and the personal ZENOO plan (roadmap part 2: 01, 02)
+
+- **Catalogue** (`src/Catalogue/CatalogueSync.php`, `app:catalogue:sync`, Admin → Store catalogue):
+  copies the main store's products from Shopify's public `products.json` (`SHOPIFY_STORE_URL`,
+  default `https://zenoo.lt`; no API key). Pack sizes come from the variant or product title
+  ("300 g", "6 x 300 g"); the energy (kcal/100 g, kcal/kg or MJ/kg) and the analytical constituents
+  are read from the description in LT/EN/PL/UK, or the energy is estimated from the analysis. In the
+  admin, check each product's energy, kind (complete food, topper, treat, supplement) and species,
+  hide products, and add a note for the coach ("high fat: not for low-fat diets"). Corrections
+  survive the next sync. Only **usable** products (for dogs, in the store, with energy and a pack
+  size) are used.
+- **Personal plan** (`src/Catalogue/PlanBuilder.php`): for the complete ZENOO food with the lowest
+  cost per 1,000 kcal: grams and cost a day as a topper (25%), half the bowl or the whole bowl,
+  using the quiz's calorie maths. The pick is the biggest share under `PLAN_DAILY_BUDGET` euros a day
+  (default 4), so big dogs get a topper or half-bowl plan. "2-week starter" goes to a Shopify cart
+  permalink (`/cart/<variant>:<qty>`) with the cheapest packs for two weeks, plus
+  `?discount=SHOPIFY_STARTER_CODE` when that's set. Shown on the quiz result (the same maths in
+  `public/quiz/app.js`), on the dashboard ("Bella's ZENOO plan", clicks counted on the dog profile)
+  and through the coach's `zenoo_plan` tool, with the selling rules in the prompt.
+
 ## Logged in vs. visitors
 
 - `/` is the welcome page for visitors; logged-in pet parents are sent to `/dashboard` (the logo

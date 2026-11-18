@@ -244,6 +244,20 @@ class DogProfile
         $this->data['followups'] = array_values(array_merge($done, $open));
     }
 
+    /** Clicks on the personal plan's starter links: {topper: n, half: n, full: n, last: "2026-11-18"}. */
+    public function recordPlanClick(string $option, \DateTimeImmutable $at): void
+    {
+        $clicks = (array) ($this->data['plan_clicks'] ?? []);
+        $clicks[$option] = (int) ($clicks[$option] ?? 0) + 1;
+        $clicks['last'] = $at->format('Y-m-d');
+        $this->data['plan_clicks'] = $clicks;
+    }
+
+    public function getPlanClicks(): array
+    {
+        return (array) ($this->data['plan_clicks'] ?? []);
+    }
+
     /** The weight the pet parent told the coach since the quiz, if newer: { "kg": 31.5, "at": "2026-11-17" }. */
     public function getWeightUpdate(): ?array
     {

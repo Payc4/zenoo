@@ -69,6 +69,7 @@ class DashboardController extends AbstractDashboardController
     {
         yield MenuItem::linkToDashboard('Overview', 'fa fa-home');
         yield MenuItem::section('Shop');
+        yield MenuItem::linkToRoute('Store catalogue (Shopify)', 'fas fa-store', 'admin_catalogue');
         yield MenuItem::linkToCrud('Products', 'fas fa-box', Product::class);
         yield MenuItem::linkToCrud('Purchases', 'fas fa-receipt', Purchase::class);
         yield MenuItem::section('Accounts');
