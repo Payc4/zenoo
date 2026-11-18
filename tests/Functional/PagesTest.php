@@ -24,7 +24,7 @@ class PagesTest extends AppTestCase
     public function testQuizPageSendsToKlaviyo(): void
     {
         $crawler = $this->client->request('GET', '/quiz/');
-        $script = $crawler->filter('script')->first()->text();
+        $script = $crawler->filter('script')->reduce(fn ($s) => str_contains($s->text(), 'ZQ_CONFIG'))->first()->text();
         $this->assertStringContainsString('"sendToKlaviyo":true', $script);
         $this->assertStringContainsString('"klaviyoCompanyId":"SVCcfJ"', $script);
         $this->assertStringContainsString('"klaviyoListId":"Xubzza"', $script);

@@ -111,7 +111,7 @@ final class CourseController extends AbstractController
     }
 
     #[Route('/progress/{id}', name: 'app_course_progress', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function saveProgress(Lesson $lesson, Request $request): JsonResponse
+    public function saveProgress(Lesson $lesson, Request $request, \App\Tracking\Funnel $funnel): JsonResponse
     {
         $user = $this->getUser();
         $course = $lesson->getCourse();
@@ -161,6 +161,7 @@ final class CourseController extends AbstractController
 
         if (!empty($data['complete']) && !$progress->isCompleted()) {
             $progress->setCompletedAt(new \DateTimeImmutable());
+            $funnel->record('lesson_done', \App\Tracking\Attribution::label($user->getAttribution()));
         }
 
         $this->em->persist($progress);

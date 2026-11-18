@@ -39,6 +39,7 @@ final class DashboardController extends AbstractController
         private readonly LessonRecommender $recommender,
         private readonly DogPhotoUploader $dogPhotos,
         private readonly \App\Catalogue\PlanBuilder $plans,
+        private readonly \App\Tracking\Funnel $funnel,
         private readonly EntityManagerInterface $em,
         #[Autowire('%kernel.project_dir%')] private readonly string $projectDir,
     ) {
@@ -73,6 +74,12 @@ final class DashboardController extends AbstractController
             }
         }
 
+        $zenooPlan = $dog ? $this->plans->forDog($dog) : null;
+        if ($zenooPlan && !$request->getSession()->get('funnel_plan_view')) {
+            $request->getSession()->set('funnel_plan_view', true);
+            $this->funnel->record('plan_view');
+        }
+
         return $this->render('dashboard/index.html.twig', [
             'user' => $user,
             'dog' => $dog,
@@ -85,7 +92,7 @@ final class DashboardController extends AbstractController
             'next' => $next,
             'streak' => $this->progress->getStreak($user),
             'coachQuestions' => $dog ? $this->coachQuestions($dog) : [],
-            'zenooPlan' => $dog ? $this->plans->forDog($dog) : null,
+            'zenooPlan' => $zenooPlan,
         ]);
     }
 
@@ -128,6 +135,7 @@ final class DashboardController extends AbstractController
         }
         $dog->recordPlanClick($option, new \DateTimeImmutable());
         $this->em->flush();
+        $this->funnel->record('plan_cart', \App\Tracking\Attribution::label($user->getAttribution()));
         return $this->redirect($plan['options'][$option]['cart_url']);
     }
 

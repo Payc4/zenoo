@@ -431,3 +431,14 @@
 'The whole bowl': 'Cała miska'
 'Day %n%': 'Dzień %n%'
 'Days %from%–%to%': 'Dni %from%–%to%'
+
+# Cookie banner
+'Cookies': 'Pliki cookie'
+'We use cookies that the site needs to work. With your OK we also use analytics and advertising cookies to see which campaigns bring people to ZENOO.': 'Używamy plików cookie niezbędnych do działania strony. Za Twoją zgodą używamy też analitycznych i reklamowych plików cookie, żeby widzieć, które kampanie przyprowadzają ludzi do ZENOO.'
+'Accept all': 'Akceptuję wszystkie'
+'Only necessary': 'Tylko niezbędne'
+'Choose': 'Wybierz'
+'Analytics (Google Analytics)': 'Analityka (Google Analytics)'
+'Advertising (Meta)': 'Reklama (Meta)'
+'Save my choice': 'Zapisz wybór'
+'Cookie settings': 'Ustawienia cookie'

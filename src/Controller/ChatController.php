@@ -215,7 +215,7 @@ class ChatController extends AbstractController
     }
 
     #[Route('/send', name: 'app_chat_send', methods: ['POST'])]
-    public function send(Request $request, ClaudeClient $claude, ChatAgent $agent, SafetyCheck $safety, DogProfileRepository $dogs, LoggerInterface $logger): Response
+    public function send(Request $request, ClaudeClient $claude, ChatAgent $agent, SafetyCheck $safety, DogProfileRepository $dogs, \App\Tracking\Funnel $funnel, LoggerInterface $logger): Response
     {
         $user = $this->currentUser();
 
@@ -263,6 +263,7 @@ class ChatController extends AbstractController
             $this->em->persist($conversation);
         }
 
+        $funnel->record('chat_message', \App\Tracking\Attribution::label($user->getAttribution()));
         $userMessage = (new ChatMessage($conversation, ChatMessage::ROLE_USER, $text))->setAttachments($attachments);
         $this->em->persist($userMessage);
         $conversation->touch();

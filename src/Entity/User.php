@@ -68,6 +68,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => true])]
     private bool $hasPassword = true;
 
+    /**
+     * Where they came from (src/Tracking/Attribution): {first: {source, medium, campaign, content, term,
+     * gclid, fbclid, ttclid, msclkid, ref, referrer, landing, at}, last: {…}}. Set when the account is made.
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $attribution = null;
+
+    public function getAttribution(): ?array
+    {
+        return $this->attribution;
+    }
+
+    public function setAttribution(?array $attribution): static
+    {
+        $this->attribution = $attribution;
+        return $this;
+    }
+
     /** Coach follow-up emails ("two weeks in, how is Bella?"); switched off in the account. */
     #[ORM\Column(options: ['default' => true])]
     private bool $coachEmails = true;

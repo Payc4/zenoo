@@ -16,6 +16,8 @@ needs no manual steps.
    store's products and prices every morning (or press Sync in Admin → Store catalogue). Optional
    variables: `SHOPIFY_STORE_URL` (default `https://zenoo.lt`), `PLAN_DAILY_BUDGET` (default 4,
    euros a day) and `SHOPIFY_STARTER_CODE` (a Shopify discount code added to the starter cart).
+   Measurement (optional): `TRACKING_GA4_ID` (G-…) and `TRACKING_META_PIXEL_ID` turn on the cookie
+   banner and the tags; without them only the first-party funnel counts run.
    Before changing the coach's prompt or model, run `php bin/console app:coach:eval` in the app's
    terminal (it calls the real model, a few cents per run).
 4. **Persistent storage:** mount a volume at `/var/www/html/public/uploads` so profile

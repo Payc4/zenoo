@@ -1,0 +1,41 @@
+{% extends 'admin/course_studio/_layout.html.twig' %}
+{% block title %}Funnel{% endblock %}
+{% block brand %}<a class="cs-top__brand" href="{{ path('admin_funnel') }}">Funnel</a>{% endblock %}
+
+{% block body %}
+<main class="cs-wrap">
+  <h1 class="cs-h1">Funnel</h1>
+  <p class="cs-muted">Each step counted once per visit, by the source that first brought the visitor (campaign tags, ad click IDs, partner code or referring site). Counts only, no personal data, so these work with or without cookie consent. GA4 and Meta get the same steps from visitors who allow them.</p>
+  <p class="cs-small">{% for d in [7, 30, 90] %}<a href="{{ path('admin_funnel', {days: d}) }}" {{ d == days ? 'aria-current="page" style="font-weight:700"' }}>Last {{ d }} days</a>{{ not loop.last ? ' · ' }}{% endfor %}</p>
+
+  {% set landing = steps.landing ?: 0 %}
+  <table class="cv-table">
+    <thead><tr><th>Step</th><th>Count</th><th>Of visits</th><th>From the step before</th></tr></thead>
+    <tbody>
+    {% set prev = null %}
+    {% for key, label in labels %}
+      {% set n = steps[key] ?? 0 %}
+      <tr>
+        <td>{{ label }}</td>
+        <td><strong>{{ n }}</strong></td>
+        <td>{{ landing > 0 ? (n / landing * 100)|round(1) ~ ' %' : '—' }}</td>
+        <td>{{ prev is not null and prev > 0 and key in ['quiz_start', 'quiz_result', 'quiz_submit', 'account_created', 'plan_view', 'plan_cart'] ? (n / prev * 100)|round(1) ~ ' %' : '—' }}</td>
+      </tr>
+      {% if key in ['landing', 'quiz_start', 'quiz_result', 'quiz_submit', 'account_created', 'plan_view'] %}{% set prev = n %}{% endif %}
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h2 class="cs-label" style="margin-top:28px">By source</h2>
+  {% if sources is empty %}<p class="cs-muted">No visits counted yet.</p>{% else %}
+  <table class="cv-table">
+    <thead><tr><th>Source</th>{% for key, label in labels %}<th title="{{ label }}">{{ short[key] }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for source, counts in sources %}
+      <tr><td><strong>{{ source }}</strong></td>{% for key in labels|keys %}<td>{{ counts[key] ?? '—' }}</td>{% endfor %}</tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</main>
+{% endblock %}

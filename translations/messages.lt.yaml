@@ -431,3 +431,14 @@
 'The whole bowl': 'Visas dubenėlis'
 'Day %n%': '%n% diena'
 'Days %from%–%to%': '%from%–%to% dienos'
+
+# Cookie banner
+'Cookies': 'Slapukai'
+'We use cookies that the site needs to work. With your OK we also use analytics and advertising cookies to see which campaigns bring people to ZENOO.': 'Naudojame slapukus, be kurių svetainė neveiktų. Jums sutikus, taip pat naudojame analitikos ir reklamos slapukus, kad matytume, kurios kampanijos atveda žmones į ZENOO.'
+'Accept all': 'Sutinku su visais'
+'Only necessary': 'Tik būtini'
+'Choose': 'Pasirinkti'
+'Analytics (Google Analytics)': 'Analitika („Google Analytics“)'
+'Advertising (Meta)': 'Reklama („Meta“)'
+'Save my choice': 'Išsaugoti pasirinkimą'
+'Cookie settings': 'Slapukų nustatymai'

@@ -431,3 +431,14 @@
 'The whole bowl': 'Уся миска'
 'Day %n%': 'День %n%'
 'Days %from%–%to%': 'Дні %from%–%to%'
+
+# Cookie banner
+'Cookies': 'Файли cookie'
+'We use cookies that the site needs to work. With your OK we also use analytics and advertising cookies to see which campaigns bring people to ZENOO.': 'Ми використовуємо файли cookie, без яких сайт не працює. З вашої згоди ми також використовуємо аналітичні та рекламні cookie, щоб бачити, які кампанії приводять людей до ZENOO.'
+'Accept all': 'Прийняти всі'
+'Only necessary': 'Лише необхідні'
+'Choose': 'Вибрати'
+'Analytics (Google Analytics)': 'Аналітика (Google Analytics)'
+'Advertising (Meta)': 'Реклама (Meta)'
+'Save my choice': 'Зберегти вибір'
+'Cookie settings': 'Налаштування cookie'

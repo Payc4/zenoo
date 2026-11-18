@@ -1,0 +1,20 @@
+{# Measurement (src/Tracking): the cookie banner and GA4 / Meta pixel, only after consent. Included in every page's <head>. #}
+{% set tc = tracking_config() %}
+<script>
+  window.ZN_TRACKING = {{ (tc|merge({
+    events: tracking_events(),
+    privacyUrl: path('app_privacy_policy'),
+    text: {
+      title: 'Cookies'|trans,
+      body: 'We use cookies that the site needs to work. With your OK we also use analytics and advertising cookies to see which campaigns bring people to ZENOO.'|trans,
+      all: 'Accept all'|trans,
+      necessary: 'Only necessary'|trans,
+      choose: 'Choose'|trans,
+      analytics: 'Analytics (Google Analytics)'|trans,
+      marketing: 'Advertising (Meta)'|trans,
+      save: 'Save my choice'|trans,
+      privacy: 'Privacy policy'|trans,
+    },
+  }))|json_encode|raw }};
+</script>
+<script src="/consent.js" defer></script>

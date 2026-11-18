@@ -588,6 +588,8 @@ ${nav()}`,
     } else if (t.dataset.action === 'next') {
       if (t.disabled) return;
       step = Math.min(step + 1, active().length - 1);
+      if (step === 1) track('quiz_start');
+      if (active()[step].id === 'result') track('quiz_result', { value: r0()?.total });
       if (active()[step].id === 'result' && !submitted) { submitted = true; submit(); }
       render();
     } else if (t.dataset.action === 'back') { step = Math.max(0, step - 1); render(); }
@@ -625,6 +627,9 @@ ${nav()}`,
       refreshNext(); save();
     }
   });
+
+  // Links that count as a funnel step (the result's "order a starter" link).
+  app.addEventListener('click', (e) => { const a = e.target.closest && e.target.closest('a[data-track]'); if (a) track(a.dataset.track); });
 
   app.addEventListener('change', (e) => {
     if (e.target.id === 'zq-scanfile' && e.target.files[0]) scanLabel(e.target.files[0]);
@@ -668,6 +673,7 @@ ${nav()}`,
       .then(({ ok, data }) => {
         if (!ok) throw new Error(data.error || '');
         setAccount(data.status === 'saved' ? { state: 'saved', dashboard: data.dashboard } : { state: 'sent' });
+        if (data.status !== 'saved') track('quiz_submit');
       })
       .catch((err) => { console.error('[ZENOO quiz] account', err); setAccount({ state: 'error', error: err.message || '' }); });
   }
@@ -682,6 +688,9 @@ ${nav()}`,
     }).then((res) => { if (!res.ok) throw new Error(`Klaviyo ${path}: ${res.status}`); });
   }
 
+  // Funnel steps and, with consent, GA4 / the Meta pixel (public/consent.js).
+  const track = (step, params) => { try { window.znTrack && window.znTrack(step, params); } catch (e) { /* never break the quiz */ } };
+  const r0 = () => { try { return S.evaluate(answers()); } catch (e) { return null; } };
   let submitted = false;
   function submit() {
     const r = S.evaluate(answers());

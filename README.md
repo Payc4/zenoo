@@ -179,6 +179,21 @@ Every message goes: **safety check → coach (AI) → tools and data**.
   `public/quiz/app.js`), on the dashboard ("Bella's ZENOO plan", clicks counted on the dog profile)
   and through the coach's `zenoo_plan` tool, with the selling rules in the prompt.
 
+## Measurement (roadmap part 2: 03)
+
+- **Where people come from** (`src/Tracking/Attribution.php`): campaign tags (`utm_*`), ad click IDs
+  (`gclid`, `fbclid`, `ttclid`, `msclkid`), a partner code (`?ref=vetklinika`) and the referring site,
+  first and last touch, kept in the session; with analytics consent also in a 90-day `zn_src`
+  cookie. Saved on the quiz lead and on the account (`User::getAttribution()`).
+- **Funnel** (`src/Tracking/Funnel.php`, Admin → Funnel): daily counts per step and source —
+  visits, quiz started, score seen, lead, account, plan seen, starter clicked, coach message, lesson
+  finished. Counts only, no personal data, so it works without consent.
+- **GA4 and the Meta pixel** (`public/consent.js`, `templates/_tracking.html.twig`): set
+  `TRACKING_GA4_ID` and/or `TRACKING_META_PIXEL_ID`. Then a cookie banner (four languages) asks first;
+  nothing loads before consent (Google Consent Mode). The same funnel steps go to both (Meta standard
+  events: Lead, CompleteRegistration, ViewContent, InitiateCheckout). Purchases happen on Shopify:
+  connect the store's own Google and Meta channels there so purchases are reported back.
+
 ## Logged in vs. visitors
 
 - `/` is the welcome page for visitors; logged-in pet parents are sent to `/dashboard` (the logo

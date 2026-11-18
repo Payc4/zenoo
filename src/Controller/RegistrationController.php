@@ -27,6 +27,8 @@ class RegistrationController extends AbstractController
         EmailService $emails,
         LoggerInterface $logger,
         TranslatorInterface $translator,
+        \App\Tracking\Attribution $attribution,
+        \App\Tracking\Funnel $funnel,
     ): Response {
         if ($this->getUser()) {
             return $this->redirectToRoute('app_dashboard');
@@ -39,8 +41,10 @@ class RegistrationController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $user->setPassword($hasher->hashPassword($user, (string) $form->get('plainPassword')->getData()));
             $user->setLocale($request->getLocale());
+            $user->setAttribution($attribution->get($request));
             $em->persist($user);
             $em->flush();
+            $funnel->record('account_created');
 
             try {
                 $emails->sendWelcomeEmail($user);

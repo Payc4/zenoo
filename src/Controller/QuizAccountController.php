@@ -51,6 +51,8 @@ final class QuizAccountController extends AbstractController
         private readonly TranslatorInterface $translator,
         private readonly LoggerInterface $logger,
         private readonly KlaviyoProfiles $klaviyo,
+        private readonly \App\Tracking\Attribution $attribution,
+        private readonly \App\Tracking\Funnel $funnel,
         #[Autowire('%kernel.secret%')] private readonly string $secret,
         #[Autowire('%env(bool:default:app.quiz.site_confirm_default:QUIZ_SITE_CONFIRM_EMAIL)%')] private readonly bool $siteConfirmEmail = true,
     ) {
@@ -95,9 +97,12 @@ final class QuizAccountController extends AbstractController
         $this->submissions->deleteExpired();
 
         $token = bin2hex(random_bytes(32));
-        $submission = new QuizSubmission($email, $firstName !== '' ? $firstName : null, $locale, $data, $token, $ipHash);
+        // Where this lead came from, kept with it until the account is made (see Attribution).
+        $source = $this->attribution->get($request);
+        $submission = new QuizSubmission($email, $firstName !== '' ? $firstName : null, $locale, $data + ($source ? ['_attribution' => $source] : []), $token, $ipHash);
         $this->em->persist($submission);
         $this->em->flush();
+        $this->funnel->record('quiz_submit');
 
         $link = $this->generateUrl('app_quiz_confirm', ['token' => $token], 0);
         $inKlaviyo = $this->klaviyo->setProperties($email, $locale, ['dashboard_link' => $link]);
@@ -138,9 +143,11 @@ final class QuizAccountController extends AbstractController
                 ->setHasPassword(false);
             // Nobody knows this password: they log in with the email link or choose one on the dashboard.
             $user->setPassword($hasher->hashPassword($user, bin2hex(random_bytes(32))));
+            $user->setAttribution($submission->getData()['_attribution'] ?? null);
             $this->em->persist($user);
+            $this->funnel->record('account_created', \App\Tracking\Attribution::label($user->getAttribution()));
         }
-        $this->dogs->saveQuizResult($user, $submission->getData(), $submission->getLocale());
+        $this->dogs->saveQuizResult($user, array_diff_key($submission->getData(), ['_attribution' => 1]), $submission->getLocale());
         $submission->confirm();
         $this->em->flush();
 
