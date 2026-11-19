@@ -99,7 +99,24 @@ class ChatFiles
             : ['type' => 'image', 'source' => ['type' => 'base64', 'media_type' => 'image/jpeg', 'data' => $data]];
     }
 
-    /** Deletes every chat file of this pet parent (chat cleared or account deleted). */
+    /**
+     * Deletes the files sent in these messages (one pet's chat cleared or removed).
+     *
+     * @param iterable<\App\Entity\ChatMessage> $messages
+     */
+    public function removeForMessages(User $owner, iterable $messages): void
+    {
+        foreach ($messages as $m) {
+            foreach ($m->getAttachments() as $a) {
+                if ($path = $this->path($owner, $a)) {
+                    @unlink($path);
+                }
+            }
+        }
+        @rmdir($this->dir . '/' . $owner->getId()); // only when no other pet's chat has files
+    }
+
+    /** Deletes every chat file of this pet parent (account deleted). */
     public function removeAll(User $user): void
     {
         $dir = $this->dir . '/' . $user->getId();

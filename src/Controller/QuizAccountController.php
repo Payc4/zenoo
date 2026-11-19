@@ -79,8 +79,12 @@ final class QuizAccountController extends AbstractController
 
         $user = $this->getUser();
         if ($user instanceof User) {
-            $this->dogs->saveQuizResult($user, $data, $locale);
+            $dog = $this->dogs->saveQuizResult($user, $data, $locale);
             $this->em->flush();
+            // Started from "New chat": straight on to this pet's chat.
+            if (\is_array($body) && ($body['then'] ?? null) === 'chat') {
+                return $this->json(['status' => 'saved', 'dashboard' => $this->generateUrl('app_chat', ['pet' => $dog->getId()]), 'go' => true]);
+            }
             return $this->json(['status' => 'saved', 'dashboard' => $this->generateUrl('app_dashboard')]);
         }
 

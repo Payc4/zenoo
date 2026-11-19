@@ -8,8 +8,8 @@
 
 {% block body %}
 <div class="chat-app" id="chat"
-     data-send-url="{{ path('app_chat_send') }}"
-     data-checkin-url="{{ path('app_chat_checkin') }}"
+     data-send-url="{{ path('app_chat_send', {pet: dog.id}) }}"
+     data-checkin-url="{{ path('app_chat_checkin', {pet: dog.id}) }}"
      {% if openerUrl %}data-opener-url="{{ openerUrl }}"{% endif %}
      data-csrf="{{ csrf_token('chat') }}"
      data-max-chars="{{ maxChars }}"
@@ -47,23 +47,20 @@
 
     <section class="chat-main">
         <div class="chat-bar">
-            <span class="chat-bar__title">{{ 'Chat with ZENOO'|trans }}</span>
-            {% if dogs|length > 1 %}
-                {# Several dogs: the coach talks about the selected one. #}
-                <span class="chat-dogs">{{ 'About:'|trans }}
-                    {% for d in dogs %}
-                        {% if d.id == dog.id %}<strong>{{ d.name }}</strong>
-                        {% else %}<form method="post" action="{{ path('app_dog_select', {id: d.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('dog-select') }}"><input type="hidden" name="back" value="/chat"><button type="submit" class="link-btn small">{{ d.name }}</button></form>{% endif %}
-                    {% endfor %}
-                </span>
-            {% endif %}
+            {# One chat per pet. #}
+            <nav class="chat-pets" aria-label="{{ 'Your pets’ chats'|trans }}">
+                {% for d in chats %}
+                    <a class="chat-pet{{ d.id == dog.id ? ' is-on' }}" href="{{ path('app_chat', {pet: d.id}) }}"{% if d.id == dog.id %} aria-current="page"{% endif %}>{{ d.name }}</a>
+                {% endfor %}
+                <a class="chat-pet chat-pet--new" href="{{ path('app_chat_new') }}">+ {{ 'New chat'|trans }}</a>
+            </nav>
             {% if unlimited %}
                 <span class="chat-quota">{{ 'Admin: no daily limit'|trans }}</span>
             {% else %}
                 <span class="chat-quota" title="{{ 'Resets at %time%'|trans({'%time%': resetLabel|trans}) }}">{{ '<strong id="chat-remaining">%remaining%</strong> of %limit% messages left today'|trans({'%remaining%': remaining, '%limit%': limit})|raw }}</span>
             {% endif %}
             {% if messages|length %}
-                <form method="post" action="{{ path('app_chat_clear') }}" data-confirm="{{ 'Clear your whole chat history? This can’t be undone.'|trans }}">
+                <form method="post" action="{{ path('app_chat_clear', {pet: dog.id}) }}" data-confirm="{{ 'Clear %dog%’s chat history? This can’t be undone.'|trans({'%dog%': dog.name}) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('chat-clear') }}">
                     <button type="submit" class="link-btn small">{{ 'Clear chat'|trans }}</button>
                 </form>
@@ -85,7 +82,7 @@
                 {% if messages|length == 0 %}
                     <div class="chat-empty" id="chat-empty">
                         <img src="/apple-touch-icon.png" alt="" width="56" height="56">
-                        <h1>{{ 'Hi %name%, how can we help?'|trans({'%name%': app.user.displayName}) }}</h1>
+                        <h1>{{ 'Hi %name%, how can we help with %dog%?'|trans({'%name%': app.user.displayName, '%dog%': dog.name}) }}</h1>
                         {% if needsFood and configured %}
                             {# First step after sign-up: what the dog eats, from a label photo or by name. #}
                             <div class="chat-onboard" id="chat-onboard">

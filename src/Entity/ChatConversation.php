@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/** One chat thread between a pet parent and the ZENOO chatbot (/chat). */
+/** One chat thread between a pet parent and the ZENOO coach (/chat). Each pet has exactly one. */
 #[ORM\Entity(repositoryClass: ChatConversationRepository::class)]
 #[ORM\Index(name: 'IDX_CHAT_CONV_USER_UPDATED', fields: ['user', 'updatedAt'])]
 class ChatConversation
@@ -20,6 +20,11 @@ class ChatConversation
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $user;
+
+    /** The pet this chat is about. Unique: one chat per pet. Deleted with the pet. */
+    #[ORM\ManyToOne(targetEntity: DogProfile::class)]
+    #[ORM\JoinColumn(name: 'dog_id', nullable: true, unique: true, onDelete: 'CASCADE')]
+    private ?DogProfile $dog = null;
 
     #[ORM\Column(length: 120)]
     private string $title = 'New conversation';
@@ -35,9 +40,10 @@ class ChatConversation
     #[ORM\OrderBy(['id' => 'ASC'])]
     private Collection $messages;
 
-    public function __construct(User $user)
+    public function __construct(User $user, ?DogProfile $dog = null)
     {
         $this->user = $user;
+        $this->dog = $dog;
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
         $this->messages = new ArrayCollection();
@@ -51,6 +57,11 @@ class ChatConversation
     public function getUser(): User
     {
         return $this->user;
+    }
+
+    public function getDog(): ?DogProfile
+    {
+        return $this->dog;
     }
 
     public function getTitle(): string

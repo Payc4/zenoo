@@ -5,7 +5,7 @@ namespace App\Tests\Functional;
 use App\Entity\ChatMessage;
 use App\Tests\Support\FakeClaude;
 
-/** Question cards: the starting questions and the ones Claude asks with ask_questions. */
+/** Question cards: the ones Claude asks with ask_questions. */
 class ChatQuestionsTest extends AppTestCase
 {
     private const CARDS = ['questions' => [
@@ -33,29 +33,22 @@ class ChatQuestionsTest extends AppTestCase
         return $node->count() ? json_decode($node->text(), true) : null;
     }
 
-    public function testEmptyChatShowsTheStartingQuestions(): void
+    public function testAPetsEmptyChatHasNoStartingQuestions(): void
     {
-        $this->createUser();
+        // The pet's profile comes from the quiz, so there's nothing to ask first.
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
 
-        $cards = $this->pageCards();
-        $this->assertTrue($cards['intro']);
-        $this->assertSame("What's your dog's name?", $cards['questions'][0]['question']);
-        $this->assertSame([], $cards['questions'][0]['options'], 'the name is typed');
-        $this->assertSame(['label' => 'Puppy', 'description' => 'Under 1 year'], $cards['questions'][1]['options'][0]);
-        $this->assertSelectorExists('#chat-suggest[hidden]');
-
-        // The answers arrive as one ordinary message; after that there are no starting questions.
-        $this->send("A bit about my dog:\nWhat's your dog's name? — Luna");
         $this->assertNull($this->pageCards());
-        $this->assertSelectorTextContains('.chat-bubble', 'Luna');
+        $this->assertSelectorTextContains('.chat-empty h1', 'Bella');
+        $this->assertSelectorNotExists('#chat-intro-note');
     }
 
     public function testClaudeCanAskWithCards(): void
     {
         FakeClaude::$askQuestions = self::CARDS;
         FakeClaude::$reply = 'Two quick questions:';
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
 
         $body = $this->send('How much should my dog eat?');
@@ -87,7 +80,7 @@ class ChatQuestionsTest extends AppTestCase
     {
         FakeClaude::$askQuestions = self::CARDS;
         FakeClaude::$reply = '';
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
         $this->send('How much should my dog eat?');
 
@@ -105,7 +98,7 @@ class ChatQuestionsTest extends AppTestCase
             ['question' => '', 'options' => []],
             ['question' => 'Q3', 'options' => []], ['question' => 'Q4', 'options' => []], ['question' => 'Q5', 'options' => []], ['question' => 'Q6', 'options' => []],
         ]];
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
         $this->send('How much should my dog eat?');
 

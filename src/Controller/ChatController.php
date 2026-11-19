@@ -31,8 +31,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * The ZENOO chatbot (Claude). Each logged-in pet parent has exactly one chat, created with
- * their first message. Daily message limit: ChatQuota.
+ * The ZENOO coach (Claude). Every pet has exactly one chat (ChatConversation.dog is unique),
+ * created with its first message. A new pet's chat starts with the Bowl Score quiz, which
+ * makes the pet's profile. Which pet: ?pet=<id> on the chat's own requests, else the pet
+ * selected on the dashboard or in the chat. Daily message limit: ChatQuota (per person).
  * Replies stream to the browser as server-sent events: meta, delta, questions, note, done, error.
  * "questions" carries multiple-choice cards (starting questions or Claude's ask_questions tool);
  * "note" says the food was saved to the dog's profile (Claude's save_food tool).
@@ -59,17 +61,24 @@ class ChatController extends AbstractController
     }
 
     #[Route('', name: 'app_chat', methods: ['GET'])]
-    public function index(Request $request, ClaudeClient $claude, ChatAgent $agent, DogProfileRepository $dogs, CheckIns $checkIns): Response
+    public function index(Request $request, ClaudeClient $claude, DogProfileRepository $dogs, CheckIns $checkIns): Response
     {
         $user = $this->currentUser();
-        $conversation = $this->conversations->findForUser($user);
+        $dog = $this->dogFor($request, $user, $dogs);
+        if ($dog === null) {
+            // No pet yet: the first chat starts with the quiz, which creates the pet's profile.
+            return $this->render('chat/new.html.twig', ['dogs' => [], 'hasPets' => false]);
+        }
+        if ((int) $request->query->get('pet') === $dog->getId() && $user->getActiveDogId() !== $dog->getId()) {
+            $user->setActiveDogId($dog->getId());
+            $this->em->flush();
+        }
+        $conversation = $this->conversations->findForDog($dog);
         $messages = $conversation ? $conversation->getMessages()->toArray() : [];
-        $dog = $dogs->findForUser($user);
 
-        // Cards to show: the starting questions in an empty chat (not needed when the quiz
-        // already told us about the dog), or the ones in Claude's last reply.
+        // Question cards from Claude's last reply, if it ended with some.
         $last = end($messages) ?: null;
-        $cards = !$messages ? ($dog ? null : $agent->introQuestions($request->getLocale())) : ($last && !$last->isFromUser() ? $last->getQuestions() : null);
+        $cards = $last && !$last->isFromUser() ? $last->getQuestions() : null;
 
         // First step after sign-up: the food label, until the coach knows the food.
         $needsFood = $dog !== null && $dog->getFood() === null && !$messages;
@@ -90,12 +99,17 @@ class ChatController extends AbstractController
             }
         }
 
+        // The pet chats shown at the top: pets that have a chat, plus this one.
+        $withChat = $this->conversations->dogIdsWithChat($user);
+        $allDogs = $dogs->findAllForUser($user);
+        usort($allDogs, fn (DogProfile $a, DogProfile $b) => $a->getId() <=> $b->getId()); // tabs keep their place
+
         return $this->render('chat/index.html.twig', [
             'dog' => $dog,
-            'dogs' => $dog ? $dogs->findAllForUser($user) : [],
+            'chats' => array_values(array_filter($allDogs, fn (DogProfile $d) => $d === $dog || \in_array($d->getId(), $withChat, true))),
             'messages' => $messages,
             'cards' => $cards,
-            'cardsAreIntro' => !$messages && $cards !== null,
+            'cardsAreIntro' => false,
             'configured' => $claude->isConfigured(),
             'unlimited' => $this->quota->isUnlimited($user),
             'limit' => $this->quota->dailyLimit(),
@@ -108,9 +122,27 @@ class ChatController extends AbstractController
             // From the dashboard's "Show the coach a photo" (/chat?photo=1).
             'attachHint' => $request->query->has('photo'),
             'checkin' => $checkin,
-            'openerUrl' => $opener !== null ? $this->generateUrl('app_chat_opener') : null,
+            'openerUrl' => $opener !== null ? $this->generateUrl('app_chat_opener', ['pet' => $dog->getId()]) : null,
             // Starter question from the dashboard (/chat?ask=…), put in the message box.
             'ask' => mb_substr(trim((string) $request->query->get('ask', '')), 0, 300),
+        ]);
+    }
+
+    /**
+     * "New chat": a pet that has no chat yet, or a new pet (the quiz makes its profile).
+     * Pets that already have a chat aren't offered: one chat per pet.
+     */
+    #[Route('/new', name: 'app_chat_new', methods: ['GET'])]
+    public function newChat(DogProfileRepository $dogs): Response
+    {
+        $user = $this->currentUser();
+        $withChat = $this->conversations->dogIdsWithChat($user);
+        $all = $dogs->findAllForUser($user);
+        usort($all, fn (DogProfile $a, DogProfile $b) => $a->getId() <=> $b->getId()); // same order as the chat's tabs
+
+        return $this->render('chat/new.html.twig', [
+            'dogs' => array_values(array_filter($all, fn (DogProfile $d) => !\in_array($d->getId(), $withChat, true))),
+            'hasPets' => $all !== [],
         ]);
     }
 
@@ -144,19 +176,15 @@ class ChatController extends AbstractController
         if (!$this->isCsrfTokenValid('chat', (string) $request->headers->get('X-CSRF-Token'))) {
             return new JsonResponse(['error' => 'csrf'], 403);
         }
-        $conversation = $this->conversations->findForUser($user);
-        $dog = $dogs->findForUser($user);
+        $dog = $this->dogFor($request, $user, $dogs);
+        $conversation = $dog ? $this->conversations->findForDog($dog) : null;
         $days = $claude->isConfigured() ? $this->openerDue($conversation ? $conversation->getMessages()->toArray() : [], $dog) : null;
         $followUp = $dog?->dueFollowUp(new \DateTimeImmutable());
         if ($days === null) {
             return new Response('', 204);
         }
         $isNew = $conversation === null;
-        if ($isNew) {
-            $conversation = new ChatConversation($user);
-            $this->em->persist($conversation);
-            $this->em->flush();
-        }
+        $conversation ??= $this->conversations->findOrCreateForDog($dog);
         if ($request->hasSession()) {
             $request->getSession()->save();
         }
@@ -241,6 +269,11 @@ class ChatController extends AbstractController
         if (!$claude->isConfigured()) {
             return new JsonResponse(['error' => $this->translator->trans('The chat isn’t switched on yet. Please try again later.')], 503);
         }
+        // Every chat belongs to a pet; a pet's profile comes from the quiz.
+        $dog = $this->dogFor($request, $user, $dogs);
+        if ($dog === null) {
+            return new JsonResponse(['error' => $this->translator->trans('Take the quiz first, so we know your dog.')], 400);
+        }
         // Store the files first: a bad file is reported before the message counts.
         $attachments = [];
         try {
@@ -257,13 +290,10 @@ class ChatController extends AbstractController
             ], 429);
         }
 
-        // The one chat this pet parent has, started by their first message.
-        $conversation = $this->conversations->findForUser($user);
+        // This pet's one chat, started by the first message.
+        $conversation = $this->conversations->findForDog($dog);
         $isNew = $conversation === null;
-        if ($isNew) {
-            $conversation = new ChatConversation($user);
-            $this->em->persist($conversation);
-        }
+        $conversation ??= $this->conversations->findOrCreateForDog($dog);
 
         $funnel->record('chat_message', \App\Tracking\Attribution::label($user->getAttribution()));
         $userMessage = (new ChatMessage($conversation, ChatMessage::ROLE_USER, $text))->setAttachments($attachments);
@@ -280,7 +310,6 @@ class ChatController extends AbstractController
         $stream = $this->environment !== 'test';
         $quota = $this->quota;
         $translator = $this->translator;
-        $dog = $dogs->findForUser($user);
         $locale = $request->getLocale();
         $earlier = null;
         foreach (array_reverse($conversation->getMessages()->toArray()) as $m) {
@@ -390,7 +419,7 @@ class ChatController extends AbstractController
         if (!$this->isCsrfTokenValid('chat', (string) $request->headers->get('X-CSRF-Token'))) {
             return new JsonResponse(['error' => $this->translator->trans('Your session expired. Please reload the page.')], 403);
         }
-        $dog = $dogs->findForUser($user);
+        $dog = $this->dogFor($request, $user, $dogs);
         if (!$dog) {
             return new JsonResponse(['error' => $this->translator->trans('Take the quiz first, so we know your dog.')], 400);
         }
@@ -436,17 +465,34 @@ class ChatController extends AbstractController
         return $out;
     }
 
-    /** Empties the chat. The day's message count stays as it is. */
+    /** Empties this pet's chat (the chat itself stays: one per pet). The day's message count stays as it is. */
     #[Route('/clear', name: 'app_chat_clear', methods: ['POST'])]
-    public function clear(Request $request): Response
+    public function clear(Request $request, DogProfileRepository $dogs): Response
     {
         $user = $this->currentUser();
-        if ($this->isCsrfTokenValid('chat-clear', (string) $request->request->get('_token'))) {
-            $this->conversations->deleteConversationsForUser($user);
-            $this->files->removeAll($user);
+        $dog = $this->dogFor($request, $user, $dogs);
+        $conversation = $dog ? $this->conversations->findForDog($dog) : null;
+        if ($conversation && $this->isCsrfTokenValid('chat-clear', (string) $request->request->get('_token'))) {
+            $this->files->removeForMessages($user, $conversation->getMessages()->toArray());
+            $this->conversations->clearMessages($conversation);
         }
 
-        return $this->redirectToRoute('app_chat');
+        return $this->redirectToRoute('app_chat', $dog ? ['pet' => $dog->getId()] : []);
+    }
+
+    /** The pet a request is about: ?pet=<id> (one of theirs), else the selected pet, else none. */
+    private function dogFor(Request $request, User $user, DogProfileRepository $dogs): ?DogProfile
+    {
+        $id = (int) ($request->query->get('pet') ?: $request->request->get('pet'));
+        if ($id > 0) {
+            foreach ($dogs->findAllForUser($user) as $d) {
+                if ($d->getId() === $id) {
+                    return $d;
+                }
+            }
+        }
+
+        return $dogs->findForUser($user);
     }
 
     private function currentUser(): User

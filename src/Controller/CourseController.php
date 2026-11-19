@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Entity\Course;
 use App\Entity\Lesson;
 use App\Entity\LessonProgress;
-use App\Entity\Purchase;
+use App\Course\LessonAccess;
 use App\Course\LessonLayouts;
 use App\Entity\User;
 use App\Repository\CourseRepository;
@@ -29,6 +29,7 @@ final class CourseController extends AbstractController
         private readonly CourseRepository $courses,
         private readonly LessonProgressRepository $progressRepo,
         private readonly EntityManagerInterface $em,
+        private readonly LessonAccess $access,
     ) {}
 
     #[Route('', name: 'app_courses', methods: ['GET'])]
@@ -52,13 +53,18 @@ final class CourseController extends AbstractController
                 'lessons' => $lessons,
                 'progress' => $progress,
                 'done' => $done,
-                'canAccess' => $this->canAccess($course),
+                'locked' => array_values(array_map(fn (Lesson $l) => $l->getId(), array_filter($lessons, fn (Lesson $l) => !$this->canOpen($l)))),
                 'next' => $this->nextLesson($lessons, $progress),
             ];
         }
+        $unlock = $this->access->unlockProduct();
+        $anyLocked = array_filter($list, fn (array $i) => $i['locked'] !== []);
 
         return $this->render('course/index.html.twig', [
             'items' => $list,
+            // The "unlock all lessons" box, shown while this person still has locked lessons.
+            'unlock' => $anyLocked ? $unlock : null,
+            'unlockCancelled' => $request->query->has('cancelled'),
             'streak' => $user instanceof User ? $this->progressRepo->getStreak($user) : 0,
         ]);
     }
@@ -92,9 +98,9 @@ final class CourseController extends AbstractController
         if (!$user instanceof User) {
             return $this->redirectToRoute('app_login');
         }
-        if (!$this->canAccess($course)) {
-            $this->addFlash('info', 'This course is for ZENOO customers.');
-            return $this->redirectToRoute('app_courses');
+        if (!$this->canOpen($lesson)) {
+            $this->addFlash('info', 'This lesson is locked. Unlock all lessons to open it.');
+            return $this->redirect($this->generateUrl('app_courses') . '#unlock');
         }
 
         $progress = $this->progressRepo->findOneFor($user, $lesson);
@@ -115,7 +121,7 @@ final class CourseController extends AbstractController
     {
         $user = $this->getUser();
         $course = $lesson->getCourse();
-        if (!$user instanceof User || !$course || !$this->isVisible($course, $lesson) || !$this->canAccess($course)) {
+        if (!$user instanceof User || !$course || !$this->isVisible($course, $lesson) || !$this->canOpen($lesson)) {
             return $this->json(['error' => 'Not allowed'], 403);
         }
         if (!$this->isCsrfTokenValid('lesson' . $lesson->getId(), $request->headers->get('X-CSRF-Token'))) {
@@ -201,22 +207,12 @@ final class CourseController extends AbstractController
         return $this->isGranted('ROLE_ADMIN') || ($course->isPublished() && $lesson->isPublished());
     }
 
-    /** Admins and free courses; otherwise anyone with a paid order. */
-    private function canAccess(Course $course): bool
+    /** Open lessons for everyone; locked ones for admins and people who bought the lesson unlock. */
+    private function canOpen(Lesson $lesson): bool
     {
-        if ($this->isGranted('ROLE_ADMIN') || $course->isFree()) {
-            return true;
-        }
         $user = $this->getUser();
-        if (!$user instanceof User) {
-            return false;
-        }
-        foreach ($user->getPurchases() as $purchase) {
-            if ($purchase->getStatus() === Purchase::STATUS_COMPLETED) {
-                return true;
-            }
-        }
-        return false;
+
+        return $this->access->canOpen($lesson, $user instanceof User ? $user : null, $this->isGranted('ROLE_ADMIN'));
     }
 
     /** @param Lesson[] $lessons @param array<int, LessonProgress> $progress */

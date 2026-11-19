@@ -14,10 +14,16 @@ class ProductRepository extends ServiceEntityRepository
         parent::__construct($registry, Product::class);
     }
 
-    /** @return list<Product> */
+    /** @return list<Product> the shop's products (the lesson unlock is sold on the courses page) */
     public function findActive(): array
     {
-        return $this->findBy(['active' => true], ['createdAt' => 'ASC', 'id' => 'ASC']);
+        return $this->findBy(['active' => true, 'unlocksLessons' => false], ['createdAt' => 'ASC', 'id' => 'ASC']);
+    }
+
+    /** The product that opens the locked lessons, if one is set up and on sale. */
+    public function findLessonUnlock(): ?Product
+    {
+        return $this->findOneBy(['unlocksLessons' => true, 'active' => true], ['id' => 'ASC']);
     }
 
     public function findActiveBySlug(string $slug): ?Product

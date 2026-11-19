@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Controller\CourseController;
 use App\Course\CourseVoices;
+use App\Course\LessonAccess;
 use App\Course\LessonLayouts;
 use App\Course\VoiceGenerator;
 use App\Entity\Course;
@@ -35,6 +36,7 @@ final class CourseStudioController extends AbstractController
         private readonly SluggerInterface $slugger,
         private readonly VoiceGenerator $voiceGenerator,
         private readonly CourseVoices $courseVoices,
+        private readonly LessonAccess $access,
     ) {}
 
     #[Route('', name: 'admin_course_studio', methods: ['GET'])]
@@ -50,8 +52,12 @@ final class CourseStudioController extends AbstractController
                 'ready' => $this->voiceGenerator->isConfigured($course->getLocale()),
             ];
         }
+        $unlock = $this->access->unlockProduct();
+
         return $this->render('admin/course_studio/index.html.twig', [
             'courses' => $courses,
+            'unlock' => $unlock,
+            'unlockEditUrl' => $unlock ? $this->generateUrl('admin_product_edit', ['entityId' => $unlock->getId()]) : $this->generateUrl('admin_product_index'),
             'voices' => $voices,
             'voiceModel' => $this->voiceGenerator->model(),
         ]);
@@ -128,6 +134,17 @@ final class CourseStudioController extends AbstractController
             $l->setPosition($pos);
         }
         $this->em->flush();
+        return $this->redirectToRoute('admin_course_studio', ['_fragment' => 'course-' . $lesson->getCourse()->getId()]);
+    }
+
+    /** Locks a lesson (only lesson-unlock buyers can open it) or makes it free again. */
+    #[Route('/lesson/{id}/lock', name: 'admin_course_studio_lesson_lock', methods: ['POST'])]
+    public function toggleLock(Lesson $lesson, Request $request): Response
+    {
+        $this->checkCsrf($request);
+        $lesson->setIsLocked(!$lesson->isLocked());
+        $this->em->flush();
+        $this->addFlash('success', sprintf('“%s” is now %s.', $lesson->getTitle(), $lesson->isLocked() ? 'locked' : 'free'));
         return $this->redirectToRoute('admin_course_studio', ['_fragment' => 'course-' . $lesson->getCourse()->getId()]);
     }
 

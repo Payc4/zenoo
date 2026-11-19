@@ -53,6 +53,11 @@ class ShopController extends AbstractController
         }
 
         if ($purchase && $purchase->getUser() === $this->getUser()) {
+            if ($purchase->getProduct()?->unlocksLessons()) {
+                $this->addFlash('success', 'Thank you! All lessons are open now.');
+
+                return $this->redirectToRoute('app_courses');
+            }
             $this->addFlash('success', 'Thank you! Your order is confirmed.');
 
             return $this->redirectToRoute('app_account_order', ['id' => $purchase->getId()]);
@@ -84,7 +89,9 @@ class ShopController extends AbstractController
     public function checkout(string $slug, Request $request, StripeCheckout $checkout): Response
     {
         $product = $this->products->findActiveBySlug($slug) ?? throw $this->createNotFoundException();
-        $back = $this->redirectToRoute('app_product', ['slug' => $slug]);
+        $back = $product->unlocksLessons()
+            ? $this->redirect($this->generateUrl('app_courses') . '#unlock')
+            : $this->redirectToRoute('app_product', ['slug' => $slug]);
 
         if (!$this->isCsrfTokenValid('checkout-' . $slug, (string) $request->request->get('_csrf_token'))) {
             $this->addFlash('error', 'Your session expired. Please try again.');

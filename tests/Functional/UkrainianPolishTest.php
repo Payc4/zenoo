@@ -107,7 +107,7 @@ final class UkrainianPolishTest extends AppTestCase
     public function testCourseQuizChatAndEmailsInTheLanguage(string $l): void
     {
         (new CommandTester((new Application(static::$kernel))->find('app:course:import')))->execute(['--publish' => true]);
-        $user = $this->createUser()->setLocale($l);
+        $user = $this->createPetParent()->setLocale($l);
         $this->em->flush();
         $this->loginViaForm('maria@example.com', 'Password123');
         $this->use($l);
@@ -130,10 +130,10 @@ final class UkrainianPolishTest extends AppTestCase
         $this->assertStringContainsString("\"locale\":\"$l\"", $html);
         $this->assertStringContainsString('"sendToKlaviyo":false', $html);
 
-        // Chat: the first intro question and the instruction to answer in this language.
-        $crawler = $this->client->request('GET', '/chat');
-        $intro = Yaml::parseFile(static::getContainer()->getParameter('kernel.project_dir') . "/config/chatbot/intro_questions.$l.yaml");
-        $this->assertSame($intro['questions'][0]['question'], json_decode($crawler->filter('#chat-cards')->text(), true)['questions'][0]['question']);
+        // Chat: the pet's chat in this language, and the instruction to answer in it.
+        $this->client->request('GET', '/chat');
+        $this->assertSelectorTextContains('.chat-pet--new', $this->t('New chat', $l));
+        $this->assertNotSame('New chat', $this->t('New chat', $l));
         $this->assertStringContainsString('reply in ' . Locale::ENGLISH_NAMES[$l], static::getContainer()->get(CourseKnowledge::class)->language($user));
 
         // Emails (SMTP in tests) in the account's language.

@@ -10,6 +10,8 @@
   const blank = () => ({ foods: [], signs: [], label: {}, amounts: {} });
   // Site only: "+ Add another dog" (?new=1) starts a fresh quiz instead of the saved one.
   const fresh = new URLSearchParams(location.search).has('new');
+  // Site only: from the chat's "New chat" (?then=chat): open the new pet's chat once saved.
+  const thenChat = new URLSearchParams(location.search).get('then') === 'chat';
   let a = { ...blank(), ...(fresh ? {} : (load() || {})) };
   if (fresh) history.replaceState(null, '', location.pathname);
   // Site only: a logged-in pet parent doesn't have to type their name and email again.
@@ -671,11 +673,12 @@ ${nav()}`,
     fetch(CFG.accountSubmitUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CFG.accountToken },
-      body: JSON.stringify({ email: p.email, first_name: p.first_name, locale: CFG.locale, properties: { ...p.properties, quiz_marketing_consent: p.marketing } }),
+      body: JSON.stringify({ email: p.email, first_name: p.first_name, locale: CFG.locale, properties: { ...p.properties, quiz_marketing_consent: p.marketing }, ...(thenChat && CFG.user ? { then: 'chat' } : {}) }),
     }).then((res) => res.json().then((data) => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
         if (!ok) throw new Error(data.error || '');
         setAccount(data.status === 'saved' ? { state: 'saved', dashboard: data.dashboard } : { state: 'sent' });
+        if (data.go && data.dashboard) location.assign(data.dashboard);
         if (data.status !== 'saved') track('quiz_submit');
       })
       .catch((err) => { console.error('[ZENOO quiz] account', err); setAccount({ state: 'error', error: err.message || '' }); });

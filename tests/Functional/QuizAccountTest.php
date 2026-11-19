@@ -197,6 +197,16 @@ final class QuizAccountTest extends AppTestCase
         $user = $this->em->getRepository(User::class)->findOneBy(['email' => 'maria@example.com']);
         $this->assertSame('Rex', $this->em->getRepository(DogProfile::class)->findForUser($user)->getName());
 
+        // From the chat's "New chat": the new pet's chat opens straight after the quiz.
+        $data = $this->submit(['properties' => self::result(['quiz_dog_name' => 'Pip']), 'then' => 'chat']);
+        $this->em->clear();
+        $pip = $this->em->getRepository(DogProfile::class)->findOneBy(['name' => 'Pip']);
+        $this->assertSame(['status' => 'saved', 'dashboard' => '/chat?pet=' . $pip->getId(), 'go' => true], $data);
+        $this->client->request('GET', $data['dashboard']);
+        $this->assertSelectorTextContains('.chat-pet.is-on', 'Pip');
+        $this->em->remove($pip);
+        $this->em->flush();
+
         // A retake for a dog with the same name updates that dog.
         $this->submit(['email' => 'maria@example.com', 'properties' => self::result(['quiz_dog_name' => 'bella ', 'quiz_bowl_score' => 64])]);
         $this->em->clear();

@@ -27,4 +27,8 @@
 .cl-locked { display: grid; gap: 0.75rem; justify-items: start; }
 .cl-locked p { margin: 0; color: var(--ink-muted); }
 .cl-empty { text-align: center; padding: 4rem 1rem; }
+.cl-unlock { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 1.1rem 1.25rem; margin: 0 0 1.5rem; border: 1px solid var(--line, #e5e1d8); border-radius: 16px; background: var(--surface, #fff); }
+.cl-unlock__title { margin: 0 0 0.25rem; font-size: 1.1rem; }
+.cl-unlock p { margin: 0; color: var(--ink-muted); }
+.cl-lesson.is-locked .cl-lesson__t { opacity: 0.6; }
 @media (max-width: 520px) { .cl-course__top { flex-direction: column; } .cl-course__count { text-align: left; } .cl-course { padding: 1.15rem; } }

@@ -105,7 +105,7 @@ final class ConversationsController extends AbstractController
     #[Route('/{id}', name: 'admin_conversation', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show(ChatConversation $conversation): Response
     {
-        $dog = $this->dogs->findForUser($conversation->getUser());
+        $dog = $conversation->getDog() ?? $this->dogs->findForUser($conversation->getUser());
 
         return $this->render('admin/conversations/show.html.twig', [
             'conversation' => $conversation,

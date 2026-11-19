@@ -50,6 +50,10 @@ class Product
     #[ORM\Column]
     private bool $active = true;
 
+    /** Buying this opens every locked lesson. It is sold from the courses page, not listed in the shop. */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $unlocksLessons = false;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -136,6 +140,23 @@ class Product
     public function setImage(?string $image): static
     {
         $this->image = $image;
+
+        return $this;
+    }
+
+    public function unlocksLessons(): bool
+    {
+        return $this->unlocksLessons;
+    }
+
+    public function isUnlocksLessons(): bool
+    {
+        return $this->unlocksLessons;
+    }
+
+    public function setUnlocksLessons(bool $unlocks): static
+    {
+        $this->unlocksLessons = $unlocks;
 
         return $this;
     }

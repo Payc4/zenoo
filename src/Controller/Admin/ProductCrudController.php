@@ -38,5 +38,7 @@ class ProductCrudController extends AbstractCrudController
             ->setHelp('At least €0.50 (Stripe’s minimum).');
         yield TextField::new('image')->hideOnIndex()->setHelp('A file name from public/images, e.g. intro-hero.jpg.');
         yield BooleanField::new('active')->setHelp('Inactive products are hidden and can’t be bought.');
+        yield BooleanField::new('unlocksLessons', 'Unlocks locked lessons')->renderAsSwitch(false)
+            ->setHelp('Buying this opens every lesson marked “Locked” in the Course studio. It is sold from the courses page and isn’t listed in the shop.');
     }
 }

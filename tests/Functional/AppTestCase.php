@@ -42,6 +42,25 @@ abstract class AppTestCase extends WebTestCase
         return $user;
     }
 
+    /** A pet for this user, from a standard quiz result (every chat belongs to a pet). */
+    protected function createDog(User $user, array $quiz = [], string $locale = 'en'): \App\Entity\DogProfile
+    {
+        $dog = (new \App\Entity\DogProfile($user))->fillFromQuiz(QuizAccountTest::result($quiz), $locale);
+        $this->em->persist($dog);
+        $this->em->flush();
+
+        return $dog;
+    }
+
+    /** A user with one pet, ready to chat. */
+    protected function createPetParent(string $email = 'maria@example.com', string $password = 'Password123', array $roles = []): User
+    {
+        $user = $this->createUser($email, $password, $roles);
+        $this->createDog($user);
+
+        return $user;
+    }
+
     protected function createProduct(string $slug = 'test-product', string $price = '1.00', bool $active = true): Product
     {
         $product = (new Product())->setName('ZENOO Test Product')->setSlug($slug)->setPrice($price)->setTagline('A test')->setActive($active);

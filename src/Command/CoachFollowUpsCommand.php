@@ -56,8 +56,9 @@ final class CoachFollowUpsCommand extends Command
             if ($due === null || $due['sent'] !== null || !$user->wantsCoachEmails()) {
                 continue;
             }
-            $last = $this->conversations->findForUser($user)?->getMessages()->last() ?: null;
-            if ($last && $last->getCreatedAt() > $now->modify('-1 day')) {
+            // Not while they're chatting anyway (in any of their pets' chats).
+            $last = $this->conversations->lastMessageAt($user);
+            if ($last && $last > $now->modify('-1 day')) {
                 continue;
             }
             $io->writeln(sprintf('%s (%s): %s', $user->getEmail(), $dog->getName(), $due['question']));
@@ -69,7 +70,7 @@ final class CoachFollowUpsCommand extends Command
                     $user,
                     $dog->getName(),
                     $due['question'],
-                    $base . '/chat',
+                    $base . '/chat?pet=' . $dog->getId(),
                     $this->signer->sign($base . '/coach-emails/off?u=' . $user->getId()),
                 );
                 $dog->markFollowUp($due['id'], $now);

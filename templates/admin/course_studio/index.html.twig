@@ -7,6 +7,7 @@
     <div>
       <h1 class="cs-h1">Your courses</h1>
       <p class="cs-muted">Create a course, add lessons, then build each lesson slide by slide. Changes go live when you save; drafts are only visible to admins.</p>
+      <p class="cs-muted">Lessons are free for every logged-in user unless you lock them. {% if unlock %}Locked lessons open after one payment of <strong>€{{ unlock.price|number_format(2, '.', ',') }}</strong> (“{{ unlock.name }}”). <a href="{{ unlockEditUrl }}">Change the price</a>.{% else %}<strong>No lesson unlock product is on sale</strong>, so nobody can buy access to locked lessons. Switch on “Unlocks locked lessons” for a product in <a href="{{ unlockEditUrl }}">Products</a>.{% endif %}</p>
     </div>
     <form method="post" action="{{ path('admin_course_studio_course_new') }}" class="cs-inline">
       <input type="hidden" name="_token" value="{{ token }}">
@@ -26,7 +27,6 @@
       <textarea class="cs-input" name="description" rows="2" placeholder="Short description shown to learners">{{ course.description }}</textarea>
       <div class="cs-course__opts">
         <label class="cs-check"><input type="checkbox" name="published" value="1" {{ course.published ? 'checked' }}> Published (visible to learners)</label>
-        <label class="cs-check"><input type="checkbox" name="free" value="1" {{ course.free ? 'checked' }}> Free for every logged-in user <span class="cs-muted">(otherwise only people with a paid order)</span></label>
         <label class="cs-check">Language
           <select class="cs-input cs-select" name="locale">
             {% for code, name in site_locales() %}<option value="{{ code }}" {{ course.locale == code ? 'selected' }}>{{ name }}</option>{% endfor %}
@@ -37,7 +37,7 @@
     </form>
 
     <table class="cs-lessons">
-      <thead><tr><th>#</th><th>Lesson</th><th>Slides</th><th>Status</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>Lesson</th><th>Slides</th><th>Status</th><th>Access</th><th></th></tr></thead>
       <tbody>
       {% for lesson in course.lessons %}
         <tr>
@@ -45,6 +45,12 @@
           <td><a class="cs-lesson-link" href="{{ path('admin_course_studio_lesson', {id: lesson.id}) }}">{{ lesson.title }}</a>{% if lesson.subtitle %}<div class="cs-muted cs-small">{{ lesson.subtitle }}</div>{% endif %}</td>
           <td>{{ lesson.slideCount }}</td>
           <td><span class="cs-pill {{ lesson.published ? 'cs-pill--on' : '' }}">{{ lesson.published ? 'Published' : 'Draft' }}</span></td>
+          <td>
+            <form method="post" action="{{ path('admin_course_studio_lesson_lock', {id: lesson.id}) }}">
+              <input type="hidden" name="_token" value="{{ token }}">
+              <button class="cs-pill cs-pill--btn {{ lesson.locked ? '' : 'cs-pill--on' }}" title="{{ lesson.locked ? 'Only people who bought the lesson unlock can open it. Click to make it free.' : 'Every logged-in user can open it. Click to lock it.' }}">{{ lesson.locked ? '🔒 Locked' : 'Free' }}</button>
+            </form>
+          </td>
           <td class="cs-actions">
             <a class="cs-btn cs-btn--sm" href="{{ path('admin_course_studio_lesson', {id: lesson.id}) }}">Edit slides</a>
             <form method="post" action="{{ path('admin_course_studio_lesson_move', {id: lesson.id, dir: 'up'}) }}"><input type="hidden" name="_token" value="{{ token }}"><button class="cs-icon" title="Move up" {{ loop.first ? 'disabled' }}>↑</button></form>
@@ -54,7 +60,7 @@
           </td>
         </tr>
       {% else %}
-        <tr><td colspan="5" class="cs-muted cs-empty-row">No lessons yet. Add the first one below.</td></tr>
+        <tr><td colspan="6" class="cs-muted cs-empty-row">No lessons yet. Add the first one below.</td></tr>
       {% endfor %}
       </tbody>
     </table>

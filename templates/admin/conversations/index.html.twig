@@ -16,7 +16,7 @@
     <tbody>
     {% for r in rows %}
       {% set c = r.conversation %}
-      {% set dog = dogs[c.user.id] ?? null %}
+      {% set dog = c.dog ?? dogs[c.user.id] ?? null %}
       <tr>
         <td><strong>{{ r.firstName ?: '—' }}</strong><br><span class="cs-muted cs-small">{{ r.email }} · {{ locale_name(c.user.locale) }}</span></td>
         <td>{{ dog ? dog.name ~ ' (' ~ dog.bowlScore ~ '/100)' : '—' }}</td>

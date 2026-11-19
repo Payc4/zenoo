@@ -126,7 +126,7 @@ final class CoachEvalCommand extends Command
             $this->em->remove($c);
         }
         $this->em->flush();
-        $conversation = new ChatConversation($user);
+        $conversation = new ChatConversation($user, $dog);
         $this->em->persist($conversation);
         $this->em->persist(new ChatMessage($conversation, ChatMessage::ROLE_USER, $case['message']));
         $this->em->flush();

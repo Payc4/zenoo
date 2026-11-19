@@ -3,6 +3,7 @@
 namespace App\Chat;
 
 use App\Entity\ChatConversation;
+use App\Entity\DogProfile;
 use App\Entity\ChatMessage;
 use App\Repository\ChatMessageRepository;
 use App\Repository\DogProfileRepository;
@@ -29,7 +30,8 @@ use Symfony\Component\Yaml\Yaml;
  * Claude can also show multiple-choice question cards with the ask_questions tool (see Questions),
  * and save the dog's food (read from a label photo or named in the chat) to the dog profile with
  * the save_food tool, after which it carries on with its reply.
- * The starting questions shown in an empty chat come from config/chatbot/intro_questions.yaml.
+ * introQuestions() (config/chatbot/intro_questions.yaml) is no longer shown in the chat: every chat
+ * belongs to a pet whose profile comes from the quiz. Unused; kept in case starting questions return.
  *
  * Photos and PDFs the pet parent sends (ChatFiles) go to Claude as image/document blocks, for the
  * newest FILE_MESSAGES messages that have them; older ones are mentioned in words only, so a long
@@ -163,7 +165,7 @@ class ChatAgent
                     $results[] = ['type' => 'tool_result', 'tool_use_id' => $use['id'], 'content' => json_encode($this->zenooPlan($conversation, (string) ($use['input']['product'] ?? '')), JSON_UNESCAPED_UNICODE)];
                 } elseif ($use['name'] === 'calculate') {
                     $saved = true;
-                    $out = Calculators::run($use['input'], $this->dogs->findForUser($conversation->getUser()));
+                    $out = Calculators::run($use['input'], $this->dogOf($conversation));
                     $results[] = ['type' => 'tool_result', 'tool_use_id' => $use['id'], 'content' => json_encode($out, JSON_UNESCAPED_UNICODE), 'is_error' => isset($out['error'])];
                 } else {
                     $saved = true;
@@ -324,7 +326,7 @@ class ChatAgent
         if (!$catalogue) {
             return ['error' => 'The product catalogue isn\'t available. Don\'t name prices or amounts; point them to zenoo.lt or support@myzenoo.com.'];
         }
-        $dog = $this->dogs->findForUser($conversation->getUser());
+        $dog = $this->dogOf($conversation);
         $product = null;
         if ($title !== '') {
             foreach ($this->plans->catalogueProducts() as $p) {
@@ -375,7 +377,7 @@ class ChatAgent
     /** @return array{string, ?array} the tool result for Claude, the planned check-in */
     private function scheduleFollowUp(ChatConversation $conversation, array $input): array
     {
-        $dog = $this->dogs->findForUser($conversation->getUser());
+        $dog = $this->dogOf($conversation);
         if (!$dog) {
             return ['Not planned: this pet parent has no dog profile yet. Just carry on.', null];
         }
@@ -391,7 +393,7 @@ class ChatAgent
     /** @return array{bool, string, list<string>} changed?, the tool result for Claude, the facts added */
     private function updateProfile(ChatConversation $conversation, array $input): array
     {
-        $dog = $this->dogs->findForUser($conversation->getUser());
+        $dog = $this->dogOf($conversation);
         if (!$dog) {
             return [false, 'Not saved: this pet parent has no dog profile yet (they haven\'t taken the Bowl Score quiz). Just carry on.', []];
         }
@@ -417,7 +419,7 @@ class ChatAgent
     /** @return array{bool, string, ?array} saved?, the tool result for Claude, the saved food */
     private function saveFood(ChatConversation $conversation, array $input): array
     {
-        $dog = $this->dogs->findForUser($conversation->getUser());
+        $dog = $this->dogOf($conversation);
         $brand = trim((string) ($input['brand'] ?? ''));
         if (!$dog) {
             return [false, 'Not saved: this pet parent has no dog profile yet (they haven\'t taken the Bowl Score quiz). Just carry on.', null];
@@ -442,6 +444,12 @@ class ChatAgent
      *
      * @return list<array{type: string, text: string, cache_control?: array{type: string}}>
      */
+    /** The pet this chat is about (every pet has its own chat); older chats fall back to the selected pet. */
+    private function dogOf(ChatConversation $conversation): ?DogProfile
+    {
+        return $conversation->getDog() ?? $this->dogs->findForUser($conversation->getUser());
+    }
+
     public function systemBlocks(ChatConversation $conversation): array
     {
         $template = is_file($this->promptFile) ? (string) file_get_contents($this->promptFile) : '';
@@ -465,7 +473,7 @@ class ChatAgent
             $vars['{{course_progress}}'] = $this->course->progress($user);
         }
         if (str_contains($template, '{{dog_profile}}')) {
-            $vars['{{dog_profile}}'] = $this->course->dog($user);
+            $vars['{{dog_profile}}'] = $this->course->dog($user, $this->dogOf($conversation));
         }
         if (str_contains($template, '{{language}}')) {
             $vars['{{language}}'] = $this->course->language($user);

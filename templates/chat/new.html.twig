@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{# "New chat": every pet has one chat. Pick a pet that has no chat yet, or add a new pet
+   (the Bowl Score quiz makes its profile, then its chat opens). #}
+{% block title %}{{ 'New chat'|trans }} · ZENOO{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block importmap %}{{ importmap(['app', 'chat']) }}{% endblock %}
+
+{% block body %}
+<section class="chat-new">
+    <img src="/apple-touch-icon.png" alt="" width="56" height="56">
+    {% if hasPets %}
+        <h1>{{ 'Start a new chat'|trans }}</h1>
+        <p class="chat-muted">{{ 'Each pet has its own chat, so the coach always knows who you’re talking about.'|trans }}</p>
+    {% else %}
+        <h1>{{ 'Let’s meet your pet first'|trans }}</h1>
+        <p class="chat-muted">{{ 'Each chat is about one pet. Take the 3-minute Bowl Score quiz to make your pet’s profile, and its chat opens straight after.'|trans }}</p>
+    {% endif %}
+
+    {% if dogs %}
+        <ul class="chat-new__list">
+            {% for d in dogs %}
+                <li><a class="chat-new__pet" href="{{ path('app_chat', {pet: d.id}) }}">
+                    <span><strong>{{ d.name }}</strong><br><small>{{ 'Use %dog%’s profile'|trans({'%dog%': d.name}) }}</small></span>
+                    <span aria-hidden="true">→</span>
+                </a></li>
+            {% endfor %}
+        </ul>
+        <p class="chat-new__or">{{ 'or'|trans }}</p>
+    {% elseif hasPets %}
+        <p class="chat-new__or">{{ 'All your pets already have a chat. Open one at the top of the chat, or add a new pet:'|trans }}</p>
+    {% endif %}
+
+    <a class="btn" href="{{ path('app_quiz') }}?new=1&amp;then=chat">{{ hasPets ? '+ Add a new pet'|trans : 'Take the quiz'|trans }}</a>
+    {% if hasPets %}<p style="margin-top:20px"><a href="{{ path('app_chat') }}" class="link-btn small">{{ '← Back to the chat'|trans }}</a></p>{% endif %}
+</section>
+{% endblock %}

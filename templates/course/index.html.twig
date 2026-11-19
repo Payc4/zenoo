@@ -15,6 +15,20 @@
       {% if streak %}<p class="cl-streak">🔥 <strong>{{ streak }}</strong> {{ 'day streak'|trans }}</p>{% endif %}
     </header>
 
+    {% if unlock %}
+      {# One payment opens every locked lesson (admin: Products → "Unlocks locked lessons"). #}
+      <section class="cl-unlock" id="unlock">
+        <div>
+          <h2 class="cl-unlock__title">🔒 {{ 'Unlock all lessons'|trans }}</h2>
+          <p>{{ 'One payment opens every locked lesson, for good.'|trans }}{% if unlockCancelled %} {{ 'The payment was cancelled, nothing was charged.'|trans }}{% endif %}</p>
+        </div>
+        <form method="post" action="{{ path('app_checkout', {slug: unlock.slug}) }}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token('checkout-' ~ unlock.slug) }}">
+          <button type="submit" class="btn">{{ 'Unlock for €%price%'|trans({'%price%': unlock.price|number_format(2, '.', ',')}) }}</button>
+        </form>
+      </section>
+    {% endif %}
+
     {% for item in items %}
       {% set c = item.course %}
       <section class="cl-course" lang="{{ c.locale }}">
@@ -27,14 +41,8 @@
         </div>
         <div class="cl-bar"><span style="width: {{ item.lessons|length ? (item.done / item.lessons|length * 100)|round : 0 }}%"></span></div>
 
-        {% if not item.canAccess %}
-          <div class="cl-locked">
-            <p>{{ '🔒 This course is for ZENOO customers.'|trans }}</p>
-            <a href="{{ path('app_shop') }}" class="btn btn-small">{{ 'Visit the shop'|trans }}</a>
-          </div>
-        {% else %}
           {% if item.next %}
-            <a class="cl-continue" href="{{ path('app_course_lesson', {slug: c.slug, id: item.next.id}) }}">
+            <a class="cl-continue" href="{{ item.next.id in item.locked ? '#unlock' : path('app_course_lesson', {slug: c.slug, id: item.next.id}) }}">
               <span><small>{{ item.progress[item.next.id] is defined ? 'Continue'|trans : 'Up next'|trans }}</small>{{ item.next.title }}</span>
               <span class="cl-continue__go" aria-hidden="true">▶</span>
             </a>
@@ -42,16 +50,16 @@
           <ol class="cl-lessons">
             {% for l in item.lessons %}
               {% set p = item.progress[l.id] ?? null %}
-              <li class="cl-lesson{% if p and p.completed %} is-done{% endif %}">
-                <a href="{{ path('app_course_lesson', {slug: c.slug, id: l.id}) }}">
-                  <span class="cl-lesson__n">{% if p and p.completed %}✓{% else %}{{ loop.index }}{% endif %}</span>
+              {% set isLocked = l.id in item.locked %}
+              <li class="cl-lesson{% if p and p.completed %} is-done{% endif %}{% if isLocked %} is-locked{% endif %}">
+                <a href="{{ isLocked ? '#unlock' : path('app_course_lesson', {slug: c.slug, id: l.id}) }}"{% if isLocked %} aria-label="{{ l.title }}: {{ 'locked'|trans }}"{% endif %}>
+                  <span class="cl-lesson__n">{% if isLocked %}🔒{% elseif p and p.completed %}✓{% else %}{{ loop.index }}{% endif %}</span>
                   <span class="cl-lesson__t">{{ l.title }}{% if not l.published %} <span class="cl-tag">{{ 'Draft'|trans }}</span>{% endif %}
                     <small>{% if l.subtitle %}{{ l.subtitle }} · {% endif %}{% if l.durationMinutes %}{{ '%n% min'|trans({'%n%': l.durationMinutes}) }}{% else %}{{ '%n% screens'|trans({'%n%': l.slideCount}) }}{% endif %}{% if p and not p.completed %} · {{ p.percent }}%{% endif %}</small></span>
                 </a>
               </li>
             {% endfor %}
           </ol>
-        {% endif %}
       </section>
     {% else %}
       <div class="cl-empty">

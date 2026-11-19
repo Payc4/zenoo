@@ -29,6 +29,7 @@ class CourseKnowledge
         private readonly LessonProgressRepository $progress,
         private readonly DogProfileRepository $dogs,
         private readonly CheckIns $checkIns,
+        private readonly \App\Course\LessonAccess $access,
     ) {
     }
 
@@ -50,8 +51,9 @@ class CourseKnowledge
     public function progress(User $user): string
     {
         $data = $this->progress->summaryForCoach($user);
+        $locked = $this->lockedFor($user);
         if (!$data['completed'] && !$data['answers']) {
-            return 'They have not started the course yet. If it fits, mention that the Courses tab has short lessons on their topic.';
+            return 'They have not started the course yet. If it fits, mention that the Courses tab has short lessons on their topic.' . $locked;
         }
 
         $lines = [];
@@ -64,7 +66,28 @@ class CourseKnowledge
                 $lines[] = sprintf('- %s — task: %s — their answer: "%s"', $a['lesson'], $this->oneLine($a['task']), $this->oneLine($a['answer']));
             }
         }
-        return implode("\n", $lines);
+        return implode("\n", $lines) . $locked;
+    }
+
+    /** Lessons this person can't open yet (locked in the Course studio, no lesson unlock bought). */
+    private function lockedFor(User $user): string
+    {
+        $course = $this->courses->findOneBy(['slug' => ImportCourseCommand::COURSES['en']['slug']]);
+        if (!$course || $this->access->hasUnlock($user)) {
+            return '';
+        }
+        $numbers = [];
+        foreach (array_values($course->getLessons()->toArray()) as $i => $lesson) {
+            if ($lesson->isLocked()) {
+                $numbers[] = $i + 1;
+            }
+        }
+        if (!$numbers) {
+            return '';
+        }
+        return "\nLocked for them: lesson" . (\count($numbers) > 1 ? 's ' : ' ') . implode(', ', $numbers)
+            . '. They open after a one-off payment ("Unlock all lessons" on the Courses page). You can still use what those lessons teach;'
+            . ' if you link one, say it is part of the unlock. Don\'t push the purchase.';
     }
 
     private function lesson(int $n, Lesson $lesson): string
@@ -111,9 +134,10 @@ class CourseKnowledge
         return mb_substr(trim(preg_replace('/\s+/u', ' ', $s)), 0, 400);
     }
 
-    public function dog(User $user): string
+    /** The pet this chat is about ($dog), else the pet parent's selected pet. */
+    public function dog(User $user, ?DogProfile $dog = null): string
     {
-        $dog = $this->dogs->findForUser($user);
+        $dog ??= $this->dogs->findForUser($user);
         if (!$dog) {
             return 'They have not taken the Bowl Score quiz yet, so you don\'t know their dog\'s details unless they tell you. If it helps, suggest the free 3-minute quiz (Bowl Score quiz in the menu).';
         }
@@ -188,9 +212,9 @@ class CourseKnowledge
         // Other dogs in the household (roadmap 07): the chat is about the selected one.
         $others = array_values(array_filter($this->dogs->findAllForUser($user), fn ($d) => $d->getId() !== $dog->getId()));
         if ($others) {
-            $lines[] = '- Their other dog' . (\count($others) > 1 ? 's' : '') . ' (they can switch the chat to them at the top of the chat): '
+            $lines[] = '- Their other dog' . (\count($others) > 1 ? 's' : '') . ' (each pet has its own chat; they switch pets at the top of the chat): '
                 . implode('; ', array_map(fn ($d) => $d->getName() . ' (' . ($d->get('breed') ?: 'breed not given') . ', ' . ($d->get('age_years') !== null ? $d->get('age_years') . ' years' : 'age not given') . ', Bowl Score ' . $d->getBowlScore() . ')', $others))
-                . '. Everything above is about ' . $dog->getName() . '; if they ask about another dog, say so and suggest switching.';
+                . '. Everything above is about ' . $dog->getName() . '; if they ask about another dog, say this chat is about ' . $dog->getName() . ' and suggest opening that dog\'s chat at the top.';
         }
         return implode("\n", $lines);
     }

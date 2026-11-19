@@ -154,7 +154,7 @@ final class ChatPhotoTest extends AppTestCase
         $dir = static::getContainer()->getParameter('kernel.project_dir') . '/public/uploads/private/chat/' . $this->dog()->getUser()->getId();
         $this->assertCount(4, glob($dir . '/*'));
         $crawler = $this->client->request('GET', '/chat');
-        $this->client->submit($crawler->filter('form[action="/chat/clear"]')->form());
+        $this->client->submit($crawler->filter('form[action^="/chat/clear"]')->form());
         $this->assertDirectoryDoesNotExist($dir);
     }
 

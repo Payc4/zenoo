@@ -40,6 +40,10 @@ class Lesson
     #[ORM\Column]
     private bool $isPublished = false;
 
+    /** Locked lessons open only for people who bought the lesson unlock (set in the Course studio). */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isLocked = false;
+
     #[ORM\Column(type: 'json')]
     private array $slides = [];
 
@@ -80,6 +84,9 @@ class Lesson
 
     public function isPublished(): bool { return $this->isPublished; }
     public function setIsPublished(bool $isPublished): static { $this->isPublished = $isPublished; return $this; }
+
+    public function isLocked(): bool { return $this->isLocked; }
+    public function setIsLocked(bool $locked): static { $this->isLocked = $locked; return $this; }
 
     public function getSlides(): array { return $this->slides; }
     public function setSlides(array $slides): static { $this->slides = array_values($slides); return $this; }

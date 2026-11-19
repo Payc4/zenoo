@@ -176,5 +176,15 @@
 .chat-human { margin-left: 6px; white-space: nowrap; color: inherit; text-decoration: underline; }
 
 /* Several dogs: which one the chat is about */
-.chat-dogs { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; }
-.chat-dogs form { display: inline; margin: 0; }
+.chat-pets { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.chat-pet { display: inline-block; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); font-size: 14px; font-weight: 600; color: var(--forest, #445942); text-decoration: none; white-space: nowrap; }
+.chat-pet:hover { background: rgba(68, 89, 66, .06); }
+.chat-pet.is-on { background: var(--forest, #445942); border-color: var(--forest, #445942); color: #fff; }
+.chat-pet--new { border-style: dashed; color: var(--ink-muted); }
+.chat-new { max-width: 560px; margin: 48px auto; padding: 0 20px; text-align: center; }
+.chat-new > img { display: block; margin: 0 auto 12px; border-radius: 12px; }
+.chat-new__list { display: grid; gap: 10px; margin: 24px 0; padding: 0; list-style: none; text-align: left; }
+.chat-new__pet { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--line); border-radius: 14px; color: inherit; text-decoration: none; }
+.chat-new__pet:hover { border-color: var(--forest, #445942); }
+.chat-new__pet small { color: var(--ink-muted); }
+.chat-new__or { color: var(--ink-muted); margin: 8px 0 16px; }

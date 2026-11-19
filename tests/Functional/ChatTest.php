@@ -53,7 +53,7 @@ class ChatTest extends AppTestCase
 
     public function testSendStreamsTheReplyAndSavesTheTurn(): void
     {
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
 
         [$status, $body] = $this->send('How much should my dog eat?');
@@ -85,9 +85,13 @@ class ChatTest extends AppTestCase
         $this->assertSelectorTextContains('.chat-answer strong', 'Weigh');
     }
 
-    public function testEveryoneHasExactlyOneChat(): void
+    public function testEachPetHasExactlyOneChat(): void
     {
-        $this->createUser();
+        $user = $this->createUser();
+        $bella = $this->createDog($user);
+        $max = $this->createDog($user, ['quiz_dog_name' => 'Max']);
+        $user->setActiveDogId($bella->getId()); // the chat follows the selected pet
+        $this->em->flush();
         $this->loginViaForm('maria@example.com', 'Password123');
         $this->send('First question');
         // Even if a browser sends an old-style conversation id, it lands in the same chat.
@@ -98,16 +102,58 @@ class ChatTest extends AppTestCase
 
         $crawler = $this->client->request('GET', '/chat');
         $this->assertCount(4, $crawler->filter('.chat-msg'));
-        $this->assertSelectorNotExists('.chat-convs');
-        $this->assertStringNotContainsString('New chat', $crawler->filter('main')->text());
+        $this->assertSame(['Bella', '+ New chat'], $crawler->filter('.chat-pets a')->each(fn ($a) => trim($a->text())), 'Max has no chat yet');
+
+        // New chat offers Max (no chat yet), not Bella, plus a new pet through the quiz.
+        $crawler = $this->client->request('GET', '/chat/new');
+        $this->assertSame(['/chat?pet=' . $max->getId()], $crawler->filter('.chat-new__pet')->each(fn ($a) => $a->attr('href')));
+        $this->assertSelectorExists('a[href="/quiz/?new=1&then=chat"]');
+
+        // Max's chat is separate and about Max.
+        $crawler = $this->client->request('GET', '/chat?pet=' . $max->getId());
+        $this->assertCount(0, $crawler->filter('.chat-msg'));
+        $this->assertSelectorTextContains('.chat-pet.is-on', 'Max');
+        $this->em->createQuery('DELETE FROM App\Entity\ChatUsage u')->execute(); // the test limit is 2 a day
+        $this->client->request('POST', '/chat/send?pet=' . $max->getId(), [], [], [
+            'CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => (string) $crawler->filter('#chat')->attr('data-csrf'),
+        ], json_encode(['message' => 'About Max']));
+        $this->assertSame(2, $this->rows(ChatConversation::class));
+        $this->assertSame([['role' => 'user', 'content' => 'About Max']], FakeClaude::$requests[2]['messages'], 'Bella’s chat isn’t mixed in');
+        $this->assertStringContainsString('Name: Max', FakeClaude::$requests[2]['system'][1]['text'], 'the coach gets Max’s profile');
+
+        // Both pets now have a chat: New chat only offers a new pet.
+        $crawler = $this->client->request('GET', '/chat/new');
+        $this->assertCount(0, $crawler->filter('.chat-new__pet'));
+        $this->assertSame(['Bella', 'Max', '+ New chat'], $this->client->request('GET', '/chat')->filter('.chat-pets a')->each(fn ($a) => trim($a->text())));
 
         $this->client->request('GET', '/chat/c/1');
-        $this->assertResponseRedirects('/chat', null, 'old chat links go to the one chat');
+        $this->assertResponseRedirects('/chat', null, 'old chat links go to the chat');
+    }
+
+    public function testNoPetMeansTheQuizFirst(): void
+    {
+        $this->createUser();
+        $this->loginViaForm('maria@example.com', 'Password123');
+        $this->client->request('GET', '/chat');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorNotExists('#chat');
+        $this->assertSelectorExists('a[href="/quiz/?new=1&then=chat"]');
+
+        // Sending without a pet (a page left open while the pet was removed) is refused.
+        $user = $this->em->getRepository(\App\Entity\User::class)->findOneBy([]);
+        $dog = $this->createDog($user);
+        $token = (string) $this->client->request('GET', '/chat')->filter('#chat')->attr('data-csrf');
+        $this->em->remove($this->em->getRepository(\App\Entity\DogProfile::class)->find($dog->getId()));
+        $this->em->flush();
+        $this->client->request('POST', '/chat/send', [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $token], '{"message":"hi"}');
+        $this->assertResponseStatusCodeSame(400);
+        $this->assertSame(0, $this->rows(ChatConversation::class));
+        $this->assertCount(0, FakeClaude::$requests);
     }
 
     public function testDailyLimitAndClearingTheChatDoesNotResetIt(): void
     {
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
         $this->assertSame(200, $this->send('one')[0]);
         $this->assertSame(200, $this->send('two')[0]);
@@ -119,7 +165,7 @@ class ChatTest extends AppTestCase
 
         $crawler = $this->client->request('GET', '/chat');
         $this->client->submit($crawler->filter('.chat-bar form')->form());
-        $this->assertResponseRedirects('/chat');
+        $this->assertResponseRedirects('/chat?pet=' . $this->em->getRepository(\App\Entity\DogProfile::class)->findOneBy([])->getId());
         $this->assertSame(0, $this->rows(ChatMessage::class), 'Clear chat empties the history');
         $this->assertSame(429, $this->send('four')[0], 'clearing the chat does not give messages back');
 
@@ -130,7 +176,7 @@ class ChatTest extends AppTestCase
 
     public function testFailedReplyIsRolledBackAndRefunded(): void
     {
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
         FakeClaude::$fail = true;
 
@@ -145,7 +191,7 @@ class ChatTest extends AppTestCase
 
     public function testAdminsHaveNoLimit(): void
     {
-        $this->createUser('admin@example.com', 'AdminPass123', ['ROLE_ADMIN']);
+        $this->createPetParent('admin@example.com', 'AdminPass123', ['ROLE_ADMIN']);
         $this->loginViaForm('admin@example.com', 'AdminPass123');
         foreach (['a', 'b', 'c'] as $m) {
             $this->assertSame(200, $this->send($m)[0]);
@@ -154,8 +200,8 @@ class ChatTest extends AppTestCase
 
     public function testChatsArePrivate(): void
     {
-        $this->createUser();
-        $this->createUser('jonas@example.com');
+        $this->createPetParent();
+        $this->createPetParent('jonas@example.com');
         $this->loginViaForm('maria@example.com', 'Password123');
         $this->send('Maria’s question');
         $mariasChat = $this->em->getRepository(ChatConversation::class)->findOneBy([])->getId();
@@ -165,14 +211,20 @@ class ChatTest extends AppTestCase
         $crawler = $this->client->request('GET', '/chat');
         $this->assertCount(0, $crawler->filter('.chat-msg'), 'Jonas sees his own empty chat');
 
-        $this->send('Jonas’s question', null, ['conversationId' => $mariasChat]);
+        // Even pointing at Maria's pet, Jonas only reaches his own pet's chat.
+        $mariasDog = $this->em->getRepository(ChatConversation::class)->find($mariasChat)->getDog()->getId();
+        $crawler = $this->client->request('GET', '/chat?pet=' . $mariasDog);
+        $this->assertCount(0, $crawler->filter('.chat-msg'));
+        $this->client->request('POST', '/chat/send?pet=' . $mariasDog, [], [], [
+            'CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => (string) $crawler->filter('#chat')->attr('data-csrf'),
+        ], json_encode(['message' => 'Jonas’s question', 'conversationId' => $mariasChat]));
         $this->assertSame(2, $this->rows(ChatConversation::class), 'Jonas gets his own chat');
         $this->assertCount(1, FakeClaude::$requests[1]['messages'], 'Maria’s messages are never sent');
     }
 
     public function testClearChatNeedsCsrfToken(): void
     {
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
         $this->send('hi');
         $this->client->request('POST', '/chat/clear', ['_token' => 'forged']);
@@ -181,7 +233,7 @@ class ChatTest extends AppTestCase
 
     public function testSendNeedsCsrfTokenAndText(): void
     {
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
         $this->assertSame(403, $this->send('hi', 'forged')[0]);
         $this->assertSame(400, $this->send('   ')[0]);
@@ -192,7 +244,7 @@ class ChatTest extends AppTestCase
     public function testRepliesAreEscaped(): void
     {
         FakeClaude::$reply = '<script>alert(1)</script> **ok**';
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
         $this->send('hi');
         $this->client->request('GET', '/chat');
@@ -203,7 +255,7 @@ class ChatTest extends AppTestCase
 
     public function testDeletingTheAccountRemovesChats(): void
     {
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
         $this->send('hi');
         $crawler = $this->client->request('GET', '/account');

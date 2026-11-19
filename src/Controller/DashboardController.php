@@ -158,7 +158,7 @@ final class DashboardController extends AbstractController
 
     /** Removes one of several dogs, with its photo. The last dog stays (delete the account instead). */
     #[Route('/dashboard/dog/{id}/remove', name: 'app_dog_remove', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function removeDog(int $id, Request $request, \Symfony\Contracts\Translation\TranslatorInterface $translator): Response
+    public function removeDog(int $id, Request $request, \Symfony\Contracts\Translation\TranslatorInterface $translator, \App\Repository\ChatConversationRepository $chats, \App\Chat\ChatFiles $chatFiles): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -166,6 +166,11 @@ final class DashboardController extends AbstractController
         foreach ($dogs as $dog) {
             if ($dog->getId() === $id && \count($dogs) > 1 && $this->isCsrfTokenValid('dog-remove' . $id, (string) $request->request->get('_token'))) {
                 $this->dogPhotos->remove($dog);
+                // Its chat goes with it (one chat per pet).
+                if ($chat = $chats->findForDog($dog)) {
+                    $chatFiles->removeForMessages($user, $chat->getMessages()->toArray());
+                    $this->em->remove($chat);
+                }
                 $name = $dog->getName();
                 $this->em->remove($dog);
                 $user->setActiveDogId(null);

@@ -7,6 +7,7 @@ use App\Entity\Course;
 use App\Entity\Lesson;
 use App\Entity\LessonProgress;
 use App\Tests\Support\FakeClaude;
+use App\Tests\Support\FakeStripe;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -101,7 +102,7 @@ final class CourseTest extends AppTestCase
         $this->publish();
         $lesson = $this->course()->getLessons()->first();
         $slides = array_column($lesson->getSlides(), null, 'layout');
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
 
         $crawler = $this->client->request('GET', '/courses');
@@ -179,20 +180,103 @@ final class CourseTest extends AppTestCase
         $this->assertSelectorTextContains('.lp-slide--achievement .lp-mode', 'Gautas ženklelis');
     }
 
-    public function testPaidCoursesAreLockedForPetParentsWithoutAnOrder(): void
+    public function testLockedLessonsOpenAfterTheOneOffUnlock(): void
     {
         $this->import();
         $this->publish();
-        $this->course()->setIsFree(false);
+        $lessons = $this->course()->getLessons()->toArray();
+        $first = $lessons[0];
+        $last = end($lessons);
+        $last->setIsLocked(true);
         $this->em->flush();
-        $lesson = $this->course()->getLessons()->first();
-        $this->createUser();
+        $unlock = $this->createProduct('all-lessons', '9.99')->setUnlocksLessons(true);
+        $other = $this->createProduct('test-product');
+        $this->em->flush();
+        $user = $this->createUser();
         $this->loginViaForm('maria@example.com', 'Password123');
 
-        $this->client->request('GET', '/courses');
-        $this->assertSelectorTextContains('.cl-locked', 'for ZENOO customers');
-        $this->client->request('GET', '/courses/dog-wellness/lesson/' . $lesson->getId());
+        // Every lesson but the locked one is open; the unlock box shows the price.
+        $crawler = $this->client->request('GET', '/courses');
+        $this->assertSelectorTextContains('#unlock button', '€9.99');
+        $this->assertSame(1, $crawler->filter('.cl-lesson.is-locked')->count());
+        $this->assertSame('#unlock', $crawler->filter('.cl-lesson.is-locked a')->attr('href'));
+        $this->client->request('GET', '/courses/dog-wellness/lesson/' . $first->getId());
+        $this->assertResponseIsSuccessful();
+        $this->client->request('GET', '/courses/dog-wellness/lesson/' . $last->getId());
+        $this->assertResponseRedirects('/courses#unlock');
+        $this->client->request('POST', '/courses/progress/' . $last->getId(), [], [], ['HTTP_X_CSRF_TOKEN' => 'x'], '{"complete":true}');
+        $this->assertResponseStatusCodeSame(403);
+
+        // The unlock isn't one of the shop's products.
+        $this->client->request('GET', '/shop');
+        $this->assertSelectorNotExists('a[href="/shop/all-lessons"]');
+
+        // Buying something else doesn't open it.
+        FakeStripe::$sessions['cs_other'] = $this->paidSession($user, $other, 'cs_other');
+        $this->client->request('GET', '/shop/return?session_id=cs_other');
+        $this->client->request('GET', '/courses/dog-wellness/lesson/' . $last->getId());
+        $this->assertResponseRedirects('/courses#unlock');
+
+        // One Stripe checkout for the unlock; cancelling comes back to the courses.
+        $crawler = $this->client->request('GET', '/courses');
+        $this->client->submit($crawler->filter('#unlock form')->form());
+        $this->assertStringStartsWith('https://checkout.stripe.com/', $this->client->getResponse()->headers->get('Location'));
+        $params = FakeStripe::lastCheckoutParams();
+        $this->assertSame('999', (string) $params['line_items'][0]['price_data']['unit_amount']);
+        $this->assertStringEndsWith('/courses?cancelled=1', $params['cancel_url']);
+
+        // Paid: back on the courses page with everything open.
+        FakeStripe::$sessions['cs_unlock'] = $this->paidSession($user, $unlock, 'cs_unlock', 999);
+        $this->client->request('GET', '/shop/return?session_id=cs_unlock');
         $this->assertResponseRedirects('/courses');
+        $this->client->followRedirect();
+        $this->assertContains('Thank you! All lessons are open now.', $this->flashes());
+        $this->assertSelectorNotExists('#unlock');
+        $this->assertSelectorNotExists('.cl-lesson.is-locked');
+        $this->client->request('GET', '/courses/dog-wellness/lesson/' . $last->getId());
+        $this->assertResponseIsSuccessful();
+    }
+
+    public function testTheCoachKnowsWhichLessonsAreLocked(): void
+    {
+        $this->import();
+        $this->publish();
+        $lessons = $this->course()->getLessons()->toArray();
+        end($lessons)->setIsLocked(true);
+        $this->em->flush();
+        $this->createPetParent();
+        $this->loginViaForm('maria@example.com', 'Password123');
+
+        $this->client->request('POST', '/chat/send', [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $this->chatToken()], json_encode(['message' => 'Hi']));
+        $this->assertStringContainsString('Locked for them: lesson 30.', FakeClaude::$requests[0]['system'][1]['text']);
+    }
+
+    public function testAdminsLockAndFreeLessonsInTheStudio(): void
+    {
+        $this->import();
+        $lesson = $this->course()->getLessons()->first();
+        $this->createUser('admin@example.com', 'Password123', ['ROLE_ADMIN']);
+        $this->loginViaForm('admin@example.com', 'Password123');
+
+        $crawler = $this->client->request('GET', '/admin/course-studio');
+        $this->assertSelectorTextContains('.cs-intro', 'No lesson unlock product is on sale');
+        $this->client->submit($crawler->filter('form[action="/admin/course-studio/lesson/' . $lesson->getId() . '/lock"]')->form());
+        $this->em->clear();
+        $this->assertTrue($this->em->getRepository(\App\Entity\Lesson::class)->find($lesson->getId())->isLocked());
+
+        $crawler = $this->client->request('GET', '/admin/course-studio');
+        $this->assertSelectorTextContains('form[action="/admin/course-studio/lesson/' . $lesson->getId() . '/lock"] button', 'Locked');
+        $this->client->submit($crawler->filter('form[action="/admin/course-studio/lesson/' . $lesson->getId() . '/lock"]')->form());
+        $this->em->clear();
+        $this->assertFalse($this->em->getRepository(\App\Entity\Lesson::class)->find($lesson->getId())->isLocked());
+
+        // The price comes from the unlock product, edited in admin → Products.
+        $this->createProduct('all-lessons', '12.50')->setUnlocksLessons(true);
+        $this->em->flush();
+        $this->client->request('GET', '/admin/course-studio');
+        $this->assertSelectorTextContains('.cs-intro', '€12.50');
+        $this->client->request('GET', '/admin/product');
+        $this->assertResponseIsSuccessful();
     }
 
     public function testStudioIsForAdminsAndSavesCleanSlides(): void

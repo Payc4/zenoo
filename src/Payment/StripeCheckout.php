@@ -86,7 +86,7 @@ class StripeCheckout
             // Discount codes are created in the Stripe dashboard and typed in on Stripe's page.
             'allow_promotion_codes' => true,
             'success_url' => $base . '/shop/return?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => $base . '/shop/' . rawurlencode($product->getSlug()) . '?cancelled=1',
+            'cancel_url' => $product->unlocksLessons() ? $base . '/courses?cancelled=1' : $base . '/shop/' . rawurlencode($product->getSlug()) . '?cancelled=1',
             'metadata' => $metadata,
             'payment_intent_data' => ['metadata' => $metadata],
         ];

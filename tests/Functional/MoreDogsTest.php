@@ -35,22 +35,33 @@ final class MoreDogsTest extends AppTestCase
 
         // The chat is about the selected dog, and the coach knows about the other one.
         $crawler = $this->client->request('GET', '/chat');
-        $this->assertSelectorTextContains('.chat-dogs strong', 'Bella');
+        $this->assertSelectorTextContains('.chat-pet.is-on', 'Bella');
         $csrf = $crawler->filter('#chat')->attr('data-csrf');
         $this->client->request('POST', '/chat/send', [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $csrf], json_encode(['message' => 'How much should she eat?']));
         $profile = end(FakeClaude::$requests)['system'][1]['text'];
         $this->assertStringContainsString('Name: Bella', $profile);
-        $this->assertStringContainsString('Their other dog (they can switch the chat to them at the top of the chat): Max (Beagle', $profile);
+        $this->assertStringContainsString('Their other dog (each pet has its own chat; they switch pets at the top of the chat): Max (Beagle', $profile);
 
-        // Switching from the chat comes back to the chat.
+        // Max's chat: opening it from the chat selects Max.
         $crawler = $this->client->request('GET', '/chat');
-        $this->client->submit($crawler->filter('.chat-dogs form')->form());
-        $this->assertResponseRedirects('/chat');
+        $this->client->click($crawler->filter('.chat-pet--new')->link());
+        $this->client->click($this->client->getCrawler()->filter('.chat-new__pet')->link());
+        $this->assertSelectorTextContains('.chat-pet.is-on', 'Max');
+        $this->assertSelectorTextContains('.chat-empty h1', 'Max');
+        $this->client->request('GET', '/dashboard');
+        $this->assertSelectorTextContains('h1', 'Max’s dashboard');
     }
 
     public function testRemovingADog(): void
     {
         $user = $this->household();
+        // Max and Bella each have a chat.
+        foreach ($this->em->getRepository(DogProfile::class)->findAll() as $d) {
+            $chat = new \App\Entity\ChatConversation($d->getUser(), $d);
+            $this->em->persist($chat);
+            $this->em->persist(new \App\Entity\ChatMessage($chat, 'user', 'About ' . $d->getName()));
+        }
+        $this->em->flush();
         $crawler = $this->client->request('GET', '/dashboard'); // Max is selected
         $this->client->submit($crawler->filter('form.dash-remove-dog')->form());
         $this->client->followRedirect();
@@ -59,6 +70,9 @@ final class MoreDogsTest extends AppTestCase
         $this->assertSelectorNotExists('form.dash-remove-dog', 'the last dog stays');
         $this->em->clear();
         $this->assertCount(1, $this->em->getRepository(DogProfile::class)->findAll());
+        $chats = $this->em->getRepository(\App\Entity\ChatConversation::class)->findAll();
+        $this->assertSame(['Bella'], array_map(fn ($c) => $c->getDog()->getName(), $chats), 'Max’s chat went with Max');
+        $this->assertSame(['About Bella'], array_map(fn ($m) => $m->getContent(), $this->em->getRepository(\App\Entity\ChatMessage::class)->findAll()));
 
         // A quiz for a new name adds a dog again.
         $this->em->getRepository(DogProfile::class)->saveQuizResult($this->em->getRepository(User::class)->find($user->getId()), QuizAccountTest::result(['quiz_dog_name' => 'Rex']), 'en');

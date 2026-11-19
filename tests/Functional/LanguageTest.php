@@ -137,7 +137,7 @@ final class LanguageTest extends AppTestCase
     public function testLithuanianCourseQuizAndChat(): void
     {
         (new CommandTester((new Application(static::$kernel))->find('app:course:import')))->execute(['--publish' => true]);
-        $this->createUser();
+        $this->createPetParent();
         $this->loginViaForm('maria@example.com', 'Password123');
         $this->lt();
 
@@ -150,7 +150,7 @@ final class LanguageTest extends AppTestCase
         $this->assertStringContainsString('"sendToKlaviyo":false', $this->client->getResponse()->getContent(), 'no LT Klaviyo account set');
 
         $crawler = $this->client->request('GET', '/chat');
-        $this->assertSame('Kaip vardu jūsų šuo?', json_decode($crawler->filter('#chat-cards')->text(), true)['questions'][0]['question']);
+        $this->assertSelectorTextContains('.chat-pet--new', 'Naujas pokalbis');
         $this->assertStringContainsString('Praleisti', $crawler->filter('#chat')->attr('data-i18n'));
 
         $crawler = $this->client->request('GET', '/account');

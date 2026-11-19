@@ -299,7 +299,7 @@
         <button class="btn btn-small" type="submit">{{ 'Add'|trans }}</button>
       </form>
       {% if dogs|length > 1 %}
-        <form method="post" action="{{ path('app_dog_remove', {id: dog.id}) }}" class="dash-remove-dog" onsubmit="return confirm(this.dataset.confirm)" data-confirm="{{ 'Remove %dog% and everything saved about them? This can’t be undone.'|trans({'%dog%': dog.name}) }}">
+        <form method="post" action="{{ path('app_dog_remove', {id: dog.id}) }}" class="dash-remove-dog" onsubmit="return confirm(this.dataset.confirm)" data-confirm="{{ 'Remove %dog%, their chat and everything saved about them? This can’t be undone.'|trans({'%dog%': dog.name}) }}">
           <input type="hidden" name="_token" value="{{ csrf_token('dog-remove' ~ dog.id) }}">
           <button type="submit">{{ 'Remove %dog% from my account'|trans({'%dog%': dog.name}) }}</button>
         </form>

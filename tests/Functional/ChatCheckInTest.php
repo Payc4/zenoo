@@ -19,7 +19,7 @@ final class ChatCheckInTest extends AppTestCase
         $dog->setFood('Orijen', 'Original', 'dry', '', 'chat', new \DateTimeImmutable());
         $this->em->persist($dog);
         // A chat from today: the coach doesn't open it again, so the check-in shows.
-        $conversation = new \App\Entity\ChatConversation($user);
+        $conversation = new \App\Entity\ChatConversation($user, $dog);
         $this->em->persist($conversation);
         $this->em->persist(new ChatMessage($conversation, ChatMessage::ROLE_ASSISTANT, 'Hi Maria!'));
         $this->em->flush();
@@ -124,10 +124,9 @@ final class ChatCheckInTest extends AppTestCase
     public function testNoDogNoCheckIn(): void
     {
         $this->client->loginUser($this->createUser());
-        [$cards, $csrf] = $this->openChat();
-        $this->assertNull($cards);
-        $this->client->request('POST', '/chat/checkin', [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $csrf], json_encode(['answers' => []]));
-        $this->assertResponseStatusCodeSame(400);
+        $this->client->request('GET', '/chat');
+        $this->assertSelectorNotExists('#chat-checkin');
+        $this->assertSelectorExists('a[href="/quiz/?new=1&then=chat"]', 'no pet yet: the quiz comes first');
     }
 
     public function testAdminCanReadConversationsWithTheDogAndCheckIns(): void
