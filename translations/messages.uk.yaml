@@ -530,3 +530,12 @@
 'adult': 'дорослий'
 'puppy': 'цуценя'
 'senior': 'сеньйор'
+
+# Several dogs
+'%dog% has been removed from your account.': '%dog% видалено з вашого облікового запису.'
+'About:': 'Про:'
+'Your dogs': 'Ваші собаки'
+'Retake the quiz for %dog%': 'Пройти тест ще раз: %dog%'
+'+ Add another dog': '+ Додати ще одного собаку'
+'Remove %dog% and everything saved about them? This can’t be undone.': 'Видалити собаку (%dog%) і все, що про нього збережено? Цю дію не можна скасувати.'
+'Remove %dog% from my account': 'Видалити собаку з облікового запису: %dog%'

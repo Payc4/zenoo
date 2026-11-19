@@ -48,6 +48,15 @@
     <section class="chat-main">
         <div class="chat-bar">
             <span class="chat-bar__title">{{ 'Chat with ZENOO'|trans }}</span>
+            {% if dogs|length > 1 %}
+                {# Several dogs: the coach talks about the selected one. #}
+                <span class="chat-dogs">{{ 'About:'|trans }}
+                    {% for d in dogs %}
+                        {% if d.id == dog.id %}<strong>{{ d.name }}</strong>
+                        {% else %}<form method="post" action="{{ path('app_dog_select', {id: d.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('dog-select') }}"><input type="hidden" name="back" value="/chat"><button type="submit" class="link-btn small">{{ d.name }}</button></form>{% endif %}
+                    {% endfor %}
+                </span>
+            {% endif %}
             {% if unlimited %}
                 <span class="chat-quota">{{ 'Admin: no daily limit'|trans }}</span>
             {% else %}

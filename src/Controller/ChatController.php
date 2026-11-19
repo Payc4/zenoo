@@ -91,6 +91,8 @@ class ChatController extends AbstractController
         }
 
         return $this->render('chat/index.html.twig', [
+            'dog' => $dog,
+            'dogs' => $dog ? $dogs->findAllForUser($user) : [],
             'messages' => $messages,
             'cards' => $cards,
             'cardsAreIntro' => !$messages && $cards !== null,

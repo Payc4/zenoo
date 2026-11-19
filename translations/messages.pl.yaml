@@ -530,3 +530,12 @@
 'adult': 'dorosły'
 'puppy': 'szczenię'
 'senior': 'senior'
+
+# Several dogs
+'%dog% has been removed from your account.': '%dog% został(-a) usunięty(-a) z Twojego konta.'
+'About:': 'O:'
+'Your dogs': 'Twoje psy'
+'Retake the quiz for %dog%': 'Powtórz quiz: %dog%'
+'+ Add another dog': '+ Dodaj kolejnego psa'
+'Remove %dog% and everything saved about them? This can’t be undone.': 'Usunąć psa (%dog%) i wszystko, co o nim zapisano? Tego nie da się cofnąć.'
+'Remove %dog% from my account': 'Usuń psa z konta: %dog%'

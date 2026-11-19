@@ -162,7 +162,7 @@ class AccountController extends AbstractController
         $avatars->remove($user->getProfileImage());
         $chats->deleteAllForUser($user);
         $chatFiles->removeAll($user);
-        if ($dog = $dogs->findForUser($user)) {
+        foreach ($dogs->findAllForUser($user) as $dog) {
             $dogPhotos->remove($dog);
         }
         $lessonProgress->deleteAllForUser($user);

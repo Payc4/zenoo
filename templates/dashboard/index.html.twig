@@ -31,8 +31,20 @@
           {% if dog.weightUpdate %}<li>{{ dog.weightUpdate.kg }} kg</li>{% elseif dog.get('weight_kg') %}<li>{{ dog.get('weight_kg') }} kg</li>{% endif %}
         </ul>
       {% endif %}
+      {# Several dogs (roadmap 07): switch between them; add another. #}
+      {% if dogs|length > 1 %}
+        <nav class="dash-dogs" aria-label="{{ 'Your dogs'|trans }}">
+          {% for d in dogs %}
+            {% if d.id == dog.id %}<span class="dash-dogs__dog is-current" aria-current="true">{{ d.name }}</span>
+            {% else %}<form method="post" action="{{ path('app_dog_select', {id: d.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('dog-select') }}"><button class="dash-dogs__dog" type="submit">{{ d.name }}</button></form>{% endif %}
+          {% endfor %}
+        </nav>
+      {% endif %}
     </div>
-    <a class="btn btn-ghost-light btn-small dash-retake" href="{{ path('app_quiz') }}">{{ dog ? 'Retake the quiz'|trans : 'Take the quiz'|trans }}</a>
+    <div class="dash-head__actions">
+      <a class="btn btn-ghost-light btn-small dash-retake" href="{{ path('app_quiz') }}">{{ dog ? 'Retake the quiz for %dog%'|trans({'%dog%': dog.name}) : 'Take the quiz'|trans }}</a>
+      {% if dog %}<a class="dash-add-dog" href="{{ path('app_quiz') }}?new=1">{{ '+ Add another dog'|trans }}</a>{% endif %}
+    </div>
   </div>
 </section>
 
@@ -286,6 +298,12 @@
         <input id="dog-note" name="text" maxlength="240" required placeholder="{{ 'Add something about %dog%, e.g. “allergic to chicken”'|trans({'%dog%': dog.name}) }}">
         <button class="btn btn-small" type="submit">{{ 'Add'|trans }}</button>
       </form>
+      {% if dogs|length > 1 %}
+        <form method="post" action="{{ path('app_dog_remove', {id: dog.id}) }}" class="dash-remove-dog" onsubmit="return confirm(this.dataset.confirm)" data-confirm="{{ 'Remove %dog% and everything saved about them? This can’t be undone.'|trans({'%dog%': dog.name}) }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('dog-remove' ~ dog.id) }}">
+          <button type="submit">{{ 'Remove %dog% from my account'|trans({'%dog%': dog.name}) }}</button>
+        </form>
+      {% endif %}
       <p class="dash-knows__hint">{{ 'Tell the coach when something changes, and it’s added here.'|trans }}
         <a href="{{ path('app_vet_report') }}">{{ 'Report for the vet (print or PDF)'|trans }}</a></p>
     </section>

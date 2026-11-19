@@ -188,15 +188,21 @@ final class QuizAccountTest extends AppTestCase
         $this->assertSelectorTextContains('.flash-success', 'Bella’s profile is saved to your account.');
         $this->assertSelectorNotExists('.dash-notice', 'existing account keeps its password');
 
-        // Logged in: a new quiz replaces the profile straight away, no email.
+        // Logged in: a quiz for another dog adds it to the account straight away, no email, and selects it.
         $data = $this->submit(['email' => 'other@example.com', 'properties' => self::result(['quiz_dog_name' => 'Rex', 'quiz_bowl_score' => 81])]);
         $this->assertSame('saved', $data['status']);
         $this->assertSame('/dashboard', $data['dashboard']);
         $this->em->clear();
-        $dogs = $this->em->getRepository(DogProfile::class)->findAll();
-        $this->assertCount(1, $dogs);
-        $this->assertSame('Rex', $dogs[0]->getName());
-        $this->assertSame(81, $dogs[0]->getBowlScore());
+        $this->assertCount(2, $this->em->getRepository(DogProfile::class)->findAll());
+        $user = $this->em->getRepository(User::class)->findOneBy(['email' => 'maria@example.com']);
+        $this->assertSame('Rex', $this->em->getRepository(DogProfile::class)->findForUser($user)->getName());
+
+        // A retake for a dog with the same name updates that dog.
+        $this->submit(['email' => 'maria@example.com', 'properties' => self::result(['quiz_dog_name' => 'bella ', 'quiz_bowl_score' => 64])]);
+        $this->em->clear();
+        $this->assertCount(2, $this->em->getRepository(DogProfile::class)->findAll());
+        $bella = $this->em->getRepository(DogProfile::class)->findOneBy(['name' => 'bella']) ?? $this->em->getRepository(DogProfile::class)->findOneBy(['name' => 'Bella']);
+        $this->assertSame(64, $bella->getBowlScore());
 
         // The quiz page fills in the logged-in pet parent's name and email.
         $this->client->request('GET', '/quiz/');

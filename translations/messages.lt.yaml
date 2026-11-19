@@ -530,3 +530,12 @@
 'adult': 'suaugęs'
 'puppy': 'šuniukas'
 'senior': 'senjoras'
+
+# Several dogs
+'%dog% has been removed from your account.': '%dog% pašalintas iš jūsų paskyros.'
+'About:': 'Apie:'
+'Your dogs': 'Jūsų šunys'
+'Retake the quiz for %dog%': 'Pakartoti testą: %dog%'
+'+ Add another dog': '+ Pridėti kitą šunį'
+'Remove %dog% and everything saved about them? This can’t be undone.': 'Pašalinti šunį (%dog%) ir viską, kas apie jį išsaugota? To nebus galima atšaukti.'
+'Remove %dog% from my account': 'Pašalinti šunį iš paskyros: %dog%'

@@ -8,7 +8,10 @@
   const STORE_KEY = 'zq-proto-v1';
 
   const blank = () => ({ foods: [], signs: [], label: {}, amounts: {} });
-  let a = { ...blank(), ...(load() || {}) };
+  // Site only: "+ Add another dog" (?new=1) starts a fresh quiz instead of the saved one.
+  const fresh = new URLSearchParams(location.search).has('new');
+  let a = { ...blank(), ...(fresh ? {} : (load() || {})) };
+  if (fresh) history.replaceState(null, '', location.pathname);
   // Site only: a logged-in pet parent doesn't have to type their name and email again.
   if (CFG.user) { a.parentName = a.parentName || CFG.user.firstName || ''; a.email = a.email || CFG.user.email || ''; }
   let step = a._step || 0;

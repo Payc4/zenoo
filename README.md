@@ -189,6 +189,18 @@ Every message goes: **safety check → coach (AI) → tools and data**.
 - After 30 days the dashboard invites a quiz retake; earlier scores are kept, so it shows "Bella went
   from 44 to 61" and the coach sees the scores over time.
 
+## Several dogs per account (roadmap part 2: 07)
+
+- An account can have several dogs (`DogProfileRepository::findAllForUser()`); `User::getActiveDogId()`
+  says which one is selected, and `findForUser()` returns it, so the dashboard, plan, trackers,
+  check-ins and coach are about that dog. The dashboard and the chat show a switcher when there are
+  several.
+- A logged-in quiz updates the dog with the same name (a retake) or adds a new dog;
+  "+ Add another dog" opens a fresh quiz (`/quiz/?new=1`). The new or updated dog becomes selected.
+- The coach is told about the other dogs and suggests switching when asked about one of them.
+  One of several dogs can be removed from the dashboard (the last one stays). Cats need a cat quiz
+  first.
+
 ## Phone, trust and sharing (roadmap part 2: 08–12)
 
 - **Installable app (08):** `public/manifest.webmanifest`, icons in `public/icons/`, a service

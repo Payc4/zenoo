@@ -86,6 +86,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /** The dog the dashboard, plan and coach are about, when the account has several. */
+    #[ORM\Column(nullable: true)]
+    private ?int $activeDogId = null;
+
+    public function getActiveDogId(): ?int
+    {
+        return $this->activeDogId;
+    }
+
+    public function setActiveDogId(?int $id): static
+    {
+        $this->activeDogId = $id;
+        return $this;
+    }
+
     /** Coach follow-up emails ("two weeks in, how is Bella?"); switched off in the account. */
     #[ORM\Column(options: ['default' => true])]
     private bool $coachEmails = true;

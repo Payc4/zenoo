@@ -93,6 +93,7 @@ final class DashboardController extends AbstractController
             'streak' => $this->progress->getStreak($user),
             'coachQuestions' => $dog ? $this->coachQuestions($dog) : [],
             'zenooPlan' => $zenooPlan,
+            'dogs' => $this->dogs->findAllForUser($user),
         ]);
     }
 
@@ -137,6 +138,42 @@ final class DashboardController extends AbstractController
         $this->em->flush();
         $this->funnel->record('plan_cart', \App\Tracking\Attribution::label($user->getAttribution()));
         return $this->redirect($plan['options'][$option]['cart_url']);
+    }
+
+    /** Several dogs: choose which one the dashboard, plan and coach are about. */
+    #[Route('/dashboard/dog/{id}/select', name: 'app_dog_select', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function selectDog(int $id, Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        foreach ($this->dogs->findAllForUser($user) as $dog) {
+            if ($dog->getId() === $id && $this->isCsrfTokenValid('dog-select', (string) $request->request->get('_token'))) {
+                $user->setActiveDogId($id);
+                $this->em->flush();
+            }
+        }
+        $back = (string) $request->request->get('back', '');
+        return $this->redirect($back === '/chat' ? $this->generateUrl('app_chat') : $this->generateUrl('app_dashboard'));
+    }
+
+    /** Removes one of several dogs, with its photo. The last dog stays (delete the account instead). */
+    #[Route('/dashboard/dog/{id}/remove', name: 'app_dog_remove', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function removeDog(int $id, Request $request, \Symfony\Contracts\Translation\TranslatorInterface $translator): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $dogs = $this->dogs->findAllForUser($user);
+        foreach ($dogs as $dog) {
+            if ($dog->getId() === $id && \count($dogs) > 1 && $this->isCsrfTokenValid('dog-remove' . $id, (string) $request->request->get('_token'))) {
+                $this->dogPhotos->remove($dog);
+                $name = $dog->getName();
+                $this->em->remove($dog);
+                $user->setActiveDogId(null);
+                $this->em->flush();
+                $this->addFlash('success', $translator->trans('%dog% has been removed from your account.', ['%dog%' => $name]));
+            }
+        }
+        return $this->redirectToRoute('app_dashboard');
     }
 
     /** Roadmap 11: a one-page summary to print or save as PDF and take to the vet. */

@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * sends to Klaviyo), so the dashboard can show the score, the plan and the tips.
  */
 #[ORM\Entity(repositoryClass: DogProfileRepository::class)]
-#[ORM\UniqueConstraint(name: 'UNIQ_DOG_PROFILE_USER', fields: ['user'])]
+#[ORM\Index(name: 'IDX_DOG_PROFILE_USER', fields: ['user'])]
 class DogProfile
 {
     /** Points available per part of the Bowl Score (public/quiz/scoring.js, CONFIG.weights). */
@@ -22,7 +22,8 @@ class DogProfile
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\OneToOne]
+    /** An account can have several dogs (roadmap 07); User::getActiveDogId() says which one is selected. */
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $user;
 

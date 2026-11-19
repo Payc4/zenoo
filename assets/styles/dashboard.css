@@ -151,3 +151,14 @@
 .share-card__inner { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
 .share-card__photo { border-radius: 20px; object-fit: cover; }
 .share-card__score { color: var(--sun, #f7a223); }
+
+/* Several dogs */
+.dash-dogs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.dash-dogs form { margin: 0; }
+.dash-dogs__dog { font: inherit; font-weight: 700; font-size: 14px; padding: 6px 14px; border-radius: 99px; border: 2px solid rgba(255, 255, 255, .6); background: transparent; color: inherit; cursor: pointer; }
+.dash-dogs__dog.is-current { background: #fff; color: var(--forest, #445942); border-color: #fff; }
+.dash-head__actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.dash-add-dog { color: inherit; font-weight: 600; font-size: 14px; }
+.dash-remove-dog { margin-top: 12px; }
+.dash-remove-dog button { border: 0; background: none; padding: 0; font: inherit; font-size: 13px; color: #8f2f1f; text-decoration: underline; cursor: pointer; }
+@media (max-width: 700px) { .dash-head__actions { align-items: flex-start; } }

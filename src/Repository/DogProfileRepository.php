@@ -15,17 +15,47 @@ class DogProfileRepository extends ServiceEntityRepository
         parent::__construct($registry, DogProfile::class);
     }
 
+    /** The selected dog (see User::getActiveDogId()), else the one updated most recently. */
     public function findForUser(User $user): ?DogProfile
     {
-        return $this->findOneBy(['user' => $user]);
+        $dogs = $this->findAllForUser($user);
+        foreach ($dogs as $dog) {
+            if ($dog->getId() === $user->getActiveDogId()) {
+                return $dog;
+            }
+        }
+        return $dogs[0] ?? null;
     }
 
-    /** Creates the user's dog profile or replaces it with a newer quiz result (not flushed). */
-    public function saveQuizResult(User $user, array $data, string $locale): DogProfile
+    /** @return list<DogProfile> the account's dogs, most recently updated first */
+    public function findAllForUser(User $user): array
     {
-        $profile = $this->findForUser($user) ?? new DogProfile($user);
+        return $this->findBy(['user' => $user], ['updatedAt' => 'DESC', 'id' => 'DESC']);
+    }
+
+    /**
+     * Saves a quiz result (not flushed): to the dog with that id, else to the account's dog with
+     * the same name (a retake), else as a new dog (another dog in the household). The saved dog
+     * becomes the selected one.
+     */
+    public function saveQuizResult(User $user, array $data, string $locale, ?int $dogId = null): DogProfile
+    {
+        $dogs = $this->findAllForUser($user);
+        $name = mb_strtolower(trim((string) ($data['quiz_dog_name'] ?? '')));
+        $profile = null;
+        foreach ($dogs as $dog) {
+            if (($dogId !== null && $dog->getId() === $dogId) || ($dogId === null && $name !== '' && mb_strtolower(trim($dog->getName())) === $name)) {
+                $profile = $dog;
+                break;
+            }
+        }
+        $profile ??= new DogProfile($user);
         $profile->fillFromQuiz($data, $locale);
         $this->getEntityManager()->persist($profile);
+        if ($profile->getId() === null) {
+            $this->getEntityManager()->flush(); // for the id
+        }
+        $user->setActiveDogId($profile->getId());
         return $profile;
     }
 
