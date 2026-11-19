@@ -69,6 +69,7 @@ final class QuizLabelController extends AbstractController
 
         try {
             $result = $this->claude->stream([
+                'model' => $this->claude->fastModel(),
                 'max_tokens' => 2048,
                 'system' => self::PROMPT . "\n\nWrite \"take\" in " . Locale::ENGLISH_NAMES[$locale] . '.',
                 'messages' => [['role' => 'user', 'content' => [

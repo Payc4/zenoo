@@ -38,18 +38,52 @@ final class ChatReliabilityTest extends AppTestCase
         return $this->em->getRepository(ChatMessage::class)->findBy([], ['id' => 'ASC']);
     }
 
-    public function testThinkingIsOffAndTheProfileIsInEveryRequest(): void
+    public function testOpusThinksWithRoomAndTheProfileIsInEveryRequest(): void
     {
         $this->userWithDog();
         $this->send('What should I do first?');
         $req = FakeClaude::$requests[0];
-        $this->assertSame(['type' => 'disabled'], $req['thinking']);
-        $this->assertGreaterThanOrEqual(4096, $req['max_tokens']);
+        // Claude Opus 5.5 always thinks: no "disabled" (the API refuses it), and room for the thinking.
+        $this->assertSame('claude-opus-5-5', $req['model']);
+        $this->assertArrayNotHasKey('thinking', $req);
+        $this->assertGreaterThanOrEqual(16000, $req['max_tokens']);
+        // The safety check ran on the fast model, with thinking off and its one tool forced.
+        $this->assertSame('claude-haiku-5-5', FakeClaude::$triage[0]['model']);
+        $this->assertSame(['type' => 'disabled'], FakeClaude::$triage[0]['thinking']);
+        $this->assertSame('tool', FakeClaude::$triage[0]['tool_choice']['type']);
         // Rules + course cached, then the dog's profile (with the Bowl Score), cached too.
         $this->assertCount(2, $req['system']);
         $this->assertStringContainsString('Bowl Score:', $req['system'][1]['text']);
         $this->assertStringContainsString('Orijen Original', $req['system'][1]['text']);
         $this->assertSame(['type' => 'ephemeral'], $req['system'][1]['cache_control']);
+    }
+
+    public function testThinkingBlocksAreSentBackInAToolLoop(): void
+    {
+        $this->userWithDog();
+        FakeClaude::$thinking = true;
+        FakeClaude::$script = [
+            ['text' => '', 'tool' => ['name' => 'calculate', 'input' => ['operation' => 'daily_energy']]],
+            ['text' => 'About 1,250 kcal a day.'],
+        ];
+        $this->send('How many calories does she need?');
+        $assistant = FakeClaude::$requests[1]['messages'][\count(FakeClaude::$requests[1]['messages']) - 2];
+        $this->assertSame('assistant', $assistant['role']);
+        $this->assertSame(['thinking', 'tool_use'], array_column($assistant['content'], 'type'), 'thinking first, unchanged, then the tool call');
+        $this->assertSame('sig-1', $assistant['content'][0]['signature']);
+        $this->assertSame('About 1,250 kcal a day.', $this->messages()[1]->getContent());
+    }
+
+    public function testAForcedToolBecomesAutoOnAModelThatAlwaysThinks(): void
+    {
+        $this->assertTrue(\App\Chat\ClaudeClient::alwaysThinks('claude-opus-5-5'));
+        $this->assertFalse(\App\Chat\ClaudeClient::alwaysThinks('claude-haiku-5-5'));
+        $client = new \App\Chat\ClaudeClient(static::getContainer()->get(\Symfony\Contracts\HttpClient\HttpClientInterface::class), 'key', 'claude-opus-5-5', 'https://api.anthropic.com', 'claude-opus-5-5', 'low');
+        $client->stream(['max_tokens' => 200, 'messages' => [['role' => 'user', 'content' => 'x']], 'tools' => [['name' => 'triage', 'input_schema' => ['type' => 'object']]], 'tool_choice' => ['type' => 'tool', 'name' => 'triage']], static function (): void {});
+        $req = end(FakeClaude::$requests);
+        $this->assertSame(['type' => 'auto'], $req['tool_choice']);
+        $this->assertSame(12200, $req['max_tokens']);
+        $this->assertSame(['effort' => 'low'], $req['output_config']);
     }
 
     public function testAnEmptyReplyIsRetriedOnce(): void

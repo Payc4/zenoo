@@ -355,10 +355,12 @@ Every message goes: **safety check → coach (AI) → tools and data**.
   prompt caching, so the long course text is mostly read from Claude's cache (about 19,000 tokens).
 - **Switching it on:** set `ANTHROPIC_API_KEY` (from the Claude Console). Without it, the Chat
   tab says the chat isn't switched on yet.
-- **Model:** `claude-haiku-5-5` by default. Set `ANTHROPIC_MODEL` to change it. Haiku 5.5 "thinks"
-  before answering unless told not to, and that thinking counts toward `max_tokens`, so
-  `ClaudeClient` sends `thinking: {type: disabled}` for it (replies used to stop mid-sentence or come
-  back empty). Replies get up to 4,096 tokens; one that still hits the limit is cut back to its last
+- **Models:** the coach runs on `claude-opus-5-5` (`ANTHROPIC_MODEL`); the safety check and the
+  quiz label reader run on `claude-haiku-5-5` (`ANTHROPIC_FAST_MODEL`), which is quick, cheap and can
+  be made to answer with one tool. Opus 5.5 always thinks and its thinking counts toward `max_tokens`,
+  so `ClaudeClient` adds 12,000 tokens of room, never forces a tool on it, and sends the thinking
+  blocks back unchanged in a tool loop. `ANTHROPIC_EFFORT` (low, medium, high) sets how much it
+  thinks (default: the model's, medium). For Haiku, thinking is switched off (it used to cut replies). Replies get up to 4,096 tokens; one that still hits the limit is cut back to its last
   full sentence, and an empty reply is retried once, then reported as an error that doesn't use a message.
 - **The dog's profile grows:** the profile part of the prompt (Bowl Score, breakdown, plan, food,
   check-ins) is rebuilt from the database for every message and cached too. The coach saves what the

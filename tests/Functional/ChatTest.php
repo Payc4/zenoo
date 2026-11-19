@@ -71,7 +71,7 @@ class ChatTest extends AppTestCase
         $this->assertSame([300, 42], [$messages[1]->getInputTokens(), $messages[1]->getOutputTokens()]);
 
         $request = FakeClaude::$requests[0];
-        $this->assertSame('claude-haiku-5-5', $request['model']);
+        $this->assertSame('claude-opus-5-5', $request['model']);
         $this->assertTrue($request['stream']);
         $this->assertCount(2, $request['system'], 'shared (cached) block + personal block');
         $this->assertSame(['type' => 'ephemeral'], $request['system'][0]['cache_control']);

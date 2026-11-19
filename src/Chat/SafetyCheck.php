@@ -43,6 +43,7 @@ final class SafetyCheck
         $list = implode("\n", array_map(fn ($k, $v) => "- $k: $v", array_keys(self::FLAGS), self::FLAGS));
         try {
             $result = $this->claude->stream([
+                'model' => $this->claude->fastModel(),
                 'max_tokens' => 200,
                 'system' => "You check messages that pet parents send to a dog-nutrition coach, before the coach sees them. "
                     . "Decide whether the message says that their dog is in one of these situations RIGHT NOW (today or ongoing):\n$list\n\n"

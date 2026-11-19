@@ -25,7 +25,10 @@ parameters:
     # (KLAVIYO_PRIVATE_KEY); the site's own email is then just the fallback.
     app.quiz.site_confirm_default: true
     # Chatbot (/chat). ANTHROPIC_API_KEY switches it on; the prompt is config/chatbot/system_prompt.md.
-    chat.default_model: 'claude-haiku-5-5'
+    # The coach: Claude Opus 5.5 (always thinks; ClaudeClient leaves room for it). The safety check
+    # and the label reader use the fast model (quick, cheap, can be made to answer with one tool).
+    chat.default_model: 'claude-opus-5-5'
+    chat.fast_model: 'claude-haiku-5-5'
     chat.default_base_url: 'https://api.anthropic.com'
     chat.default_daily_limit: 60
     chat.default_timezone: 'Europe/Vilnius'

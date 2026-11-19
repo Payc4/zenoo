@@ -25,6 +25,8 @@ final class FakeClaude
 
     /** What the safety check (SafetyCheck, tool "triage") gets back; its calls go to $triage, not $requests. */
     public static string $redFlag = 'none';
+    /** Start each coach reply with a thinking block (with a signature), as Claude Opus 5.5 does. */
+    public static bool $thinking = false;
     public static array $triage = [];
 
     public static function reset(): void
@@ -35,6 +37,7 @@ final class FakeClaude
         self::$requests = [];
         self::$script = [];
         self::$redFlag = 'none';
+        self::$thinking = false;
         self::$triage = [];
     }
 
@@ -43,7 +46,7 @@ final class FakeClaude
         $request = json_decode((string) ($options['body'] ?? '{}'), true);
         if (($request['tool_choice']['name'] ?? null) === 'triage') {
             self::$triage[] = $request;
-            return self::stream('', ['name' => 'triage', 'input' => ['red_flag' => self::$redFlag]], null);
+            return self::stream('', ['name' => 'triage', 'input' => ['red_flag' => self::$redFlag]], null, false);
         }
         self::$requests[] = $request;
         if (self::$fail) {
@@ -60,24 +63,31 @@ final class FakeClaude
             $stop = $next['stop'] ?? null;
         }
 
-        return self::stream($reply, $tool, $stop);
+        return self::stream($reply, $tool, $stop, self::$thinking);
     }
 
-    private static function stream(string $reply, ?array $tool, ?string $stop): MockResponse
+    private static function stream(string $reply, ?array $tool, ?string $stop, bool $thinking = false): MockResponse
     {
-        $events = [
-            ['message_start', ['type' => 'message_start', 'message' => ['usage' => ['input_tokens' => 300, 'output_tokens' => 1]]]],
-            ['content_block_start', ['type' => 'content_block_start', 'index' => 0, 'content_block' => ['type' => 'text', 'text' => '']]],
-        ];
+        $events = [['message_start', ['type' => 'message_start', 'message' => ['usage' => ['input_tokens' => 300, 'output_tokens' => 1]]]]];
+        $i = 0;
+        if ($thinking) {
+            $events[] = ['content_block_start', ['type' => 'content_block_start', 'index' => $i, 'content_block' => ['type' => 'thinking', 'thinking' => '', 'signature' => '']]];
+            $events[] = ['content_block_delta', ['type' => 'content_block_delta', 'index' => $i, 'delta' => ['type' => 'thinking_delta', 'thinking' => 'Let me think about Bella.']]];
+            $events[] = ['content_block_delta', ['type' => 'content_block_delta', 'index' => $i, 'delta' => ['type' => 'signature_delta', 'signature' => 'sig-' . \count(self::$requests)]]];
+            $events[] = ['content_block_stop', ['type' => 'content_block_stop', 'index' => $i]];
+            ++$i;
+        }
+        $events[] = ['content_block_start', ['type' => 'content_block_start', 'index' => $i, 'content_block' => ['type' => 'text', 'text' => '']]];
         foreach ($reply === '' ? [] : mb_str_split($reply, 8) as $piece) {
-            $events[] = ['content_block_delta', ['type' => 'content_block_delta', 'index' => 0, 'delta' => ['type' => 'text_delta', 'text' => $piece]]];
+            $events[] = ['content_block_delta', ['type' => 'content_block_delta', 'index' => $i, 'delta' => ['type' => 'text_delta', 'text' => $piece]]];
         }
         if ($tool !== null) {
-            $events[] = ['content_block_start', ['type' => 'content_block_start', 'index' => 1, 'content_block' => ['type' => 'tool_use', 'id' => 'toolu_' . \count(self::$requests) . '_' . \count(self::$triage), 'name' => $tool['name'], 'input' => new \stdClass()]]];
+            ++$i;
+            $events[] = ['content_block_start', ['type' => 'content_block_start', 'index' => $i, 'content_block' => ['type' => 'tool_use', 'id' => 'toolu_' . \count(self::$requests) . '_' . \count(self::$triage), 'name' => $tool['name'], 'input' => new \stdClass()]]];
             foreach (str_split(json_encode($tool['input']), 30) as $piece) {
-                $events[] = ['content_block_delta', ['type' => 'content_block_delta', 'index' => 1, 'delta' => ['type' => 'input_json_delta', 'partial_json' => $piece]]];
+                $events[] = ['content_block_delta', ['type' => 'content_block_delta', 'index' => $i, 'delta' => ['type' => 'input_json_delta', 'partial_json' => $piece]]];
             }
-            $events[] = ['content_block_stop', ['type' => 'content_block_stop', 'index' => 1]];
+            $events[] = ['content_block_stop', ['type' => 'content_block_stop', 'index' => $i]];
         }
         $events[] = ['message_delta', ['type' => 'message_delta', 'delta' => ['stop_reason' => $stop ?? ($tool !== null ? 'tool_use' : 'end_turn')], 'usage' => ['output_tokens' => 42]]];
         $events[] = ['message_stop', ['type' => 'message_stop']];

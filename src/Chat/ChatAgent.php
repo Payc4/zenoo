@@ -42,7 +42,7 @@ class ChatAgent
     /** How many of the newest messages with photos/files Claude still sees the files of. */
     public const FILE_MESSAGES = 2;
     /** Room for a long answer; only the tokens actually written are billed. */
-    private const MAX_TOKENS = 4096;
+    private const MAX_TOKENS = 4096; // ClaudeClient adds room for thinking on models that always think
     /** save_food → carry on: at most this many requests per turn. */
     private const MAX_ROUNDS = 5;
 
@@ -174,14 +174,8 @@ class ChatAgent
             if (!$saved || $questions !== null || $result['stop_reason'] !== 'tool_use') {
                 break;
             }
-            $assistant = [];
-            if (trim($result['text']) !== '') {
-                $assistant[] = ['type' => 'text', 'text' => $result['text']];
-            }
-            foreach ($result['tool_uses'] as $use) {
-                $assistant[] = ['type' => 'tool_use', 'id' => $use['id'], 'name' => $use['name'], 'input' => $use['input'] ?: new \stdClass()];
-            }
-            $messages[] = ['role' => 'assistant', 'content' => $assistant];
+            // The assistant turn exactly as it came (with any thinking blocks): Opus 5.5 requires it.
+            $messages[] = ['role' => 'assistant', 'content' => $result['content']];
             $messages[] = ['role' => 'user', 'content' => $results];
         }
 
