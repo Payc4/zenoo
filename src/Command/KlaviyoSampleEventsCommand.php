@@ -39,7 +39,7 @@ final class KlaviyoSampleEventsCommand extends Command
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'Where the sample events go (a Klaviyo profile)')
             ->addOption('lang', null, InputOption::VALUE_REQUIRED, 'en, lt, uk or pl', 'en')
-            ->addOption('only', null, InputOption::VALUE_REQUIRED, 'Comma-separated: welcome,order,reset,login,changed,quiz,followup');
+            ->addOption('only', null, InputOption::VALUE_REQUIRED, 'Comma-separated: welcome,order,reset,login,changed,quiz,followup,plan,series');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -67,6 +67,8 @@ final class KlaviyoSampleEventsCommand extends Command
             'login' => fn () => $this->emails->sendMagicLoginLink($user, $site . '/login?sample=1', new \DateTimeImmutable('+10 minutes')),
             'changed' => fn () => $this->emails->sendPasswordChangedNotice($user),
             'quiz' => fn () => $this->emails->sendQuizConfirmation($quiz, $site . '/quiz/?sample=1'),
+            'plan' => fn () => $this->emails->sendPlanEmail($user, ['dog' => 'Bella', 'score' => 52, 'fixes' => ['Weigh her food for a week.', 'Add a fresher topper.'], 'food' => 'Dry food: about 290 g a day', 'meals' => '2 meals a day', 'kcal' => 1130, 'zenoo' => ['product' => 'ZENOO RAW', 'option_label' => 'as a topper', 'grams' => 155, 'cost' => 3.9]], ['dashboard' => $site . '/dashboard', 'plan' => $site . '/dashboard#zenoo-h']),
+            'series' => fn () => $this->emails->sendSeriesEmail($user, 'Bella', 7, ['subject' => ['One week with %dog%’s plan', ['%dog%' => 'Bella']], 'heading' => ['One week with %dog%’s plan', ['%dog%' => 'Bella']], 'text' => ['How is it going? Weigh %dog% and note the stool and any itching in the trackers on your dashboard. It takes a minute, and the coach uses it to keep the advice right.', ['%dog%' => 'Bella']], 'button' => 'Open the trackers'], $site . '/dashboard#trackers-h', $site . '/emails/off?sample=1'),
             'followup' => fn () => $this->emails->sendCoachFollowUp($user, 'Bella', 'Two weeks in: what does Bella weigh now?', $site . '/chat', $site . '/coach-emails/off?sample=1'),
         ];
         foreach ($only as $key) {

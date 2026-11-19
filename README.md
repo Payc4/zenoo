@@ -189,6 +189,20 @@ Every message goes: **safety check → coach (AI) → tools and data**.
 - After 30 days the dashboard invites a quiz retake; earlier scores are kept, so it shows "Bella went
   from 44 to 61" and the coach sees the scores over time.
 
+## Emails in every language (roadmap part 2: 04)
+
+- `src/Service/PlanEmails.php`: the site sends the plan emails itself, in the pet parent's
+  language, through Klaviyo where that language has it (event `ZENOO Plan` / `ZENOO Plan Series`,
+  templates in `docs/klaviyo/`) or SMTP otherwise (`templates/emails/plan.html.twig`, `series.html.twig`).
+- **Plan email**, right after a quiz account is confirmed, to everyone: the score, the two fixes,
+  the daily plan and the ZENOO pick with a link to the plan.
+- **Series** on day 3 (first lesson), 7 (weigh and log in the trackers) and 14 (the ZENOO plan, or
+  the coach), only with the quiz's tips-and-offers tick (`User::wantsMarketingEmails()`), each step
+  once, with a signed unsubscribe link; also switchable under Account → Emails. Daily:
+  `php bin/console app:emails:series` (`--dry-run` lists).
+- `SITE_EMAIL_SERIES_LOCALES` (default `lt,uk,pl`) says which languages the site covers; English is
+  left to the Klaviyo quiz flow until `en` is added.
+
 ## Several dogs per account (roadmap part 2: 07)
 
 - An account can have several dogs (`DogProfileRepository::findAllForUser()`); `User::getActiveDogId()`

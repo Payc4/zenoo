@@ -38,6 +38,8 @@ class EmailService
         'changed' => 'ZENOO Password Changed',
         'quiz' => 'ZENOO Quiz Confirmation',
         'followup' => 'ZENOO Coach Check-in',
+        'plan' => 'ZENOO Plan',
+        'series' => 'ZENOO Plan Series',
     ];
 
     public function __construct(
@@ -176,6 +178,61 @@ class EmailService
             'button' => 'Answer in the chat',
             'note' => 'Your answer helps the coach keep the advice right for your dog.',
             'off' => 'Don’t want these check-ins? Switch them off',
+        ]), $user);
+    }
+
+    /**
+     * Roadmap 04: the plan they asked for, right after the account is made. $plan is the plan
+     * email's content from PlanEmails (score, fixes, daily plan, ZENOO pick); $urls has dashboard and plan links.
+     */
+    public function sendPlanEmail(User $user, array $plan, array $urls): void
+    {
+        $locale = $user->getLocale();
+        $dog = $plan['dog'];
+        $zenoo = $plan['zenoo'] ?? null;
+        $this->send($user->getEmail(), '%dog%’s Bowl Score and plan', ['%dog%' => $dog], 'emails/plan.html.twig', ['user' => $user, 'plan' => $plan, 'urls' => $urls], $locale, 'plan', [
+            'dog_name' => $dog,
+            'bowl_score' => $plan['score'],
+            'fix_1' => $plan['fixes'][0] ?? '',
+            'fix_2' => $plan['fixes'][1] ?? '',
+            'plan_food' => $plan['food'] ?? '',
+            'plan_meals' => $plan['meals'] ?? '',
+            'kcal' => $plan['kcal'] ?? null,
+            'zenoo_product' => $zenoo['product'] ?? '',
+            'zenoo_grams' => $zenoo['grams'] ?? null,
+            'zenoo_cost_day' => $zenoo['cost'] ?? null,
+            'dashboard_url' => $urls['dashboard'],
+            'plan_url' => $urls['plan'],
+        ] + $this->copy($locale, [
+            'heading' => ['%dog%’s Bowl Score: %score%/100', ['%dog%' => $dog, '%score%' => $plan['score']]],
+            'greeting' => $user->getFirstName() ? ['Hi %name%,', ['%name%' => $user->getFirstName()]] : 'Hi,',
+            'intro' => ['Here is %dog%’s plan, so you have it to hand.', ['%dog%' => $dog]],
+            'fixes_title' => 'What we’d do first',
+            'plan_title' => 'The daily plan',
+            'zenoo_title' => 'Fresher food with ZENOO',
+            'zenoo_text' => $zenoo ? ['%product% %option%: about %grams% g a day (around €%cost% a day).', ['%product%' => $zenoo['product'], '%option%' => $this->translator->trans($zenoo['option_label'], [], null, $locale), '%grams%' => $zenoo['grams'], '%cost%' => number_format($zenoo['cost'], 2, \App\Locale::decimalSeparator($locale), ' ')]] : '',
+            'button' => ['Open %dog%’s dashboard', ['%dog%' => $dog]],
+            'note' => 'The coach in your dashboard can answer questions about the plan any time.',
+        ]), $user);
+    }
+
+    /** Roadmap 04: the tips series (day 3, 7 and 14), only for pet parents who opted in. */
+    public function sendSeriesEmail(User $user, string $dogName, int $day, array $content, string $buttonUrl, string $offUrl): void
+    {
+        $locale = $user->getLocale();
+        $this->send($user->getEmail(), $content['subject'][0], $content['subject'][1], 'emails/series.html.twig', [
+            'user' => $user, 'dogName' => $dogName, 'day' => $day, 'content' => $content, 'buttonUrl' => $buttonUrl, 'offUrl' => $offUrl,
+        ], $locale, 'series', [
+            'day' => $day,
+            'dog_name' => $dogName,
+            'button_url' => $buttonUrl,
+            'off_url' => $offUrl,
+        ] + $this->copy($locale, [
+            'heading' => $content['heading'],
+            'greeting' => $user->getFirstName() ? ['Hi %name%,', ['%name%' => $user->getFirstName()]] : 'Hi,',
+            'text' => $content['text'],
+            'button' => $content['button'],
+            'off' => 'Don’t want these emails? Unsubscribe',
         ]), $user);
     }
 

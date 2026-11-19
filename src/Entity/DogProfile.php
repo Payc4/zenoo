@@ -326,6 +326,19 @@ class DogProfile
         return (int) floor(($now->getTimestamp() - ($this->updatedAt ?? $this->createdAt)->getTimestamp()) / 86400);
     }
 
+    /** Plan emails sent (PlanEmails): {"0": "2026-11-19", "3": "…"} by day of the series. */
+    public function getEmailSeries(): array
+    {
+        return (array) ($this->data['email_series'] ?? []);
+    }
+
+    public function markEmailSent(int $day, \DateTimeImmutable $at): void
+    {
+        $sent = $this->getEmailSeries();
+        $sent[(string) $day] = $at->format('Y-m-d');
+        $this->data['email_series'] = $sent;
+    }
+
     /** Clicks on the personal plan's starter links: {topper: n, half: n, full: n, last: "2026-11-18"}. */
     public function recordPlanClick(string $option, \DateTimeImmutable $at): void
     {

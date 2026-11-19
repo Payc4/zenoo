@@ -86,6 +86,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /** Tips and offers by email (the plan email series); only with the quiz's opt-in tick. */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $marketingEmails = false;
+
+    public function wantsMarketingEmails(): bool
+    {
+        return $this->marketingEmails;
+    }
+
+    public function setMarketingEmails(bool $on): static
+    {
+        $this->marketingEmails = $on;
+        return $this;
+    }
+
     /** The dog the dashboard, plan and coach are about, when the account has several. */
     #[ORM\Column(nullable: true)]
     private ?int $activeDogId = null;

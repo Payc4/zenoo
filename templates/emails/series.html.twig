@@ -1,0 +1,11 @@
+{% extends 'emails/_layout.html.twig' %}
+{# Roadmap 04: the tips series (PlanEmails, day 3, 7 and 14). content holds [message, params] pairs. #}
+{% macro t(line) %}{{ line is iterable ? line[0]|trans(line[1]) : line|trans }}{% endmacro %}
+{% block title %}{{ _self.t(content.heading) }}{% endblock %}
+{% block content %}
+<h1 style="font-family:'Inter Tight',Inter,Helvetica,Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">{{ _self.t(content.heading) }}</h1>
+<p style="margin:0 0 12px;">{{ user.firstName ? 'Hi %name%,'|trans({'%name%': user.firstName}) : 'Hi,'|trans }}</p>
+<p style="margin:0 0 12px;">{{ _self.t(content.text) }}</p>
+{{ include('emails/_button.html.twig', {url: buttonUrl, label: _self.t(content.button)|trim}) }}
+<p style="margin:16px 0 0;font-size:13px;color:#7c8a7b;"><a href="{{ offUrl }}" style="color:#7c8a7b;">{{ 'Don’t want these emails? Unsubscribe'|trans }}</a></p>
+{% endblock %}

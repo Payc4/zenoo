@@ -53,6 +53,7 @@ final class QuizAccountController extends AbstractController
         private readonly KlaviyoProfiles $klaviyo,
         private readonly \App\Tracking\Attribution $attribution,
         private readonly \App\Tracking\Funnel $funnel,
+        private readonly \App\Service\PlanEmails $planEmails,
         #[Autowire('%kernel.secret%')] private readonly string $secret,
         #[Autowire('%env(bool:default:app.quiz.site_confirm_default:QUIZ_SITE_CONFIRM_EMAIL)%')] private readonly bool $siteConfirmEmail = true,
     ) {
@@ -147,8 +148,13 @@ final class QuizAccountController extends AbstractController
             $this->em->persist($user);
             $this->funnel->record('account_created', \App\Tracking\Attribution::label($user->getAttribution()));
         }
-        $this->dogs->saveQuizResult($user, array_diff_key($submission->getData(), ['_attribution' => 1]), $submission->getLocale());
+        $dog = $this->dogs->saveQuizResult($user, array_diff_key($submission->getData(), ['_attribution' => 1]), $submission->getLocale());
+        if (!empty($submission->getData()['quiz_marketing_consent'])) {
+            $user->setMarketingEmails(true); // the quiz's tips-and-offers tick
+        }
         $submission->confirm();
+        $this->em->flush();
+        $this->planEmails->sendPlan($user, $dog); // roadmap 04: in their language (LT/UK/PL by default)
         $this->em->flush();
 
         $security->login($user, LoginFormAuthenticator::class, 'main');

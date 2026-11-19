@@ -12,6 +12,10 @@ needs no manual steps.
 3. **Daily coach check-ins:** in Coolify, add a scheduled task on the app:
    command `php bin/console app:coach:followups`, frequency `0 9 * * *` (09:00 every day). It emails
    the check-ins the coach planned once they're due. `--dry-run` lists them without sending.
+   Add a task `php bin/console app:emails:series`, frequency `0 10 * * *`, for the plan email
+   series (day 3, 7, 14) to opted-in pet parents. `SITE_EMAIL_SERIES_LOCALES` (default `lt,uk,pl`)
+   says which languages the site emails itself; add `en` once the English Klaviyo quiz flow is off.
+   Ukrainian and Polish have no Klaviyo account, so they go by SMTP: set `MAILER_DSN`.
    Add a second task `php bin/console app:catalogue:sync`, frequency `30 5 * * *`, to copy the
    store's products and prices every morning (or press Sync in Admin → Store catalogue). Optional
    variables: `SHOPIFY_STORE_URL` (default `https://zenoo.lt`), `PLAN_DAILY_BUDGET` (default 4,
@@ -113,6 +117,8 @@ and set the subject line to `{{ event.subject }}`.
 | ZENOO Order Confirmation | Payment received | `order_id`, `product_name`, `amount`, `discount`, `currency`, `order_date`, `order_url`, `test_order` |
 | ZENOO Quiz Confirmation | Quiz finished, when the link isn't already in the quiz flow (Lithuanian, Ukrainian or Polish quiz, or `QUIZ_SITE_CONFIRM_EMAIL=true`) | `confirm_link` (button), `dog_name`, `bowl_score` |
 | ZENOO Coach Check-in | A check-in the coach planned is due (`app:coach:followups`, daily) | `question` (in the pet parent's language), `chat_url` (button), `off_url` (switch them off), `dog_name` |
+| ZENOO Plan | Right after a quiz account is confirmed, in the languages of `SITE_EMAIL_SERIES_LOCALES` (default lt,uk,pl) | `fix_1`, `fix_2`, `plan_food`, `plan_meals`, `zenoo_*`, `dashboard_url`, `plan_url` (template `docs/klaviyo/plan.html`) |
+| ZENOO Plan Series | Day 3, 7 and 14, opted-in pet parents only (`app:emails:series`, daily) | `day`, `button_url`, `off_url` (unsubscribe), `copy_*` (template `docs/klaviyo/series.html`) |
 
 To make every metric appear in Klaviyo before building its flow (a metric only exists after its
 first event), run in Coolify's terminal: `php bin/console app:klaviyo:sample-events you@example.com`

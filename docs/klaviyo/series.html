@@ -1,0 +1,9 @@
+<!-- ZENOO site email: "series" flow (event "ZENOO Plan Series", sent on day 3, 7 and 14 to opted-in pet parents; event.day says which).
+     Paste into an HTML block. All text comes from the event, already translated. Mark this flow as marketing (unsubscribe link below). -->
+<div style="padding:8px 28px 4px;font-family:Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;color:#2b2b2b;">
+<h1 style="font-weight:800;font-size:24px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">{{ event.copy_heading }}</h1>
+<p style="margin:0 0 12px;">{{ event.copy_greeting }}</p>
+<p style="margin:0 0 12px;">{{ event.copy_text }}</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td style="border-radius:70px;background:#f7a223;"><a href="{{ event.button_url }}" style="display:inline-block;padding:14px 30px;font-weight:800;font-size:15px;color:#ffffff;text-decoration:none;text-transform:uppercase;">{{ event.copy_button }}</a></td></tr></table>
+<p style="margin:16px 0 0;font-size:13px;"><a href="{{ event.off_url }}" style="color:#7c8a7b;">{{ event.copy_off }}</a></p>
+</div>

@@ -1,0 +1,16 @@
+<!-- ZENOO site email: "plan" flow (event "ZENOO Plan"). Paste into an HTML block. Works in every site language:
+     the text comes from the event (copy_* already translated; fixes and plan lines are in the pet parent's language). -->
+<div style="padding:8px 28px 4px;font-family:Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;color:#2b2b2b;">
+<h1 style="font-weight:800;font-size:24px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">{{ event.copy_heading }}</h1>
+<p style="margin:0 0 12px;">{{ event.copy_greeting }}</p>
+<p style="margin:0 0 16px;">{{ event.copy_intro }}</p>
+{% if event.fix_1 %}<h2 style="font-weight:800;font-size:18px;margin:18px 0 8px;color:#445942;">{{ event.copy_fixes_title }}</h2>
+<ol style="margin:0 0 12px;padding-left:20px;"><li>{{ event.fix_1 }}</li>{% if event.fix_2 %}<li>{{ event.fix_2 }}</li>{% endif %}</ol>{% endif %}
+{% if event.plan_food %}<h2 style="font-weight:800;font-size:18px;margin:18px 0 8px;color:#445942;">{{ event.copy_plan_title }}</h2>
+<p style="margin:0 0 12px;">{{ event.plan_food }}<br>{{ event.plan_meals }}</p>{% endif %}
+{% if event.copy_zenoo_text %}<div style="margin:18px 0;padding:14px 18px;border:2px solid #f7a223;border-radius:14px;">
+<h2 style="font-weight:800;font-size:18px;margin:0 0 6px;color:#445942;">{{ event.copy_zenoo_title }}</h2>
+<p style="margin:0 0 10px;">{{ event.copy_zenoo_text }}</p><a href="{{ event.plan_url }}" style="color:#445942;font-weight:700;">→</a></div>{% endif %}
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td style="border-radius:70px;background:#f7a223;"><a href="{{ event.dashboard_url }}" style="display:inline-block;padding:14px 30px;font-weight:800;font-size:15px;color:#ffffff;text-decoration:none;text-transform:uppercase;">{{ event.copy_button }}</a></td></tr></table>
+<p style="margin:0 0 12px;">{{ event.copy_note }}</p>
+</div>
