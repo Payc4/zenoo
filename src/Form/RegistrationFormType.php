@@ -7,7 +7,6 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
-use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -22,34 +21,27 @@ class RegistrationFormType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('firstName', TextType::class, [
-                'label' => 'First name',
-                'attr' => ['autocomplete' => 'given-name'],
-                'constraints' => [
-                    new NotBlank(message: 'Please enter your first name.'),
-                    new Length(max: 100),
-                ],
-            ])
-            ->add('lastName', TextType::class, [
-                'label' => 'Last name',
-                'required' => false,
-                'attr' => ['autocomplete' => 'family-name'],
-                'constraints' => [new Length(max: 100)],
-            ])
+            // Short sign-up (test report U10): an email and one password with a "show" toggle,
+            // as the quiz makes an account from an email. The first name is optional.
             ->add('email', EmailType::class, [
                 'label' => 'Email',
                 'attr' => ['autocomplete' => 'email'],
             ])
-            ->add('plainPassword', RepeatedType::class, [
-                'type' => PasswordType::class,
+            ->add('plainPassword', PasswordType::class, [
+                'label' => 'Password',
                 'mapped' => false,
-                'first_options' => ['label' => 'Password', 'attr' => ['autocomplete' => 'new-password'], 'help' => 'At least 8 characters.'],
-                'second_options' => ['label' => 'Repeat password', 'attr' => ['autocomplete' => 'new-password']],
-                'invalid_message' => 'The two passwords don’t match.',
+                'help' => 'At least 8 characters.',
+                'attr' => ['autocomplete' => 'new-password', 'data-show-password' => ''],
                 'constraints' => [
                     new NotBlank(message: 'Please choose a password.'),
                     new Length(min: self::MIN_PASSWORD, max: 4096, minMessage: 'Your password needs at least {{ limit }} characters.'),
                 ],
+            ])
+            ->add('firstName', TextType::class, [
+                'label' => 'First name (optional)',
+                'required' => false,
+                'attr' => ['autocomplete' => 'given-name'],
+                'constraints' => [new Length(max: 100)],
             ])
             ->add('agreeTerms', CheckboxType::class, [
                 'label' => 'I agree to the privacy policy',

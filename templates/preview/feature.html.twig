@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{# What a visitor sees on /chat and /courses (test report N5): a short preview and two ways in. #}
+{% block title %}{{ (feature == 'coach' ? 'The ZENOO coach' : 'The ZENOO course')|trans }} · ZENOO{% endblock %}
+
+{% block body %}
+<section class="preview wrap">
+  {% if feature == 'coach' %}
+    <p class="kicker">{{ 'Coach'|trans }}</p>
+    <h1>{{ 'A feeding coach that knows your dog'|trans }}</h1>
+    <p class="lead">{{ 'Ask anything about your dog’s food. The coach uses your dog’s Bowl Score, weight and notes, reads food labels from a photo, and checks in on how a change is going.'|trans }}</p>
+    <div class="preview-chat" aria-hidden="true">
+      <p class="preview-chat__me">{{ 'How much should Bella eat a day?'|trans }}</p>
+      <p class="preview-chat__bot">{{ 'About 290 g of her dry food, split into two meals. She’s a little above her ideal shape, so keep treats small and weigh her again in two weeks.'|trans }}</p>
+    </div>
+    <p class="small muted">{{ 'An example. Your coach works from your own dog’s profile.'|trans }}</p>
+  {% else %}
+    <p class="kicker">{{ 'Course'|trans }}</p>
+    <h1>{{ '%n% short lessons on feeding your dog well'|trans({'%n%': lessonCount}) }}</h1>
+    <p class="lead">{{ 'About 8 minutes each, from Agota, ZENOO’s founder. Picked for your dog once you’ve taken the free check.'|trans }}</p>
+    {% if lessons %}
+      <ol class="preview-lessons">
+        {% for l in lessons %}<li>{{ l.title }}</li>{% endfor %}
+      </ol>
+      <p class="small muted">{{ 'and %n% more'|trans({'%n%': lessonCount - lessons|length}) }}</p>
+    {% endif %}
+  {% endif %}
+  <div class="btn-row preview-actions">
+    <a class="btn" href="{{ path('app_quiz') }}">{{ 'Take the free check'|trans }}</a>
+    <a class="btn btn-outline" href="{{ path('app_login') }}">{{ 'Sign in'|trans }}</a>
+  </div>
+</section>
+{% endblock %}

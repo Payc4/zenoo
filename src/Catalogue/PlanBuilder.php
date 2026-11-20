@@ -68,7 +68,7 @@ final class PlanBuilder
         }
         return [
             'product' => $product,
-            'product_url' => $this->sync->storeUrl() . '/products/' . $product->getHandle(),
+            'product_url' => self::tag($this->sync->storeUrl() . '/products/' . $product->getHandle(), 'dashboard'),
             'kcal_per_day' => (int) round($energy['kcal'], -1),
             'options' => $options,
             'recommended' => $recommended,
@@ -122,7 +122,7 @@ final class PlanBuilder
         [$v] = $p->cheapestPerGram();
         return [
             'title' => $p->getTitle(),
-            'url' => $this->sync->storeUrl() . '/products/' . $p->getHandle(),
+            'url' => self::tag($this->sync->storeUrl() . '/products/' . $p->getHandle(), 'quiz'),
             'image' => $p->getImage(),
             'kcal100' => $p->getKcal100(),
             'variant' => ['id' => $v['id'], 'title' => $v['title'], 'packGrams' => $v['packGrams'], 'price' => $v['price']],
@@ -131,6 +131,8 @@ final class PlanBuilder
             'cartBase' => $this->sync->storeUrl() . '/cart/',
             'starterCode' => $this->starterCode ?: null,
             'starterDays' => self::STARTER_DAYS,
+            // Tracking tags for the cart link the quiz builds.
+            'utm' => self::tags('quiz'),
         ];
     }
 
@@ -153,16 +155,33 @@ final class PlanBuilder
                 'packs' => array_map(fn ($x) => ['size' => $x['title'], 'grams' => $x['packGrams'], 'price_eur' => $x['price'], 'available' => $x['available']], $p->getVariants()),
                 'best_value_pack' => $v['title'],
                 'note' => $p->getNotes(),
-                'url' => $this->sync->storeUrl() . '/products/' . $p->getHandle(),
+                'url' => self::tag($this->sync->storeUrl() . '/products/' . $p->getHandle(), 'coach'),
             ];
         }, $this->products->findUsable());
     }
 
-    /** Shopify cart permalink: straight to checkout with the packs (and the starter code). */
-    public function cartUrl(string $variantId, int $qty): string
+    /** Shopify cart permalink: straight to checkout with the packs (and the starter code), tagged. */
+    public function cartUrl(string $variantId, int $qty, string $from = 'dashboard'): string
     {
         $url = $this->sync->storeUrl() . '/cart/' . $variantId . ':' . $qty;
-        return $this->starterCode ? $url . '?discount=' . rawurlencode($this->starterCode) : $url;
+        return self::tag($this->starterCode ? $url . '?discount=' . rawurlencode($this->starterCode) : $url, $from);
+    }
+
+    /** The store's home page, tagged: where advice links when there's no plan (no product synced yet). */
+    public function shopUrl(string $from): string
+    {
+        return self::tag($this->sync->storeUrl() . '/', $from);
+    }
+
+    /** Tracking tags on every link to the store, so sales from the app can be counted (N7). */
+    public static function tags(string $from): string
+    {
+        return http_build_query(['utm_source' => 'zenoo-app', 'utm_medium' => 'referral', 'utm_campaign' => 'zenoo-plan', 'utm_content' => $from]);
+    }
+
+    public static function tag(string $url, string $from): string
+    {
+        return $url . (str_contains($url, '?') ? '&' : '?') . self::tags($from);
     }
 
     private static function round(float $g): int

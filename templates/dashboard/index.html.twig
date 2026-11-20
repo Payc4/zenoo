@@ -244,6 +244,13 @@
       </details>
       <p class="small muted">{{ 'An estimate from the pack’s energy value and %dog%’s quiz answers. Questions? Ask the coach.'|trans({'%dog%': dog.name}) }}</p>
     </section>
+  {% elseif dog %}
+    {# No product synced yet: the coach's plan link still lands here, with the shop one tap away. #}
+    <section class="card dash-zenoo" aria-labelledby="zenoo-h">
+      <h2 id="zenoo-h">{{ 'Fresher food for %dog%'|trans({'%dog%': dog.name}) }}</h2>
+      <p class="dash-zenoo__lead">{{ 'ZENOO makes real food for dogs. Your personal plan, with grams and cost a day, appears here once the shop’s products are loaded.'|trans }}</p>
+      <a class="btn btn-outline btn-small" href="{{ shopUrl }}" target="_blank" rel="noopener" data-track="plan_cart">{{ 'Visit the ZENOO shop'|trans }}</a>
+    </section>
   {% endif %}
 
   {# ---------- Lessons ---------- #}

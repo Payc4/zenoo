@@ -639,7 +639,7 @@ ${backOnly()}`,
     const option = ['full', 'half'].find((k) => opt(shares[k]).cost <= Z.budget) || 'topper';
     const o = opt(shares[option]);
     const s = starter(o.need);
-    const cartUrl = `${Z.cartBase}${s.v.id}:${s.qty}${Z.starterCode ? `?discount=${encodeURIComponent(Z.starterCode)}` : ''}`;
+    const cartUrl = `${Z.cartBase}${s.v.id}:${s.qty}?${Z.starterCode ? `discount=${encodeURIComponent(Z.starterCode)}&` : ''}${Z.utm || ''}`.replace(/[?&]$/, '');
     return { option, grams: o.grams, cost: o.cost, starterPrice: s.qty * s.v.price, cartUrl };
   }
 

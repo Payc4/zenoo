@@ -28,7 +28,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * The ZENOO coach (Claude). Every pet has exactly one chat (ChatConversation.dog is unique),
@@ -43,7 +42,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * ChatFiles and shown back only through attachment(), to their owner and to admins.
  */
 #[Route('/chat')]
-#[IsGranted('ROLE_USER')]
+// Signed in only (security.yaml), except /chat itself, which shows visitors a preview.
 class ChatController extends AbstractController
 {
     public const MAX_MESSAGE_CHARS = 2000;
@@ -64,6 +63,9 @@ class ChatController extends AbstractController
     #[Route('', name: 'app_chat', methods: ['GET'])]
     public function index(Request $request, ClaudeClient $claude, DogProfileRepository $dogs, CheckIns $checkIns): Response
     {
+        if (!$this->getUser() instanceof User) {
+            return $this->render('preview/feature.html.twig', ['feature' => 'coach']);
+        }
         $user = $this->currentUser();
         $dog = $this->dogFor($request, $user, $dogs);
         if ($dog === null) {

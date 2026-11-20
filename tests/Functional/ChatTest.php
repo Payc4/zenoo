@@ -38,7 +38,12 @@ class ChatTest extends AppTestCase
 
     public function testChatNeedsLogin(): void
     {
+        // A visitor sees a preview with two ways in (N5); everything else needs a login.
         $this->client->request('GET', '/chat');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorExists('.preview a[href="/quiz/"]');
+        $this->assertSelectorExists('.preview a[href="/login"]');
+        $this->client->request('GET', '/chat/new');
         $this->assertResponseRedirects('/login');
         $this->client->request('POST', '/chat/send', [], [], ['CONTENT_TYPE' => 'application/json'], '{"message":"hi"}');
         $this->assertSame(0, $this->rows(ChatMessage::class));

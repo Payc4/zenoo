@@ -48,8 +48,7 @@ final class KlaviyoEmailTest extends AppTestCase
         $this->client->submit($crawler->selectButton('Create account')->form([
             'registration_form[firstName]' => 'Maria',
             'registration_form[email]' => 'maria@example.com',
-            'registration_form[plainPassword][first]' => 'Password123',
-            'registration_form[plainPassword][second]' => 'Password123',
+            'registration_form[plainPassword]' => 'Password123',
             'registration_form[agreeTerms]' => '1',
         ]));
         $this->assertResponseRedirects('/dashboard');

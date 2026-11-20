@@ -72,3 +72,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+// "Show" toggle on password fields (sign-up asks for the password once).
+document.querySelectorAll('input[data-show-password]').forEach((input) => {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'password-toggle';
+  btn.textContent = input.dataset.show || 'Show';
+  btn.setAttribute('aria-pressed', 'false');
+  btn.addEventListener('click', () => {
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.textContent = show ? (input.dataset.hide || 'Hide') : (input.dataset.show || 'Show');
+    btn.setAttribute('aria-pressed', String(show));
+  });
+  const wrap = document.createElement('div');
+  wrap.className = 'password-wrap';
+  input.parentNode.insertBefore(wrap, input);
+  wrap.append(input, btn);
+});

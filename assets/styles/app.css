@@ -310,3 +310,31 @@ input[aria-invalid="true"], .has-error input { border-color: var(--danger); }
 .method-table th, .method-table td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid rgba(0, 0, 0, .1); }
 .method-table td:nth-child(2) { font-weight: 800; white-space: nowrap; }
 .method-reviewed { font-weight: 600; }
+
+/* Visitor preview of the coach and the course (test report N5). */
+.preview { max-width: 640px; padding-top: 40px; padding-bottom: 56px; }
+.preview-chat { display: grid; gap: 10px; margin: 24px 0 8px; }
+.preview-chat p { margin: 0; padding: 12px 16px; border-radius: 18px; max-width: 85%; }
+.preview-chat__me { justify-self: end; background: var(--forest); color: var(--white); }
+.preview-chat__bot { background: var(--white); border: 1px solid var(--line); }
+.preview-lessons { margin: 20px 0 6px; padding-left: 22px; }
+.preview-lessons li { margin-bottom: 6px; }
+.preview-actions { margin-top: 28px; }
+
+/* Home: an example result instead of a stock photo (proposal 7). */
+.hero-signin { margin: 14px 0 0; color: var(--label-on-dark); }
+.hero-signin a { color: var(--white); }
+.hero-result { margin: 0; background: var(--cream); color: var(--forest); border-radius: var(--radius); overflow: hidden; box-shadow: 0 18px 40px rgba(0, 0, 0, .18); max-width: 420px; justify-self: center; width: 100%; }
+.hero-result__score { background: var(--forest-800); color: var(--white); padding: 22px 24px; display: grid; gap: 4px; }
+.hero-result__label { font: 800 12px var(--font-display); text-transform: uppercase; letter-spacing: .06em; color: var(--label-on-dark); }
+.hero-result__score strong { font: 800 56px/1 var(--font-display); color: var(--sun); }
+.hero-result__score strong small { font-size: 22px; color: var(--white); }
+.hero-result__body { padding: 18px 24px 22px; }
+.hero-result__title { font: 800 15px var(--font-display); text-transform: uppercase; margin: 0 0 8px; }
+.hero-result__body ol { margin: 0; padding-left: 20px; }
+.hero-result__body li { margin-bottom: 6px; }
+.password-wrap { position: relative; }
+.password-wrap input { padding-right: 80px; }
+.password-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); min-height: 44px; padding: 0 12px; border: 0; background: none; font: 600 14px var(--font-sans); color: var(--forest); text-decoration: underline; cursor: pointer; }
+/* Labels on dark green are pale green, not amber (proposal 1). */
+.hero .kicker, .card-forest .kicker, .account-head .kicker { color: var(--label-on-dark); }

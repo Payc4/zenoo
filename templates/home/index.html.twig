@@ -1,22 +1,37 @@
 {% extends 'base.html.twig' %}
 
+{# Home (test report proposal 7): the headline names what a visitor gets, one action, and a
+   preview of the result in place of a stock photo. #}
+{% block description %}{{ 'A free 3-minute check of your dog’s bowl, body and day, with a Bowl Score and a daily plan.'|trans }}{% endblock %}
+{% block head %}{{ include('_og.html.twig', {og_title: 'Find out if your dog is eating properly'|trans, og_description: 'A free 3-minute check of your dog’s bowl, body and day, with a Bowl Score and a daily plan.'|trans}) }}{% endblock %}
+
 {% block body %}
 <section class="hero">
     <div class="wrap">
         <div>
-            <p class="kicker">{{ 'Your ZENOO account'|trans }}</p>
-            <h1>{{ 'Real food.'|trans }} <span class="accent">{{ 'Healthy pet.'|trans }}</span></h1>
-            <p class="lead">{{ 'Check what’s in your dog’s bowl with the free Bowl Score quiz, shop with ZENOO and keep every order in one place.'|trans }}</p>
+            <p class="kicker">{{ 'Free · about 3 minutes'|trans }}</p>
+            <h1>{{ 'Find out if your dog is eating properly'|trans }}</h1>
+            <p class="lead">{{ 'Answer a few questions and get a Bowl Score out of 100, how many grams to feed a day, and the first three things to change.'|trans }}</p>
             <div class="btn-row">
-                <a class="btn" href="{{ path('app_quiz') }}">{{ 'Take the Bowl Score quiz'|trans }}</a>
-                {% if app.user %}
-                    <a class="btn btn-ghost-light" href="{{ path('app_account') }}">{{ 'My account'|trans }}</a>
-                {% else %}
-                    <a class="btn btn-ghost-light" href="{{ path('app_register') }}">{{ 'Create an account'|trans }}</a>
-                {% endif %}
+                <a class="btn" href="{{ path('app_quiz') }}">{{ 'Get your dog’s Bowl Score'|trans }}</a>
             </div>
+            {% if not app.user %}<p class="hero-signin">{{ 'Already have an account?'|trans }} <a href="{{ path('app_login') }}">{{ 'Sign in'|trans }}</a></p>{% endif %}
         </div>
-        <img class="hero-photo" src="/images/intro-hero.jpg" alt="{{ 'A curly-coated dog looking up at a bowl of food'|trans }}" width="1000" height="750">
+        <figure class="hero-result" aria-label="{{ 'An example result'|trans }}">
+            <div class="hero-result__score">
+                <span class="hero-result__label">{{ 'Example: Bella’s Bowl Score'|trans }}</span>
+                <strong>72<small>/100</small></strong>
+                <span>{{ 'Good, with room to grow'|trans }}</span>
+            </div>
+            <div class="hero-result__body">
+                <p class="hero-result__title">{{ 'What we’d do first'|trans }}</p>
+                <ol>
+                    <li>{{ 'Weigh her food: about 290 g a day, in two meals'|trans }}</li>
+                    <li>{{ 'Swap part of the bowl for fresher, meat-rich food'|trans }}</li>
+                    <li>{{ 'Add a 15-minute sniff walk'|trans }}</li>
+                </ol>
+            </div>
+        </figure>
     </div>
 </section>
 
@@ -27,49 +42,21 @@
         <div class="grid grid-3" style="margin-top:24px">
             <div class="card">
                 <span class="feature-num">01</span>
-                <h3>{{ 'Check the bowl'|trans }}</h3>
-                <p>{{ 'Answer a few questions about your dog and their food. You get a Bowl Score out of 100 and a daily plan.'|trans }}</p>
-                <a href="{{ path('app_quiz') }}">{{ 'Start the quiz'|trans }}</a>
+                <h3>{{ 'Take the check'|trans }}</h3>
+                <p>{{ 'Breed, age, weight, body shape, activity and food: about 3 minutes, no right or wrong answers.'|trans }}</p>
             </div>
             <div class="card">
                 <span class="feature-num">02</span>
-                <h3>{{ 'Create your account'|trans }}</h3>
-                <p>{{ 'One login for your orders and details. Sign in with your password or a one-time link sent to your email.'|trans }}</p>
-                <a href="{{ path(app.user ? 'app_account' : 'app_register') }}">{{ app.user ? 'Go to my account'|trans : 'Create an account'|trans }}</a>
+                <h3>{{ 'Get your dog’s plan'|trans }}</h3>
+                <p>{{ 'A Bowl Score out of 100, grams a day for your dog, and the first three things to try.'|trans }}</p>
             </div>
             <div class="card">
                 <span class="feature-num">03</span>
-                <h3>{{ 'Order with ease'|trans }}</h3>
-                <p>{{ 'Pay safely on Stripe’s secure checkout. Your receipt lands in your inbox and in your account.'|trans }}</p>
-                <a href="{{ path('app_shop') }}">{{ 'Visit the shop'|trans }}</a>
+                <h3>{{ 'Keep it going'|trans }}</h3>
+                <p>{{ 'A coach that knows your dog, short lessons, and a log for weight, stool and itching. All free.'|trans }}</p>
             </div>
         </div>
+        <p style="margin-top:28px"><a class="btn btn-outline" href="{{ path('app_quiz') }}">{{ 'Start the check'|trans }}</a></p>
     </div>
 </section>
-
-<section class="band">
-    <div class="wrap">
-        <img src="/images/body-check.jpg" alt="{{ 'Two hands gently feeling a dog’s ribs'|trans }}" width="1000" height="750" loading="lazy">
-        <div>
-            <p class="kicker">{{ 'Free · about 3 minutes'|trans }}</p>
-            <h2>{{ 'Is your dog eating properly?'|trans }}</h2>
-            <p class="lead">{{ 'The Bowl Score quiz looks at breed, age, weight, body shape, activity and food, then shows how much to feed and the first two things to try.'|trans }}</p>
-            <div class="btn-row"><a class="btn btn-forest" href="{{ path('app_quiz') }}">{{ 'Get the Bowl Score'|trans }}</a></div>
-        </div>
-    </div>
-</section>
-
-{% if products|length %}
-<section class="section">
-    <div class="wrap">
-        <p class="kicker">{{ 'Shop'|trans }}</p>
-        <h2>{{ 'In the shop'|trans }}</h2>
-        <div class="grid grid-3" style="margin-top:24px">
-            {% for product in products|slice(0, 3) %}
-                {{ include('shop/_card.html.twig', {product: product}) }}
-            {% endfor %}
-        </div>
-    </div>
-</section>
-{% endif %}
 {% endblock %}

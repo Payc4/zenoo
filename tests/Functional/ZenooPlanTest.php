@@ -43,7 +43,7 @@ final class ZenooPlanTest extends AppTestCase
 
         // 14 × 157 g = 2.2 kg: eight 300 g packs (€230) cost less than two six-packs (€300).
         $this->client->click($pick->selectLink('2-week starter: €230.00')->link());
-        $this->assertResponseRedirects('https://zenoo.lt/cart/91:8');
+        $this->assertResponseRedirects('https://zenoo.lt/cart/91:8?utm_source=zenoo-app&utm_medium=referral&utm_campaign=zenoo-plan&utm_content=dashboard', null, 'tagged so the sale can be counted');
         $this->em->clear();
         $this->assertSame(1, $this->em->getRepository(DogProfile::class)->findOneBy([])->getPlanClicks()['topper']);
     }
@@ -56,7 +56,7 @@ final class ZenooPlanTest extends AppTestCase
         $this->assertSame('full', $plan('20')['recommended']); // a 4 kg dog: about 180 g, €15 a day
         $this->assertSame('half', $plan('10')['recommended']);
         $this->assertSame('topper', $plan('4')['recommended']);
-        $this->assertStringEndsWith('?discount=START10', $plan('4')['options']['topper']['cart_url']);
+        $this->assertStringContainsString('?discount=START10&utm_source=zenoo-app', $plan('4')['options']['topper']['cart_url']);
     }
 
     public function testTheQuizAndTheCoachGetTheSamePlan(): void
@@ -89,6 +89,9 @@ final class ZenooPlanTest extends AppTestCase
         $this->em->getConnection()->executeStatement('DELETE FROM catalogue_product');
         $this->bella();
         $this->client->request('GET', '/dashboard');
-        $this->assertSelectorNotExists('.dash-zenoo');
+        // No plan, but the coach's plan link still lands on a section that links the shop (N7).
+        $this->assertSelectorNotExists('.dash-zenoo__option');
+        $this->assertSelectorExists('#zenoo-h');
+        $this->assertSelectorExists('.dash-zenoo a[href^="https://zenoo.lt/?utm_source=zenoo-app"]');
     }
 }

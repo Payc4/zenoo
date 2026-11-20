@@ -8,6 +8,13 @@
   <p class="cs-muted">Each step counted once per visit, by the source that first brought the visitor (campaign tags, ad click IDs, partner code or referring site). Counts only, no personal data, so these work with or without cookie consent. GA4 and Meta get the same steps from visitors who allow them.</p>
   <p class="cs-small">{% for d in [7, 30, 90] %}<a href="{{ path('admin_funnel', {days: d}) }}" {{ d == days ? 'aria-current="page" style="font-weight:700"' }}>Last {{ d }} days</a>{{ not loop.last ? ' · ' }}{% endfor %}</p>
 
+  <h2 class="cs-label">Before paid traffic</h2>
+  <table class="cv-table" style="margin-bottom:28px">
+    {% for row in setup %}
+      <tr><td>{{ row[1] ? '✓' : '✗' }}</td><td>{{ row[0] }}</td><td class="cs-muted">{{ row[1] ? 'Set' : row[2] }}</td></tr>
+    {% endfor %}
+  </table>
+
   {% set landing = steps.landing ?: 0 %}
   <table class="cv-table">
     <thead><tr><th>Step</th><th>Count</th><th>Of visits</th><th>From the step before</th></tr></thead>

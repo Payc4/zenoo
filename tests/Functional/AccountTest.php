@@ -13,8 +13,7 @@ class AccountTest extends AppTestCase
         $this->client->submit($crawler->selectButton('Create account')->form([
             'registration_form[firstName]' => 'Maria',
             'registration_form[email]' => '  Maria@Example.COM ',
-            'registration_form[plainPassword][first]' => 'Password123',
-            'registration_form[plainPassword][second]' => 'Password123',
+            'registration_form[plainPassword]' => 'Password123',
             'registration_form[agreeTerms]' => '1',
         ]));
 
@@ -37,13 +36,12 @@ class AccountTest extends AppTestCase
         $this->client->submit($crawler->selectButton('Create account')->form([
             'registration_form[firstName]' => '',
             'registration_form[email]' => 'TAKEN@example.com',
-            'registration_form[plainPassword][first]' => 'short',
-            'registration_form[plainPassword][second]' => 'short',
+            'registration_form[plainPassword]' => 'short',
         ]));
 
         $this->assertResponseStatusCodeSame(422);
         $text = $this->client->getCrawler()->filter('form')->text();
-        $this->assertStringContainsString('Please enter your first name.', $text);
+        $this->assertStringNotContainsString('Please enter your first name.', $text, 'the first name is optional');
         $this->assertStringContainsString('An account with this email already exists.', $text);
         $this->assertStringContainsString('at least 8 characters', $text);
         $this->assertStringContainsString('agree to the privacy policy', $text);

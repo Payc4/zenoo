@@ -10,6 +10,7 @@
     <link rel="icon" href="/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     {% block robots %}{% endblock %}
+    {% block head %}{% endblock %}
     {% block importmap %}{{ importmap('app') }}{% endblock %}
     {{ include('_tracking.html.twig') }}
 </head>
@@ -53,7 +54,7 @@
                     <a href="{{ path('app_logout') }}">{{ 'Log out'|trans }}</a>
                 {% else %}
                     <a href="{{ path('app_login') }}" {{ route == 'app_login' ? 'aria-current="page"' }}>{{ 'Log in'|trans }}</a>
-                    <a class="btn btn-small" href="{{ path('app_register') }}">{{ 'Create account'|trans }}</a>
+                    <a class="btn btn-ghost-light btn-small" href="{{ path('app_register') }}">{{ 'Create account'|trans }}</a>
                 {% endif %}
             </nav>
         </div>

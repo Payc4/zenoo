@@ -54,6 +54,10 @@ class HomeController extends AbstractController
         #[Autowire('%app.quiz.klaviyo_list_id%')] string $klaviyoListId,
         #[Autowire('%app.quiz.klaviyo_lt_company_id%')] ?string $klaviyoLtCompanyId,
         #[Autowire('%app.quiz.klaviyo_lt_list_id%')] ?string $klaviyoLtListId,
+        #[Autowire('%app.quiz.klaviyo_uk_company_id%')] ?string $klaviyoUkCompanyId,
+        #[Autowire('%app.quiz.klaviyo_uk_list_id%')] ?string $klaviyoUkListId,
+        #[Autowire('%app.quiz.klaviyo_pl_company_id%')] ?string $klaviyoPlCompanyId,
+        #[Autowire('%app.quiz.klaviyo_pl_list_id%')] ?string $klaviyoPlListId,
         #[Autowire('%app.quiz.send_to_klaviyo%')] bool $sendToKlaviyo,
         \App\Chat\ClaudeClient $claude,
         \App\Catalogue\PlanBuilder $plans,
@@ -74,10 +78,12 @@ class HomeController extends AbstractController
         if (!is_file($this->getParameter('kernel.project_dir') . "/public/quiz/content.$locale.js")) {
             $locale = 'en';
         }
-        // Ukrainian and Polish results aren't added to a Klaviyo list: the quiz flow's emails are English.
+        // A Klaviyo list per language (N8). Ukrainian and Polish only when their lists are set.
         [$company, $list] = match ($locale) {
             'en' => [$klaviyoCompanyId, $klaviyoListId],
             'lt' => [(string) $klaviyoLtCompanyId, (string) $klaviyoLtListId],
+            'uk' => [(string) $klaviyoUkCompanyId, (string) $klaviyoUkListId],
+            'pl' => [(string) $klaviyoPlCompanyId, (string) $klaviyoPlListId],
             default => ['', ''],
         };
 

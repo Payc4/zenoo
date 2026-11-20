@@ -35,6 +35,15 @@ final class CourseController extends AbstractController
     #[Route('', name: 'app_courses', methods: ['GET'])]
     public function index(Request $request): Response
     {
+        // Visitors get a short preview and two ways in (test report N5).
+        if (!$this->getUser() instanceof User) {
+            $course = $this->courseFor($request->getLocale());
+            return $this->render('preview/feature.html.twig', [
+                'feature' => 'course',
+                'lessons' => $course ? \array_slice($course->getPublishedLessons(), 0, 5) : [],
+                'lessonCount' => $course ? \count($course->getPublishedLessons()) : 30,
+            ]);
+        }
         $user = $this->getUser();
         $isAdmin = $this->isGranted('ROLE_ADMIN');
         $courses = $this->courses->findAllOrdered(!$isAdmin);
@@ -200,6 +209,20 @@ final class CourseController extends AbstractController
             'locale' => $course?->getLocale() ?? 'en',
             'ui' => LessonLayouts::ui($course?->getLocale() ?? 'en'),
         ];
+    }
+
+    /** The published course in this language, else the English one. */
+    private function courseFor(string $locale): ?Course
+    {
+        $courses = $this->courses->findAllOrdered(true);
+        foreach ([$locale, 'en'] as $l) {
+            foreach ($courses as $c) {
+                if ($c->getLocale() === $l) {
+                    return $c;
+                }
+            }
+        }
+        return $courses[0] ?? null;
     }
 
     private function isVisible(Course $course, Lesson $lesson): bool

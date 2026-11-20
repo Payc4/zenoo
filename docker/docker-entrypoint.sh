@@ -164,6 +164,17 @@ if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
         || echo "WARNING: course import failed — run 'php bin/console app:course:import' by hand." >&2
 fi
 
+# --- Shop catalogue ----------------------------------------------------------
+#
+# The ZENOO plan (quiz result, dashboard, coach) needs the store's products, read
+# from its public products.json. Without a sync the plan is switched off everywhere
+# (test report N7), so the catalogue is refreshed on every boot as well as by the
+# scheduled task. A store that can't be reached is reported, not fatal.
+if [ "${SYNC_CATALOGUE:-true}" = "true" ]; then
+    php bin/console app:catalogue:sync --no-interaction \
+        || echo "WARNING: catalogue sync failed — the ZENOO plan stays off until 'php bin/console app:catalogue:sync' works." >&2
+fi
+
 # --- Admin bootstrap ---------------------------------------------------------
 #
 # Only for the very first deploy against an empty database, and only when both

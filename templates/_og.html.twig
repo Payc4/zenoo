@@ -1,0 +1,10 @@
+{# Link previews for shared links (test report M6). Pass title and description. #}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ZENOO">
+<meta property="og:title" content="{{ og_title }}">
+<meta property="og:description" content="{{ og_description }}">
+<meta property="og:url" content="{{ url(app.request.attributes.get('_route') ?: 'app_homepage') }}">
+<meta property="og:image" content="{{ absolute_url('/og-image.jpg') }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">

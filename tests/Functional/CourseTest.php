@@ -84,7 +84,11 @@ final class CourseTest extends AppTestCase
         $this->import();
         $lesson = $this->course()->getLessons()->first();
 
+        // Visitors: a preview with the first lessons and two ways in (N5); lessons need a login.
         $this->client->request('GET', '/courses');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorExists('.preview a[href="/quiz/"]');
+        $this->client->request('GET', '/courses/lesson/1');
         $this->assertResponseRedirects('/login');
 
         $this->createUser();

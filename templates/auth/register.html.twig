@@ -7,16 +7,14 @@
     <div class="wrap">
         <div class="auth-card">
             <h1>{{ 'Create your account'|trans }}</h1>
-            <p class="lead">{{ 'One login for your orders and details.'|trans }}</p>
+            <p class="lead">{{ 'Your dog’s Bowl Score, plan, coach and lessons in one place.'|trans }}</p>
+            <p class="small"><a href="{{ path('app_quiz') }}">{{ 'Or start with the free check: it makes your account from your email.'|trans }}</a></p>
 
             {{ form_start(registrationForm, {attr: {novalidate: 'novalidate'}}) }}
                 {{ form_errors(registrationForm) }}
-                <div class="field-row">
-                    {{ form_row(registrationForm.firstName) }}
-                    {{ form_row(registrationForm.lastName) }}
-                </div>
                 {{ form_row(registrationForm.email) }}
-                {{ form_row(registrationForm.plainPassword) }}
+                {{ form_row(registrationForm.plainPassword, {attr: {autocomplete: 'new-password', 'data-show-password': '', 'data-show': 'Show'|trans, 'data-hide': 'Hide'|trans}}) }}
+                {{ form_row(registrationForm.firstName) }}
                 {{ form_row(registrationForm.agreeTerms, {label: 'I agree to the <a href="%url%" target="_blank">privacy policy</a>'|trans({'%url%': path('app_privacy_policy')}), label_html: true}) }}
                 {% if registrationForm.vars.turnstile_site_key %}
                     <div class="cf-turnstile" data-sitekey="{{ registrationForm.vars.turnstile_site_key }}" data-theme="light"></div>

@@ -43,6 +43,8 @@ security:
     access_control:
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/account, roles: ROLE_USER }
+        # Visitors see a short preview of the coach and the course here (test report N5).
+        - { path: ^/(chat|courses)$, roles: PUBLIC_ACCESS }
         - { path: ^/chat, roles: ROLE_USER }
         - { path: ^/courses, roles: ROLE_USER }
         - { path: ^/dashboard, roles: ROLE_USER }

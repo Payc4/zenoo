@@ -93,6 +93,7 @@ final class DashboardController extends AbstractController
             'streak' => $this->progress->getStreak($user),
             'coachQuestions' => $dog ? $this->coachQuestions($dog) : [],
             'zenooPlan' => $zenooPlan,
+            'shopUrl' => $this->plans->shopUrl('dashboard'),
             'dogs' => $this->dogs->findAllForUser($user),
         ]);
     }

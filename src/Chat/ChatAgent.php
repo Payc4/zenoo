@@ -351,6 +351,8 @@ class ChatAgent
                 'starter_code' => $plan['starter_code'],
                 'order_link' => '/dashboard#zenoo-h',
             ],
+            // No plan (no product synced, or the weight isn't known): link the shop, never a dead section.
+            'shop_link' => $plan === null ? $this->plans->shopUrl('coach') : null,
         ];
     }
 
