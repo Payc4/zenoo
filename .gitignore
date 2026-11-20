@@ -44,3 +44,5 @@
 /node_modules
 .windsurf*
 *.whl
+/public/uploads/private/dogs/*
+!/public/uploads/private/dogs/.gitkeep
