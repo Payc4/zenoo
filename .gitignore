@@ -46,3 +46,5 @@
 *.whl
 /public/uploads/private/dogs/*
 !/public/uploads/private/dogs/.gitkeep
+/public/uploads/dogs/
+/public/uploads/private/
