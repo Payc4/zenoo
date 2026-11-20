@@ -26,3 +26,15 @@
 
 /* Next tapped with something missing: the reason, beside the answer (N4). */
 .zq-why { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #FFF4E0; color: #6B4200; font-size: 15px; border-left: 4px solid #935A00; }
+
+/* Design rules (test report proposal 1), over the handoff styles: dark text on orange (5.4:1),
+   darker hints, 44 px taps, a 52 px main button, one heading scale. */
+:root { --on-sun: #2f3f2e; --ink-muted: #5c6b5b; }
+.zq-btn { min-height: 52px; }
+.zq-btn:not(.forest):not(.outline):hover { background: #f9b445; }
+.zq-back { min-height: 44px; }
+.zq-opt, .zq-shape { min-height: 44px; }
+h1 { font-size: 28px; }
+h2 { font-size: 20px; }
+.zq-step { opacity: 1; color: #935a00; }
+.zq-plan h2, .zq-card h3 { font-size: 17px; }

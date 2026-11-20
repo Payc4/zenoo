@@ -65,8 +65,8 @@ textarea.cs-input { resize: vertical; line-height: 1.5; }
 }
 .cs-icon:hover:not(:disabled) { border-color: #9aa69a; }
 .cs-icon:disabled { opacity: 0.35; cursor: default; }
-.cs-icon--danger:hover:not(:disabled) { color: #fff; background: var(--sun-700); border-color: var(--sun-700); }
-.cs-linkbtn { border: 0; background: none; padding: 0; font: inherit; font-size: 0.85rem; color: var(--sun-700); cursor: pointer; text-decoration: underline; }
+.cs-icon--danger:hover:not(:disabled) { color: #fff; background: var(--sun-700); border-color: var(--amber-text); }
+.cs-linkbtn { border: 0; background: none; padding: 0; font: inherit; font-size: 0.85rem; color: var(--amber-text); cursor: pointer; text-decoration: underline; }
 .cs-linkbtn--danger, .cs-link-danger { color: var(--danger); }
 .cs-link-danger { border: 0; background: none; font: inherit; font-size: 0.85rem; text-decoration: underline; cursor: pointer; }
 .cs-pill { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; background: rgba(68, 89, 66, 0.08); color: var(--ink-muted); }
@@ -107,7 +107,7 @@ textarea.cs-input { resize: vertical; line-height: 1.5; }
 .cs-bar__min { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--ink-muted); font-size: 0.85rem; }
 .cs-bar__min .cs-input { width: 4.5rem; }
 .cs-status { margin-left: auto; font-size: 0.82rem; color: var(--ink-muted); }
-.cs-status[data-state="dirty"] { color: var(--sun-700); font-weight: 600; }
+.cs-status[data-state="dirty"] { color: var(--amber-text); font-weight: 600; }
 .cs-status[data-state="error"] { color: var(--danger); font-weight: 600; }
 .cs-status[data-state="saved"]::before { content: '✓ '; color: #3f7a3b; }
 
@@ -120,7 +120,7 @@ textarea.cs-input { resize: vertical; line-height: 1.5; }
   cursor: pointer; user-select: none; box-shadow: 0 1px 2px rgba(68, 89, 66, 0.05);
 }
 .cs-thumb:hover { border-color: var(--line); }
-.cs-thumb.is-active { border-color: var(--sun-700); box-shadow: 0 0 0 3px rgba(247, 162, 35, 0.12); }
+.cs-thumb.is-active { border-color: var(--amber-text); box-shadow: 0 0 0 3px rgba(247, 162, 35, 0.12); }
 .cs-thumb.is-dragging { opacity: 0.4; }
 .cs-thumb.is-over { border-top: 3px solid var(--forest); }
 .cs-thumb__n { font-size: 0.75rem; color: var(--ink-muted); text-align: center; }
@@ -177,7 +177,7 @@ textarea.cs-input { resize: vertical; line-height: 1.5; }
   display: grid; gap: 0.3rem; text-align: left; padding: 1rem; border-radius: 14px;
   border: 1.5px solid var(--line); background: #FBF9F5; cursor: pointer; font: inherit;
 }
-.cs-layout:hover { border-color: var(--sun-700); background: #fff; }
+.cs-layout:hover { border-color: var(--amber-text); background: #fff; }
 .cs-layout__icon { font-size: 1.6rem; }
 .cs-layout strong { color: var(--forest); }
 .cs-layout small { color: var(--ink-muted); font-size: 0.8rem; line-height: 1.35; }

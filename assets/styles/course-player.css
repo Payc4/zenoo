@@ -233,7 +233,7 @@
 .lp-btn.is-waiting { opacity: 0.45; }
 .lp-btn--ghost { background: transparent; color: var(--lp-ink); border: 2px solid var(--lp-ink); padding: 0.7rem 1.2rem; font-size: 0.9rem; }
 @media (hover: hover) { .lp-btn--ghost:hover { background: rgba(68, 89, 66, 0.05); } }
-.lp-btn--cta { background: var(--sun); color: #fff; }
+.lp-btn--cta { background: var(--sun); color: var(--on-sun, #2f3f2e); }
 @media (hover: hover) { .lp-btn--cta:hover { background: var(--sun-700); } }
 .is-shake { animation: lp-shake .35s ease; }
 @keyframes lp-shake { 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-3px); } }
