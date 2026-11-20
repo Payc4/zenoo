@@ -15,7 +15,8 @@ use Twig\TwigFilter;
  */
 final class LocaleExtension extends AbstractExtension
 {
-    private const SKELETONS = ['day' => 'yMMMd', 'long' => 'yMMMMd', 'month' => 'yMMMM', 'datetime' => 'yMMMMdHHmm'];
+    /** One date format per language everywhere (test report M10): 'day' and 'long' are the same on purpose. */
+    private const SKELETONS = ['day' => 'yMMMd', 'long' => 'yMMMd', 'month' => 'yMMMM', 'datetime' => 'yMMMdHHmm'];
 
     public function __construct(private readonly TranslatorInterface $translator)
     {

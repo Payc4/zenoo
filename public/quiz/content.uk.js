@@ -345,6 +345,8 @@ window.ZQ_CONTENT = {
     },
     vars: { breedMixed: 'собаки, як {name}', noSigns: 'вибагливий апетит' },
     result: {
+      // Shown when the score is capped (scoring.js CONFIG.caps)
+      capped: { body: 'Поки {name} далеко від ідеальної статури, оцінка обмежена до {max}.', signs: 'Поки в {name} є ознаки біля миски, оцінка обмежена до {max}.' },
       // The personal ZENOO plan on the result (from the store catalogue; {product} links to it)
       zenoo: { title: 'СВІЖІША ЇЖА: {NAME}', text: 'Наш вибір: {product} {option}, приблизно <b>{grams} г на день</b> (близько €{cost} на день).', options: { topper: 'як добавка до корму', half: 'як половина миски', full: 'як уся миска' }, cta: 'Замовити набір на 2 тижні (€{price})', code: 'Пропозиція для першого замовлення: код {code} додається під час оплати.', note: 'Розраховано за енергетичною цінністю з упаковки. Переходьте поступово, приблизно за тиждень.', dashboard: 'Усі варіанти на вашій панелі' },
       scoreTitle: 'ОЦІНКА МИСКИ: {NAME}',

@@ -176,6 +176,11 @@ final class CourseController extends AbstractController
             if (isset($a['done'])) {
                 $clean['done'] = (bool) $a['done'];
             }
+            // A stool score written in a lesson ("Score: 3 …" on a 1–7 poop-score prompt) goes to the
+            // dog's stool tracker too (test report M5).
+            if (isset($clean['text'])) {
+                $this->logStoolScore($user, $lesson, $slideId, $clean['text']);
+            }
             if ($clean) {
                 $existing = $progress->getAnswer($slideId);
                 foreach ($clean as $k => $v) {
@@ -220,6 +225,26 @@ final class CourseController extends AbstractController
             'locale' => $course?->getLocale() ?? 'en',
             'ui' => LessonLayouts::ui($course?->getLocale() ?? 'en'),
         ];
+    }
+
+    /** @param array<int, string> $texts the answers to a write slide's prompts */
+    private function logStoolScore(User $user, Lesson $lesson, string $slideId, array $texts): void
+    {
+        foreach ($lesson->getSlides() as $slide) {
+            if (($slide['id'] ?? null) !== $slideId) {
+                continue;
+            }
+            foreach ($texts as $i => $text) {
+                $prompt = (string) ($slide['fields']['prompts'][$i]['instructions'] ?? '');
+                if (!preg_match('/1\s*[–-]\s*7/u', $prompt) || !preg_match('/(?<!\d|\d[.,])([1-7])(?!\d|[.,]\d)/u', $text, $m)) {
+                    continue;
+                }
+                $dog = $this->dogs->findForUser($user);
+                if ($dog && $dog->addLog('stool', (float) $m[1], new \DateTimeImmutable(), 'owner')) {
+                    $this->em->persist($dog);
+                }
+            }
+        }
     }
 
     /** The published course in this language, else the English one. */

@@ -25,6 +25,10 @@
     // Points per sub-score (total 100)
     weights: { protein: 18, carbs: 18, freshness: 14, body: 16, activity: 14, signals: 10, routine: 10 },
     bands: [ [80, 'great'], [60, 'good'], [40, 'look'], [0, 'wins'] ],
+    // Caps (test report N9): a dog far from ideal shape, or with signs at the bowl, can't be "great".
+    // Body score 3 or 7, or 1–2 signs: at most 79 ("good"). Body score ≤2 or ≥8, or 3+ signs: at most 59.
+    // Thresholds to be reviewed with a vet; they're stated on the "How the Bowl Score works" page.
+    caps: { bodyMild: 79, bodyFar: 59, signsSome: 79, signsMany: 59 },
   };
 
   function sizeClass(kg) {
@@ -197,7 +201,15 @@
     // Eating less than the target is fine for a heavy dog, and more is fine for a thin one.
     const fine = eat && ((guard.keep === 'heavy' && eat.ratio < 1) || (guard.keep === 'thin' && eat.ratio > 1));
     const subs = subScores({ ...a, ratio: eat ? (fine ? 1 : eat.ratio) : null });
-    const total = Object.values(subs).reduce((s, x) => s + x.score, 0);
+    let total = Object.values(subs).reduce((s, x) => s + x.score, 0);
+    const K = CONFIG.caps; const signs = (a.signs || []).length;
+    const caps = [];
+    if (a.bcs <= 2 || a.bcs >= 8) caps.push(['body', K.bodyFar]);
+    else if (a.bcs === 3 || a.bcs === 7) caps.push(['body', K.bodyMild]);
+    if (signs >= 3) caps.push(['signs', K.signsMany]);
+    else if (signs >= 1) caps.push(['signs', K.signsSome]);
+    const cap = caps.filter(([, max]) => total > max).sort((x, y) => x[1] - y[1])[0] || null;
+    if (cap) total = cap[1];
 
     // Plan: scale today's amounts so food + treats land on the (guarded) target.
     let planFeeds = null;
@@ -216,7 +228,7 @@
       .slice(0, 3) // three things to do, first on the result (proposal 5)
       .map((x) => x.key);
     return {
-      total, band: band(total), subs,
+      total, band: band(total), subs, capped: cap ? cap[0] : null,
       kcal: Math.round(guard.kcal / 10) * 10,
       targetKcal: Math.round(energy.kcal / 10) * 10,
       keep: guard.keep, vetCheck: guard.vetCheck,

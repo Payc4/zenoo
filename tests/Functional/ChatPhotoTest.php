@@ -178,8 +178,8 @@ final class ChatPhotoTest extends AppTestCase
         $this->assertSelectorTextContains('.flash-success', 'Lovely! The photo is saved.');
         $photo = $this->dog()->getPhoto();
         $this->assertMatchesRegularExpression('/^dog_\d+_[a-f0-9]+\.jpg$/', $photo);
-        $this->assertSelectorExists('img.dash-photo[src="/uploads/dogs/' . $photo . '"]');
-        $this->assertSame([600, 600], \array_slice(getimagesize(static::getContainer()->getParameter('kernel.project_dir') . '/public/uploads/dogs/' . $photo), 0, 2));
+        $this->assertSelectorExists('img.dash-photo[src="/dashboard/dog-photo/' . $photo . '"]');
+        $this->assertSame([600, 600], \array_slice(getimagesize(static::getContainer()->getParameter('kernel.project_dir') . '/public/uploads/private/dogs/' . $photo), 0, 2));
 
         // Retaking the quiz keeps the photo and the food the coach saved.
         $dog = $this->dog()->setFood('Acana', '', 'dry', '', 'chat', new \DateTimeImmutable());

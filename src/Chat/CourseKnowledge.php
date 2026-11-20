@@ -232,10 +232,16 @@ class CourseKnowledge
         return implode("\n", $lines);
     }
 
-    public function language(User $user): string
+    /**
+     * The language to answer in: the interface they're using right now ($locale, from the page),
+     * else their account's language (emails, scheduled check-ins). Test report N6: the coach greeted
+     * in Lithuanian inside the English interface.
+     */
+    public function language(User $user, ?string $locale = null): string
     {
-        $language = \App\Locale::ENGLISH_NAMES[$user->getLocale()] ?? null;
-        return $language !== null && $user->getLocale() !== 'en'
+        $locale = \App\Locale::isSupported($locale) ? $locale : $user->getLocale();
+        $language = \App\Locale::ENGLISH_NAMES[$locale] ?? null;
+        return $language !== null
             ? "Their site language is $language: reply in $language unless they write in another language."
             : '';
     }

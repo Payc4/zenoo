@@ -9,6 +9,7 @@ use App\Service\DogPhotoUploader;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -51,7 +52,7 @@ final class ShareController extends AbstractController
         return $this->render('share/show.html.twig', [
             'dog' => $dog,
             'code' => $code,
-            'photo' => $this->photoUrl($dog),
+            'photo' => $this->photoUrl($dog, $code),
         ]);
     }
 
@@ -73,14 +74,44 @@ final class ShareController extends AbstractController
         throw $this->createNotFoundException();
     }
 
-    /** The dog's own photo, else the breed photo from the quiz, else none. */
-    private function photoUrl(DogProfile $dog): ?string
+    /** The dog's own photo while sharing is on (M11: the share code is what lets a visitor see it). */
+    #[Route('/s/{code}/photo.jpg', name: 'app_share_photo', requirements: ['code' => '[a-f0-9]{12}'], methods: ['GET'])]
+    public function photo(string $code): Response
     {
-        if ($own = $this->photos->url($dog)) {
+        $file = $this->photos->path($this->find($code));
+        if (!$file) {
+            throw $this->createNotFoundException();
+        }
+        $response = new BinaryFileResponse($file, 200, ['Content-Type' => 'image/jpeg', 'X-Content-Type-Options' => 'nosniff']);
+        $response->setPublic();
+        $response->setMaxAge(3600);
+        return $response;
+    }
+
+    /** The dog's own photo, else the breed photo from the quiz, else none. */
+    private function photoUrl(DogProfile $dog, string $code): ?string
+    {
+        if ($this->photos->path($dog)) {
+            return $this->generateUrl('app_share_photo', ['code' => $code]);
+        }
+        $breed = $this->breedPhoto($dog);
+        return $breed ? '/quiz/assets/photos/breed-' . $breed . '.jpg' : null;
+    }
+
+    /** The photo file on disk, for the share image. */
+    private function photoFile(DogProfile $dog): ?string
+    {
+        if ($own = $this->photos->path($dog)) {
             return $own;
         }
+        $breed = $this->breedPhoto($dog);
+        return $breed ? $this->projectDir . '/public/quiz/assets/photos/breed-' . $breed . '.jpg' : null;
+    }
+
+    private function breedPhoto(DogProfile $dog): ?string
+    {
         if (preg_match('~breed-([a-z0-9-]+)\.jpg~', (string) $dog->get('breed_photo_url', ''), $m) && is_file($this->projectDir . '/public/quiz/assets/photos/breed-' . $m[1] . '.jpg')) {
-            return '/quiz/assets/photos/breed-' . $m[1] . '.jpg';
+            return $m[1];
         }
         return null;
     }
@@ -99,9 +130,9 @@ final class ShareController extends AbstractController
         $regular = $this->projectDir . '/resources/fonts/DejaVuSans.ttf';
 
         // The photo on the right, cropped square, with rounded feel from a cream frame.
-        $photo = $this->photoUrl($dog);
+        $photo = $this->photoFile($dog);
         $textRight = $w - 60;
-        if ($photo && ($src = @imagecreatefromstring((string) file_get_contents($this->projectDir . '/public' . $photo)))) {
+        if ($photo && ($src = @imagecreatefromstring((string) file_get_contents($photo)))) {
             $side = min(imagesx($src), imagesy($src));
             $size = 470;
             imagefilledrectangle($im, $w - $size - 70, 70, $w - 50, 70 + $size + 20, $cream);

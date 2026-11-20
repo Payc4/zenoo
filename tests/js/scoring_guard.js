@@ -15,5 +15,16 @@ for (const bcs of [1, 2, 3, 4, 5, 6, 7, 8, 9]) for (const w of [0.6, 3, 10, 30, 
     if (bcs <= 4 && plan < g - tol) problems.push(['less for a thin dog', bcs, w, g, plan]);
     if (Math.abs(plan - g) > g * 0.2 + tol) problems.push(['change over 20%', bcs, w, g, plan]);
     if (stage === 'puppy' && r.idealKg !== null) problems.push(['puppy target weight', w, age]);
+    // N9 score caps: far-off body shape stays under 60, a little off under 80.
+    const cap = bcs <= 2 || bcs >= 8 ? 59 : bcs === 3 || bcs === 7 ? 79 : 100;
+    if (r.total > cap) problems.push(['score over the body cap', bcs, r.total]);
   }
+// Signs of trouble cap the score too: 1–2 signs under 80, 3 or more under 60.
+for (const signs of [['itch'], ['itch', 'stool'], ['itch', 'stool', 'coat'], ['itch', 'stool', 'coat', 'gas']]) {
+  const r = S.evaluate({ ...base, signs, bcs: 5, level: 3, treats: 'none', neutered: true, weightKg: 20, ageYears: 4, stage: 'adult', adultKg: 20, feeds: [{ type: 'dry', grams: 300 }] });
+  n++;
+  const cap = signs.length >= 3 ? 59 : 79;
+  if (r.total > cap) problems.push(['score over the signs cap', signs.length, r.total]);
+  if (r.total === cap && r.capped !== 'signs') problems.push(['capped not flagged', signs.length, r.capped]);
+}
 console.log(JSON.stringify({ cases: n, problems: problems.slice(0, 5), count: problems.length }));

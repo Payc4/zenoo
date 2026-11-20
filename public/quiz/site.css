@@ -56,3 +56,4 @@ h2 { font-size: 20px; }
 .zq-quiet { text-align: center; margin: 20px 0; color: var(--ink-muted); }
 .zq-quiet .zq-back { display: inline-flex; align-items: center; }
 .zq-todo ol li { margin-bottom: 6px; }
+.zq-capped { margin: 8px 0 0; color: var(--mist, #dde5dc); }

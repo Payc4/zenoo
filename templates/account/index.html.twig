@@ -88,18 +88,18 @@
         <section class="card" id="coach-emails">
             <h2>{{ 'Emails'|trans }}</h2>
             <p class="panel-intro">{{ 'When the coach plans to check in (for example two weeks into a weight plan), it sends you a short email with its question.'|trans }}</p>
-            <form method="post" action="{{ path('app_account_coach_emails') }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('coach-emails') }}">
-                <input type="hidden" name="on" value="{{ app.user.wantsCoachEmails ? '0' : '1' }}">
-                <p>{{ app.user.wantsCoachEmails ? 'Check-in emails are on.'|trans : 'Check-in emails are off.'|trans }}</p>
-                <button class="btn btn-outline btn-small" type="submit">{{ app.user.wantsCoachEmails ? 'Switch them off'|trans : 'Switch them on'|trans }}</button>
+            {# U13: one labelled switch per kind of email instead of two "Switch them off" buttons. #}
+            {% for row in [
+                {route: 'app_account_coach_emails', token: 'coach-emails', on: app.user.wantsCoachEmails, label: 'Coach check-in emails', hint: 'A short question when the coach planned to check in.'},
+                {route: 'app_account_marketing_emails', token: 'marketing-emails', on: app.user.wantsMarketingEmails, label: 'Tips and offers', hint: 'Feeding tips and ZENOO offers, now and then.'}
+            ] %}
+            <form method="post" action="{{ path(row.route) }}" class="email-switch{{ loop.last ? ' account-marketing' : '' }}">
+                <input type="hidden" name="_token" value="{{ csrf_token(row.token) }}">
+                <input type="hidden" name="on" value="{{ row.on ? '0' : '1' }}">
+                <span class="email-switch__text" id="email-switch-{{ loop.index }}"><strong>{{ row.label|trans }}</strong><span class="muted">{{ row.hint|trans }}</span></span>
+                <button class="switch" type="submit" role="switch" aria-checked="{{ row.on ? 'true' : 'false' }}" aria-labelledby="email-switch-{{ loop.index }}"><span class="switch__state">{{ row.on ? 'On'|trans : 'Off'|trans }}</span></button>
             </form>
-            <form method="post" action="{{ path('app_account_marketing_emails') }}" class="account-marketing" style="margin-top:16px">
-                <input type="hidden" name="_token" value="{{ csrf_token('marketing-emails') }}">
-                <input type="hidden" name="on" value="{{ app.user.wantsMarketingEmails ? '0' : '1' }}">
-                <p>{{ app.user.wantsMarketingEmails ? 'Tips and offers by email are on.'|trans : 'Tips and offers by email are off.'|trans }}</p>
-                <button class="btn btn-outline btn-small" type="submit">{{ app.user.wantsMarketingEmails ? 'Switch them off'|trans : 'Switch them on'|trans }}</button>
-            </form>
+            {% endfor %}
         </section>
 
         {# ---------- Password ---------- #}

@@ -34,13 +34,13 @@ class PagesTest extends AppTestCase
 
     public function testQuizScoringAndStylesMatchTheHandoff(): void
     {
-        // styles.css is an untouched copy of the ZENOO handoff; scoring.js was changed on purpose for the
+        // styles.css is the ZENOO handoff copy with its fonts served from the site (M8, no Google Fonts); scoring.js was changed on purpose for the
         // 20 Nov 2026 test report (feeding plan follows body shape, puppy growth, score caps: thresholds
         // to be signed off by a vet). The hashes guard against silent edits: update them with any
         // deliberate change. app.js and content.*.js are changed on purpose all the time.
         $expected = [
-            'scoring.js' => 'dd9ac46d6e08c5a5bc1acbc9d5becbcc3806d6cd7ac30b385fc3922aa941e5ea',
-            'styles.css' => '3341429afe83cb14429dee3f008dc3276a014ecef9e02352b0ec0f62e2d02572',
+            'scoring.js' => '1ff6047e83705e0364ef928ee1a2e28461b385e67e5333fd2e31be1126470d53',
+            'styles.css' => 'fe80d3500ef965645811918ba82f77d16cdbc7e0946b09c14666a5336487570b',
         ];
         foreach ($expected as $file => $hash) {
             $this->assertSame($hash, hash_file('sha256', dirname(__DIR__, 2) . '/public/quiz/' . $file), $file . ' differs from the handoff copy');

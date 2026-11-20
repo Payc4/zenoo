@@ -53,7 +53,8 @@
       <section class="cl-course" lang="{{ c.locale }}">
         <div class="cl-course__top">
           <div>
-            <h2 class="cl-course__title">{{ c.title }}{% if not c.published %} <span class="cl-tag">{{ 'Draft'|trans }}</span>{% endif %}{% if c.locale != 'en' %} <span class="cl-tag cl-tag--lang">{{ locale_name(c.locale) }}</span>{% endif %}</h2>
+            <h2 class="cl-course__title">{{ c.title }}{% if not c.published %} <span class="cl-tag">{{ 'Draft'|trans }}</span>{% endif %}{% if c.locale != app.request.locale %} <span class="cl-tag cl-tag--lang">{{ '%language% only'|trans({'%language%': locale_name(c.locale)}) }}</span>{% endif %}</h2>
+            {% if c.locale != app.request.locale %}<p class="small muted" style="margin:4px 0 0">{{ 'These lessons aren’t in your language yet, so they’re shown in %language%.'|trans({'%language%': locale_name(c.locale)}) }}</p>{% endif %}
             {% if c.description %}<p class="cl-course__desc">{{ c.description }}</p>{% endif %}
           </div>
           <div class="cl-course__count">{{ item.done }} / {{ item.lessons|length }}<small>{{ 'lessons done'|trans }}</small></div>

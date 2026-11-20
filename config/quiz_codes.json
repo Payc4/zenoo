@@ -1,0 +1,70 @@
+{
+ "en": {
+  "bands": {
+   "great": "EATING REALLY WELL",
+   "good": "GOOD, WITH ROOM TO GROW",
+   "look": "WORTH A CLOSER LOOK",
+   "wins": "PLENTY OF EASY WINS"
+  },
+  "fixes": {
+   "protein": "Look for a named meat as the first ingredient and a higher protein number on the label.",
+   "carbs": "Swap part of the bowl for a fresher, meat-rich food to bring the starch down.",
+   "freshness": "Try adding something fresher to the bowl, even as a topper, and see how {name} responds.",
+   "body": "Aim for about {kcal} kcal a day and check body shape every 2 weeks.",
+   "activity": "Add a 15–20 minute sniff walk or a game of fetch to the daily routine.",
+   "routine": "Follow the gram amounts in {poss} daily plan and keep an eye on body shape.",
+   "signals": "Change one thing at a time and keep a quick note of what you see over 3–4 weeks."
+  }
+ },
+ "lt": {
+  "bands": {
+   "great": "MAITINASI TIKRAI GERAI",
+   "good": "GERAI, BET GALI BŪTI DAR GERIAU",
+   "look": "VERTA PAŽIŪRĖTI ATIDŽIAU",
+   "wins": "YRA KĄ LENGVAI PAGERINTI"
+  },
+  "fixes": {
+   "protein": "Ieškokite maisto, kurio pirmoji sudedamoji dalis – konkrečiai įvardyta mėsa, o baltymų procentas etiketėje didesnis.",
+   "carbs": "Dalį dubenėlio pakeiskite šviežesniu, mėsos turtingu maistu – taip sumažinsite krakmolo.",
+   "freshness": "Pabandykite į dubenėlį įdėti ko nors šviežesnio, kad ir kaip priedą, ir stebėkite, kaip {name} reaguoja.",
+   "body": "Siekite apie {kcal} kcal per dieną ir kūno formą tikrinkite kas 2 savaites.",
+   "activity": "Į dienos rutiną įtraukite 15–20 min. uostinėjimo pasivaikščiojimą arba žaidimą su kamuoliuku.",
+   "routine": "Laikykitės gramų, nurodytų dienos plane, ir stebėkite kūno formą.",
+   "signals": "Keiskite po vieną dalyką ir 3–4 savaites trumpai užsirašinėkite, ką pastebite."
+  }
+ },
+ "uk": {
+  "bands": {
+   "great": "ХАРЧУЄТЬСЯ ДУЖЕ ДОБРЕ",
+   "good": "ДОБРЕ, АЛЕ Є КУДИ РОСТИ",
+   "look": "ВАРТО ПРИДИВИТИСЯ УВАЖНІШЕ",
+   "wins": "БАГАТО ПРОСТИХ ПОКРАЩЕНЬ"
+  },
+  "fixes": {
+   "protein": "Шукайте корм, у якому першим інгредієнтом указано конкретне м’ясо, а відсоток білка на етикетці вищий.",
+   "carbs": "Замініть частину миски свіжішим кормом, багатим на м’ясо, щоб зменшити кількість крохмалю.",
+   "freshness": "Спробуйте додати в миску щось свіжіше, хоча б як топер (добавку зверху), і подивіться, як на це відреагує {name}.",
+   "body": "Орієнтуйтеся приблизно на {kcal} ккал на день і перевіряйте статуру кожні 2 тижні.",
+   "activity": "Додайте до щоденного розпорядку 15–20-хвилинну прогулянку, під час якої собака може вдосталь нюхати, або гру в апорт.",
+   "routine": "Дотримуйтеся кількості грамів зі щоденного плану й стежте за статурою.",
+   "signals": "Змінюйте щось одне за раз і протягом 3–4 тижнів коротко занотовуйте, що помічаєте."
+  }
+ },
+ "pl": {
+  "bands": {
+   "great": "JE NAPRAWDĘ DOBRZE",
+   "good": "DOBRZE, ALE MOŻE BYĆ JESZCZE LEPIEJ",
+   "look": "WARTO PRZYJRZEĆ SIĘ BLIŻEJ",
+   "wins": "WIELE MOŻNA ŁATWO POPRAWIĆ"
+  },
+  "fixes": {
+   "protein": "Szukaj karmy, w której pierwszym składnikiem jest konkretnie nazwane mięso, a zawartość białka na etykiecie jest wyższa.",
+   "carbs": "Zastąp część miski świeższą karmą bogatą w mięso, żeby zmniejszyć ilość skrobi.",
+   "freshness": "Spróbuj dodać coś świeższego, choćby jako dodatek do miski, i zobacz, jak zareaguje {name}.",
+   "body": "Celuj w około {kcal} kcal dziennie i sprawdzaj sylwetkę co 2 tygodnie.",
+   "activity": "Dodaj do codziennego planu 15–20-minutowy spacer z węszeniem albo zabawę w aportowanie.",
+   "routine": "Trzymaj się ilości w gramach z planu dnia i obserwuj sylwetkę psa.",
+   "signals": "Zmieniaj jedną rzecz naraz i przez 3–4 tygodnie krótko notuj, co zauważasz."
+  }
+ }
+}

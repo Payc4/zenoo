@@ -46,7 +46,7 @@
     <div class="dog-score__row">
       <div>
         <div class="dash-score__num"><span>{{ dog.bowlScore }}</span><small>/100</small></div>
-        {% if dog.get('score_title') %}<p class="dog-score__band">{{ dog.get('score_title')|lower|capitalize }}</p>{% endif %}
+        {% if dog.get('score_title') %}<p class="dog-score__band">{{ dog_text(dog, 'score_title')|lower|capitalize }}</p>{% endif %}
       </div>
       {% if history|length > 1 %}
         {% set hs = history|slice(-6) %}
@@ -74,9 +74,9 @@
           {% endfor %}
         </ul>
         <ol class="dog-fixes">
-          <li>{{ dog.get('fix_1_text') ?: 'Keep doing what you’re doing!'|trans }}</li>
-          {% if dog.get('fix_2_text') %}<li>{{ dog.get('fix_2_text') }}</li>{% endif %}
-          {% if dog.get('fix_3_text') %}<li>{{ dog.get('fix_3_text') }}</li>{% endif %}
+          <li>{{ dog_text(dog, 'fix_1_text') ?: 'Keep doing what you’re doing!'|trans }}</li>
+          {% if dog.get('fix_2_text') %}<li>{{ dog_text(dog, 'fix_2_text') }}</li>{% endif %}
+          {% if dog.get('fix_3_text') %}<li>{{ dog_text(dog, 'fix_3_text') }}</li>{% endif %}
         </ol>
       </details>
     </div>

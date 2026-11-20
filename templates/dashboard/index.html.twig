@@ -26,7 +26,7 @@
     {% if dog %}
       <a class="today-score" href="{{ path('app_dog_tab') }}#score-h">
         <span class="today-score__ring" style="--p: {{ dog.bowlScore }}"><span>{{ dog.bowlScore }}</span></span>
-        <span><strong>{{ 'Bowl Score'|trans }}{% if dog.get('score_title') %}: {{ dog.get('score_title')|lower }}{% endif %}</strong><br><u>{{ 'See the breakdown'|trans }}</u></span>
+        <span><strong>{{ 'Bowl Score'|trans }}{% if dog.get('score_title') %}: {{ dog_text(dog, 'score_title')|lower }}{% endif %}</strong><br><u>{{ 'See the breakdown'|trans }}</u></span>
       </a>
     {% endif %}
   </div>

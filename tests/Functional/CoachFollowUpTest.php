@@ -53,7 +53,7 @@ final class CoachFollowUpTest extends AppTestCase
             ['text' => 'Start with 270 g a day. I’ll check in in two weeks.'],
         ];
         $body = $this->send('I want Bella to lose weight.');
-        $this->assertStringContainsString('The coach will check in on ' . (new \DateTimeImmutable('+14 days'))->format('Y-m-d'), $body);
+        $this->assertStringContainsString('The coach will check in on ' . (new \DateTimeImmutable('+14 days'))->format('j M Y'), $body);
         $planned = $this->dog()->getFollowUps();
         $this->assertCount(1, $planned);
         $this->assertSame('What does Bella weigh now?', $planned[0]['question']);
@@ -96,7 +96,7 @@ final class CoachFollowUpTest extends AppTestCase
         $crawler = $this->client->request('GET', '/account');
         $this->client->submit($crawler->filter('#coach-emails form')->form());
         $this->client->followRedirect();
-        $this->assertSelectorTextContains('#coach-emails', 'Check-in emails are off.');
+        $this->assertSelectorExists('#coach-emails button[role="switch"][aria-checked="false"]');
         $this->assertStringContainsString('Sent 0', $this->runCommand());
 
         // The one-click link in the email needs a valid signature.

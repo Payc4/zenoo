@@ -410,7 +410,8 @@ ${backOnly()}`,
       return `
         <div class="zq-scorecard"><div class="zq-small">${tx(T.scoreTitle)}</div>
           <div class="zq-score-num">${r.total}<small>/100</small></div>
-          <h1>${bandC.title}</h1><p>${fill(bandC.text, vars)}</p></div>
+          <h1>${bandC.title}</h1><p>${fill(bandC.text, vars)}</p>
+          ${r.capped ? `<p class="zq-small zq-capped">${tx(T.capped[r.capped], { max: r.total })}</p>` : ''}</div>
         <div class="zq-card zq-todo"><h3>${T.firstTitle}</h3><ol style="margin:0;padding-left:20px">${first || `<li>${T.keepGoing}</li>`}</ol></div>
         <div class="zq-sent" id="zq-inbox"><h3 style="font-family:var(--font-display);margin:0 0 6px">${T.inboxTitle}</h3>
           <p style="margin:0">${tx(T.inboxText, { email: `<b>${esc(a.email)}</b>` })}</p></div>
@@ -496,7 +497,7 @@ ${backOnly()}`,
         quiz_label_scanned: !!a.labelScan, quiz_food_brand: a.labelScan?.brand || null,
         quiz_food_product: a.labelScan?.product || null, quiz_food_format: a.labelScan?.format || null,
         quiz_carbs_dm: Math.round(d.cDm), quiz_protein_dm: Math.round(d.pDm), quiz_appetite: a.appetite, quiz_signs: a.signs,
-        quiz_top_sign: a.signs[0] || null, quiz_bowl_score: r.total, quiz_score_band: r.band,
+        quiz_top_sign: a.signs[0] || null, quiz_bowl_score: r.total, quiz_score_band: r.band, quiz_score_capped: r.capped,
         quiz_sub_protein: r.subs.protein.score, quiz_sub_carbs: r.subs.carbs.score, quiz_sub_freshness: r.subs.freshness.score,
         quiz_sub_body: r.subs.body.score, quiz_sub_activity: r.subs.activity.score, quiz_sub_signals: r.subs.signals.score,
         quiz_sub_routine: r.subs.routine.score, quiz_meals_per_day: a.meals, quiz_treats: a.treats,

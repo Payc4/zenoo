@@ -61,6 +61,7 @@ class ChatAgent
         private readonly \App\Catalogue\PlanBuilder $plans,
         #[Autowire('%kernel.project_dir%/config/chatbot/system_prompt.md')] private readonly string $promptFile,
         #[Autowire('%kernel.project_dir%/config/chatbot/intro_questions.yaml')] private readonly string $introFile,
+        private readonly ?\Symfony\Component\HttpFoundation\RequestStack $requests = null,
     ) {
     }
 
@@ -480,7 +481,7 @@ class ChatAgent
             $vars['{{dog_profile}}'] = $this->course->dog($user, $this->dogOf($conversation));
         }
         if (str_contains($template, '{{language}}')) {
-            $vars['{{language}}'] = $this->course->language($user);
+            $vars['{{language}}'] = $this->course->language($user, $this->requests?->getCurrentRequest()?->getLocale());
         }
 
         $blocks = [['type' => 'text', 'text' => strtr($shared, $vars), 'cache_control' => ['type' => 'ephemeral']]];

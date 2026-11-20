@@ -4,11 +4,17 @@
 
 {% block body %}
 {% set subLabels = {protein: 'Protein', carbs: 'Carb load', freshness: 'Freshness', body: 'Body shape', activity: 'Activity', signals: 'Bowl signals', routine: 'Portions & routine'} %}
+{# Plain labels, never the app's internal codes (test report N10). #}
+{% set stages = {puppy: 'Puppy', adult: 'Adult', senior: 'Senior'} %}
+{% set sexes = {female: 'Female', male: 'Male'} %}
+{% set foods = {dry: 'Dry food', wet: 'Wet food', fresh: 'Fresh-cooked food', raw: 'Raw food', freezedried: 'Freeze-dried or air-dried', home: 'Home-cooked'} %}
+{% set signNames = {itching: 'Itching or scratching', tears: 'Tear stains', coat: 'Dull coat', stools: 'Loose stools', gas: 'Gas or bloating', energy: 'Low energy', breath: 'Bad breath'} %}
+{% set neutered = dog.get('neutered') in [true, 'yes', 1, '1'] %}
 <section class="section vet-report">
 <div class="wrap">
   <p class="vet-report__actions no-print">
     <button class="btn" type="button" onclick="window.print()">{{ 'Print or save as PDF'|trans }}</button>
-    <a href="{{ path('app_dashboard') }}">{{ 'Back to the dashboard'|trans }}</a>
+    <a href="{{ path('app_dog_tab') }}">{{ 'Back'|trans }}</a>
   </p>
 
   <header class="vet-report__head">
@@ -16,42 +22,47 @@
     <div>
       <p class="kicker">{{ 'Feeding summary for the vet'|trans }}</p>
       <h1>{{ dog.name }}</h1>
-      <p>{{ 'Prepared on %date% from %owner%’s answers in the ZENOO app.'|trans({'%date%': 'now'|date('Y-m-d'), '%owner%': user.displayName}) }}</p>
+      <p>{{ 'Prepared on %date% from %owner%’s answers in the ZENOO app.'|trans({'%date%': date()|local_date('long'), '%owner%': user.displayName}) }}</p>
     </div>
   </header>
 
   <h2>{{ 'The dog'|trans }}</h2>
   <table class="vet-report__table">
-    <tr><th>{{ 'Breed'|trans }}</th><td>{{ dog.get('breed') ?: '—' }}</td></tr>
-    <tr><th>{{ 'Age'|trans }}</th><td>{{ dog.get('age_years') ? dog.get('age_years')|dog_age : '—' }} ({{ dog.get('life_stage')|default('—')|trans }})</td></tr>
-    <tr><th>{{ 'Sex'|trans }}</th><td>{{ dog.get('sex')|default('—')|trans }}{% if dog.get('neutered') %} · {{ dog.get('neutered') == 'yes' ? 'neutered'|trans : 'not neutered'|trans }}{% endif %}</td></tr>
-    <tr><th>{{ 'Weight'|trans }}</th><td>{{ facts.weight_kg ? facts.weight_kg ~ ' kg' : '—' }}{% if dog.latestLog('weight') %} ({{ dog.latestLog('weight').d }}){% endif %}</td></tr>
-    <tr><th>{{ 'Body shape'|trans }}</th><td>{{ facts.bcs }}/9{% if energy %} · {{ 'ideal weight about %kg% kg'|trans({'%kg%': energy.ideal_weight_kg}) }}{% endif %}</td></tr>
-    <tr><th>{{ 'Food'|trans }}</th><td>{% if dog.food %}{{ (dog.food.brand ~ ' ' ~ dog.food.product)|trim }} ({{ dog.food.format }}){% else %}{{ dog.get('food_main')|default('—') }}{% endif %}</td></tr>
-    {% if energy %}<tr><th>{{ 'Energy'|trans }}</th><td>{{ 'about %kcal% kcal a day'|trans({'%kcal%': energy.kcal_per_day}) }}</td></tr>{% endif %}
-    {% if dog.get('plan_food') %}<tr><th>{{ 'Plan'|trans }}</th><td>{{ dog.get('plan_food') }} · {{ dog.get('plan_meals') }}</td></tr>{% endif %}
+    <tr><th>{{ 'Breed'|trans }}</th><td>{{ dog.get('breed') == 'mixed' ? 'Mixed breed'|trans : (dog.get('breed') ?: '—') }}</td></tr>
+    <tr><th>{{ 'Age'|trans }}</th><td>{{ dog.get('age_years') ? dog.get('age_years')|dog_age : '—' }}{% if stages[dog.get('life_stage')] is defined %} · {{ stages[dog.get('life_stage')]|trans }}{% endif %}</td></tr>
+    <tr><th>{{ 'Sex'|trans }}</th><td>{{ sexes[dog.get('sex')] is defined ? sexes[dog.get('sex')]|trans : '—' }} · {{ neutered ? 'neutered'|trans : 'not neutered'|trans }}</td></tr>
+    <tr><th>{{ 'Weight'|trans }}</th><td>{{ facts.weight_kg ? facts.weight_kg|replace({'.': decimal_sep()}) ~ ' kg' : '—' }}{% if dog.latestLog('weight') %} ({{ date(dog.latestLog('weight').d)|local_date('day') }}){% endif %}</td></tr>
+    <tr><th>{{ 'Body shape'|trans }}</th><td>{{ '%n% of 9'|trans({'%n%': facts.bcs}) }}{% if energy and energy.ideal_weight_kg %} · {{ 'ideal weight about %kg% kg'|trans({'%kg%': energy.ideal_weight_kg}) }}{% endif %}</td></tr>
+    <tr><th>{{ 'Current food'|trans }}</th><td>{% if dog.food %}{{ (dog.food.brand ~ ' ' ~ dog.food.product)|trim }}{% if foods[dog.food.format] is defined %} ({{ foods[dog.food.format]|trans|lower }}){% endif %}{% elseif foods[dog.get('food_main')] is defined %}{{ foods[dog.get('food_main')]|trans }}{% else %}—{% endif %}</td></tr>
+    {% if dog.get('intake_kcal') %}<tr><th>{{ 'Eats now'|trans }}</th><td>{{ 'about %kcal% kcal a day'|trans({'%kcal%': dog.get('intake_kcal')|round}) }}</td></tr>{% endif %}
+    {% if energy %}<tr><th>{{ 'Plan'|trans }}</th><td>{{ 'about %kcal% kcal a day'|trans({'%kcal%': energy.kcal_per_day}) }}{% if dog.get('plan_food') %}<br>{{ dog.get('plan_food') }}{% endif %}{% if dog.get('plan_meals') %}<br>{{ dog.get('plan_meals') }}{% endif %}</td></tr>{% endif %}
   </table>
 
   <h2>{{ 'Bowl Score: %score%/100'|trans({'%score%': dog.bowlScore}) }}</h2>
   <p class="vet-report__scores">{% for s in dog.subScores %}{{ subLabels[s.key]|trans }} {{ s.score }}/{{ s.max }}{{ not loop.last ? ' · ' }}{% endfor %}</p>
   {% if dog.scoreHistory|length > 1 %}<p>{{ 'Over time:'|trans }} {{ dog.scoreHistory|map(h => h.score ~ ' (' ~ h.at ~ ')')|join(' → ') }}</p>{% endif %}
 
+  {# Every dated log entry (N10), newest first. #}
   {% set trackerNames = {weight: 'Weight (kg)', body: 'Body shape (1–9)', stool: 'Stool (1–7)', itch: 'Itching (0–10)'} %}
-  {% set anyLog = false %}{% for t in trackerNames|keys %}{% if dog.log(t)|length > 1 %}{% set anyLog = true %}{% endif %}{% endfor %}
-  {% if anyLog %}
-    <h2>{{ 'What the owner tracked'|trans }}</h2>
-    <table class="vet-report__table">
-      {% for t, label in trackerNames %}{% set log = dog.log(t)|slice(-8) %}{% if log %}
-        <tr><th>{{ label|trans }}</th><td>{{ log|map(e => e.v ~ ' (' ~ e.d|date('j M') ~ ')')|join(', ') }}</td></tr>
-      {% endif %}{% endfor %}
+  {% set entries = dog.log|filter(e => e.src != 'quiz' or e.t in ['weight', 'body'])|reverse|slice(0, 60) %}
+  {% if entries %}
+    <h2>{{ 'What the owner logged'|trans }}</h2>
+    <table class="vet-report__table vet-report__log">
+      <tr><th>{{ 'Date'|trans }}</th>{% for t, label in trackerNames %}<th>{{ label|trans }}</th>{% endfor %}</tr>
+      {% set days = entries|map(e => e.d)|reduce((carry, d) => d in carry ? carry : carry|merge([d]), []) %}
+      {% for d in days %}
+        <tr><td>{{ date(d)|local_date('day') }}</td>
+          {% for t in trackerNames|keys %}{% set e = entries|filter(x => x.d == d and x.t == t)|first %}<td>{{ e ? e.v|replace({'.': decimal_sep()}) : '' }}</td>{% endfor %}
+        </tr>
+      {% endfor %}
     </table>
   {% endif %}
 
   {% if dog.notes or dog.get('signs') %}
     <h2>{{ 'What the owner told us'|trans }}</h2>
     <ul>
-      {% if dog.get('signs') %}<li>{{ 'Signs noted in the quiz:'|trans }} {{ dog.get('signs')|join(', ') }}</li>{% endif %}
-      {% for n in dog.notes %}<li>{{ n.at }}: {{ n.text }}</li>{% endfor %}
+      {% if dog.get('signs') %}<li>{{ 'Signs noted in the quiz:'|trans }} {{ dog.get('signs')|map(x => signNames[x] is defined ? signNames[x]|trans|lower : x)|join(', ') }}</li>{% endif %}
+      {% for n in dog.notes %}<li>{{ date(n.at)|local_date('day') }}: {{ n.text }}</li>{% endfor %}
     </ul>
   {% endif %}
   {% if checkins %}<h2>{{ 'Check-in answers'|trans }}</h2><pre class="vet-report__pre">{{ checkins }}</pre>{% endif %}

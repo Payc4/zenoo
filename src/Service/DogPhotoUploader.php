@@ -6,11 +6,16 @@ use App\Chat\ChatFiles;
 use App\Entity\DogProfile;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * The dog's own photo on the dashboard ("Finish the profile"). Like profile photos, every upload
- * is decoded, turned upright and re-encoded as a square JPEG, so only a clean image file lands in
- * public/uploads/dogs, under a random name.
+ * is decoded, turned upright and re-encoded as a square JPEG, so only a clean image file lands on
+ * disk, under a random name.
+ *
+ * Photos live in public/uploads/private/dogs, which nginx refuses (test report M11): the app serves
+ * them to the owner (app_dog_photo_file) and, while sharing is on, on the share page (app_share_photo).
+ * Photos saved before that, in public/uploads/dogs, are moved across the first time they are used.
  */
 class DogPhotoUploader
 {
@@ -19,14 +24,33 @@ class DogPhotoUploader
     private const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
     public function __construct(
-        #[Autowire('%kernel.project_dir%/public/uploads/dogs')] private readonly string $dir,
+        private readonly UrlGeneratorInterface $urls,
+        #[Autowire('%kernel.project_dir%/public/uploads/private/dogs')] private readonly string $dir,
+        #[Autowire('%kernel.project_dir%/public/uploads/dogs')] private readonly string $legacyDir,
     ) {
     }
 
+    /** The owner's URL for the photo (signed-in route), or null when the dog has none. */
     public function url(DogProfile $dog): ?string
     {
+        return $this->path($dog) ? $this->urls->generate('app_dog_photo_file', ['name' => $dog->getPhoto()]) : null;
+    }
+
+    /** The photo file on disk, or null. Moves a photo saved before M11 out of the public folder. */
+    public function path(DogProfile $dog): ?string
+    {
         $name = $dog->getPhoto();
-        return $name && $this->valid($name) && is_file($this->dir . '/' . $name) ? '/uploads/dogs/' . $name : null;
+        if (!$name || !$this->valid($name)) {
+            return null;
+        }
+        $file = $this->dir . '/' . $name;
+        if (!is_file($file) && is_file($this->legacyDir . '/' . $name)) {
+            if ((is_dir($this->dir) || @mkdir($this->dir, 0775, true)) && @rename($this->legacyDir . '/' . $name, $file)) {
+                return $file;
+            }
+            return $this->legacyDir . '/' . $name;
+        }
+        return is_file($file) ? $file : null;
     }
 
     /** @throws \InvalidArgumentException with an English message the controller translates */
@@ -69,13 +93,17 @@ class DogPhotoUploader
     public function remove(DogProfile $dog): void
     {
         $name = $dog->getPhoto();
-        if ($name && $this->valid($name) && is_file($this->dir . '/' . $name)) {
-            @unlink($this->dir . '/' . $name);
+        if ($name && $this->valid($name)) {
+            foreach ([$this->dir, $this->legacyDir] as $dir) {
+                if (is_file($dir . '/' . $name)) {
+                    @unlink($dir . '/' . $name);
+                }
+            }
         }
         $dog->setPhoto(null);
     }
 
-    private function valid(string $name): bool
+    public function valid(string $name): bool
     {
         return (bool) preg_match('/^dog_\d+_[a-f0-9]+\.jpg$/', $name);
     }

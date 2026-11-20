@@ -345,6 +345,8 @@ window.ZQ_CONTENT = {
     },
     vars: { breedMixed: 'mišrūnas', noSigns: 'išrankus apetitas' },
     result: {
+      // Shown when the score is capped (scoring.js CONFIG.caps)
+      capped: { body: 'Kol {name} sveria toli nuo idealaus, balas apribotas iki {max}.', signs: 'Kol {name} turi požymių, balas apribotas iki {max}.' },
       // The personal ZENOO plan on the result (from the store catalogue; {product} links to it)
       zenoo: { title: 'ŠVIEŽESNIS MAISTAS: {NAME}', text: 'Mūsų pasirinkimas: {product} {option}, apie <b>{grams} g per dieną</b> (apie €{cost} per dieną).', options: { topper: 'kaip priedas prie maisto', half: 'kaip pusė dubenėlio', full: 'kaip visas dubenėlis' }, cta: 'Užsakyti 2 savaičių rinkinį (€{price})', code: 'Pirmo užsakymo pasiūlymas: kodas {code} pritaikomas apmokant.', note: 'Apskaičiuota pagal pakuotės energinę vertę. Pereikite palaipsniui per maždaug savaitę.', dashboard: 'Visi variantai jūsų suvestinėje' },
       scoreTitle: 'DUBENĖLIO BALAS: {NAME}',

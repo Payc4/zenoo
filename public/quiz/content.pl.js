@@ -346,6 +346,8 @@ window.ZQ_CONTENT = {
     },
     vars: { breedMixed: 'mieszaniec', noSigns: 'grymaszenie przy jedzeniu' },
     result: {
+      // Shown when the score is capped (scoring.js CONFIG.caps)
+      capped: { body: 'Dopóki {name} jest daleko od idealnej sylwetki, wynik jest ograniczony do {max}.', signs: 'Dopóki {name} ma objawy przy misce, wynik jest ograniczony do {max}.' },
       // The personal ZENOO plan on the result (from the store catalogue; {product} links to it)
       zenoo: { title: 'ŚWIEŻSZE JEDZENIE: {NAME}', text: 'Nasz wybór: {product} {option}, około <b>{grams} g dziennie</b> (około €{cost} dziennie).', options: { topper: 'jako dodatek do karmy', half: 'jako połowa miski', full: 'jako cała miska' }, cta: 'Zamów zestaw na 2 tygodnie (€{price})', code: 'Oferta na start: kod {code} zostanie dodany przy płatności.', note: 'Szacunek na podstawie wartości energetycznej z opakowania. Przechodź stopniowo, przez mniej więcej tydzień.', dashboard: 'Wszystkie opcje w Twoim panelu' },
       scoreTitle: 'WYNIK MISKI: {NAME}',

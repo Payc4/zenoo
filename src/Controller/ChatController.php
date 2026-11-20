@@ -256,7 +256,7 @@ class ChatController extends AbstractController
     }
 
     #[Route('/send', name: 'app_chat_send', methods: ['POST'])]
-    public function send(Request $request, ClaudeClient $claude, ChatAgent $agent, SafetyCheck $safety, DogProfileRepository $dogs, \App\Tracking\Funnel $funnel, LoggerInterface $logger): Response
+    public function send(Request $request, ClaudeClient $claude, ChatAgent $agent, SafetyCheck $safety, DogProfileRepository $dogs, \App\Tracking\Funnel $funnel, LoggerInterface $logger, \App\Twig\LocaleExtension $dates): Response
     {
         $user = $this->currentUser();
 
@@ -330,7 +330,7 @@ class ChatController extends AbstractController
             }
         }
         $guard = $this->guard;
-        $response = new StreamedResponse(function () use ($agent, $safety, $guard, $dog, $locale, $earlier, $text, $conversation, $userMessage, $isNew, $remaining, $logger, $stream, $quota, $user, $translator) {
+        $response = new StreamedResponse(function () use ($agent, $safety, $guard, $dog, $locale, $earlier, $text, $conversation, $userMessage, $isNew, $remaining, $logger, $stream, $quota, $user, $translator, $dates) {
             ignore_user_abort(true); // finish and save the reply even if the tab is closed
             if ($stream) {
                 while (ob_get_level() > 0) {
@@ -410,7 +410,7 @@ class ChatController extends AbstractController
                     $emit('note', ['text' => $translator->trans('Saved to your dog’s profile: %food%', ['%food%' => trim($result['food']['brand'] . ' ' . $result['food']['product'])])]);
                 }
                 if ($result['followup'] ?? null) {
-                    $emit('note', ['text' => $translator->trans('The coach will check in on %date%.', ['%date%' => (new \DateTimeImmutable($result['followup']['due']))->format('Y-m-d')])]);
+                    $emit('note', ['text' => $translator->trans('The coach will check in on %date%.', ['%date%' => $dates->format(new \DateTimeImmutable($result['followup']['due']), 'day', $locale)])]);
                 }
                 if ($result['remembered'] ?? []) {
                     $emit('note', ['text' => $translator->trans('Saved to %dog%’s notes: %facts%', ['%dog%' => $dog?->getName() ?? '', '%facts%' => implode('; ', $result['remembered'])])]);

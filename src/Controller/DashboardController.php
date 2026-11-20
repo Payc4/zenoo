@@ -15,6 +15,7 @@ use App\Service\DogPhotoUploader;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -180,6 +181,23 @@ final class DashboardController extends AbstractController
             $this->addFlash('error', $e->getMessage());
         }
         return $this->redirectToRoute('app_dog_tab');
+    }
+
+    /** The dog photo, served to its owner only (test report M11): nginx refuses /uploads/private/. */
+    #[Route('/dashboard/dog-photo/{name}', name: 'app_dog_photo_file', requirements: ['name' => 'dog_\d+_[a-f0-9]+\.jpg'], methods: ['GET'])]
+    public function dogPhotoFile(string $name): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        foreach ($this->dogs->findAllForUser($user) as $dog) {
+            if ($dog->getPhoto() === $name && ($file = $this->dogPhotos->path($dog))) {
+                $response = new BinaryFileResponse($file, 200, ['Content-Type' => 'image/jpeg', 'X-Content-Type-Options' => 'nosniff']);
+                $response->setPrivate();
+                $response->setMaxAge(86400);
+                return $response;
+            }
+        }
+        throw $this->createNotFoundException();
     }
 
     /** The course in the page's language (English as a fallback), if pet parents can see it. */
