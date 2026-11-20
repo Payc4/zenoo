@@ -75,7 +75,7 @@ class PagesTest extends AppTestCase
         $this->assertSame('maria@example.com', $config()['user']['email']);
         // The email step is skipped for them, and the opt-in is unticked by default.
         $app = (string) file_get_contents(dirname(__DIR__, 2) . '/public/quiz/app.js');
-        $this->assertStringContainsString("{ id: 'gate', when: () => !CFG.user", $app);
+        $this->assertStringContainsString("{ id: 'gate', why: 'gate', when: () => !CFG.user", $app);
         $this->assertStringContainsString("data-check=\"marketing\" \${a.marketing ? 'checked' : ''}", $app);
         $this->assertStringContainsString('p.marketing && klaviyo(\'subscriptions\'', $app);
     }
