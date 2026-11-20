@@ -590,3 +590,5 @@
 '+ Add a new pet': '+ Додати нового улюбленця'
 '← Back to the chat': '← Назад до чату'
 'Remove %dog%, their chat and everything saved about them? This can’t be undone.': 'Видалити %dog%, чат і все, що про нього збережено? Це не можна скасувати.'
+'Saved to %dog%’s notes: %facts%': 'Збережено в нотатках про %dog%: %facts%'
+'Corrected to respect %dog%’s notes: %problem%': 'Виправлено з урахуванням нотаток про %dog%: %problem%'

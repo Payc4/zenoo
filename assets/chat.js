@@ -1,7 +1,7 @@
 /*
  * The chat page (templates/chat/index.html.twig, styles in assets/styles/chat.css).
  * Sends a message to /chat/send and renders the streamed reply
- * (server-sent events: meta, delta, questions, done, error).
+ * (server-sent events: meta, delta, replace, note, questions, done, error).
  *
  * Question cards: the starting questions (empty chat) and the ones Claude asks with its
  * ask_questions tool are shown one at a time above the message box ("2 of 4", options,
@@ -260,6 +260,8 @@ if (app) {
           thread.appendChild(note);
         },
         delta: (d) => { raw += d.text; renderInto(reply.answer, raw); },
+        // The reply went against the dog's notes (an allergy, say) and was corrected.
+        replace: (d) => { raw = d.text; renderInto(reply.answer, raw); },
         questions: (d) => { cards = d.questions; },
         done: (d) => {
           // A red flag: the safety check answered ("call your vet now"), and the message didn't count.

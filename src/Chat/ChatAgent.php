@@ -282,7 +282,9 @@ class ChatAgent
             'name' => 'update_dog_profile',
             'description' => 'Keep the dog\'s profile up to date. Call it whenever the pet parent tells you something new and lasting about their dog '
                 . 'that isn\'t in the profile yet: a new weight, symptoms and how long they have lasted, a vet diagnosis, allergies or intolerances, '
-                . 'medication or supplements, treats and chews, a change in routine or activity, likes and dislikes. One short fact per item, in the language the pet parent writes in, '
+                . 'medication or supplements, treats and chews, a change in routine or activity, likes and dislikes. ALWAYS save medical conditions, '
+                . 'including past ones (topic "condition", e.g. "Pancreatitis in 2024"), allergies and intolerances (topic "allergy") and regular medicines (topic "medicine"): '
+                . 'they become rules for every later answer, even after the chat is cleared. One short fact per item, in the language the pet parent writes in, '
                 . 'with the date or duration if they gave it. Don\'t save guesses, your own advice or one-off small talk. '
                 . 'If a fact replaces an older one in the profile (e.g. the itching stopped), put the old text in "replaces". '
                 . 'Call it in the same turn as your reply, without announcing it, then carry on.',
@@ -296,7 +298,7 @@ class ChatAgent
                         'items' => [
                             'type' => 'object',
                             'properties' => [
-                                'topic' => ['type' => 'string', 'enum' => ['health', 'vet', 'food', 'treats', 'activity', 'routine', 'behaviour', 'preference', 'other']],
+                                'topic' => ['type' => 'string', 'enum' => ['condition', 'allergy', 'medicine', 'health', 'vet', 'food', 'treats', 'activity', 'routine', 'behaviour', 'preference', 'other']],
                                 'text' => ['type' => 'string', 'description' => 'e.g. "Itchy paws and ears since spring 2026"'],
                                 'replaces' => ['type' => 'string', 'description' => 'Exact text of the profile fact this updates, or ""'],
                             ],

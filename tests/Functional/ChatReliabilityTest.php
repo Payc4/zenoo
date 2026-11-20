@@ -126,7 +126,7 @@ final class ChatReliabilityTest extends AppTestCase
         ];
         $body = $this->send('She weighs 31.5 kg now and has had itchy paws since spring.');
         $this->assertSame('Thanks! Itchy paws are worth a vet check.', $this->messages()[1]->getContent());
-        $this->assertStringContainsString('Added to your dog’s profile: 31.5 kg; Itchy paws since spring 2026', $body);
+        $this->assertStringContainsString('Saved to Bella’s notes: 31.5 kg; Itchy paws since spring 2026', $body);
 
         $this->em->clear();
         $dog = $this->em->getRepository(DogProfile::class)->findOneBy([]);

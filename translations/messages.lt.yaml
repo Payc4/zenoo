@@ -590,3 +590,5 @@
 '+ Add a new pet': '+ Pridėti naują augintinį'
 '← Back to the chat': '← Atgal į pokalbį'
 'Remove %dog%, their chat and everything saved about them? This can’t be undone.': 'Pašalinti šunį (%dog%), jo pokalbį ir viską, kas apie jį išsaugota? To nebus galima atšaukti.'
+'Saved to %dog%’s notes: %facts%': 'Išsaugota šuns (%dog%) užrašuose: %facts%'
+'Corrected to respect %dog%’s notes: %problem%': 'Pataisyta pagal šuns (%dog%) užrašus: %problem%'

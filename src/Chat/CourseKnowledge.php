@@ -186,6 +186,12 @@ class CourseKnowledge
             $lines[] = '- Weight they told you later (' . $w['at'] . '): ' . $w['kg'] . ' kg. Use this instead of the quiz weight.';
         }
         $notes = $dog->getNotes();
+        // Allergies, conditions (past ones too) and medicines are rules, not background (F6).
+        if ($rules = \App\Chat\ReplyGuard::rules($dog)) {
+            $lines[] = "- RULES FOR THIS DOG (from their notes; follow them in every answer, even if the chat was cleared):\n"
+                . implode("\n", array_map(fn ($r) => '  - ' . $r, $rules))
+                . "\n  Never suggest or approve a food, treat or ingredient the dog is allergic or intolerant to. After pancreatitis (now or in the past), no high-fat food or fatty treats (pork, fatty meat, skin, cheese). Check anything that could clash with a medicine with the vet.";
+        }
         $lines[] = $notes
             ? "- What they have told you in the chat (from your update_dog_profile notes, oldest first):\n" . implode("\n", array_map(fn ($n) => '  - ' . $n['at'] . ' [' . $n['topic'] . (($n['source'] ?? 'chat') === 'owner' ? ', added by the pet parent' : '') . '] ' . $n['text'], $notes))
             : '- Nothing saved from the chat yet. When they tell you something lasting about the dog, save it with update_dog_profile.';

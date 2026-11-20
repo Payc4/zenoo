@@ -10,7 +10,9 @@ use Psr\Log\LoggerInterface;
  * approved "call your vet now" message and nothing else: the coach doesn't answer, so it can't
  * talk the pet parent out of going.
  *
- * Questions in general ("can dogs eat grapes?") are not red flags; "she ate grapes an hour ago" is.
+ * Questions in general ("can dogs eat grapes?", "can I give ibuprofen?") are not red flags: the coach
+ * says plainly that it's toxic and why. "She ate grapes an hour ago" is. Past illnesses aren't either.
+ * The same call picks out lasting health facts (conditions, allergies, medicines) to save.
  * If the check itself fails, the message goes on to the coach, whose prompt has the same rules.
  */
 final class SafetyCheck
@@ -37,46 +39,104 @@ final class SafetyCheck
     /** The red flag the message describes, or null. Never throws: on a failed check the coach answers. */
     public function check(string $message, ?string $dogName = null, ?string $earlier = null): ?string
     {
+        return $this->triage($message, $dogName, $earlier)['flag'];
+    }
+
+    /**
+     * Sorts the message (F5) and picks out lasting health facts to save (F6), in one small call.
+     *
+     * The emergency reply is only for something happening to their dog now: "my dog ate grapes",
+     * "she's been vomiting all day". A question about whether something is safe ("can I give
+     * ibuprofen?", "can dogs eat grapes?") goes to the coach, which says plainly that it's toxic
+     * and why. History ("he had pancreatitis two years ago") is not an emergency either.
+     *
+     * @return array{flag: ?string, situation: string, facts: list<array{kind: string, text: string}>}
+     */
+    public function triage(string $message, ?string $dogName = null, ?string $earlier = null): array
+    {
+        $none = ['flag' => null, 'situation' => 'none', 'facts' => []];
         if (trim($message) === '' || !$this->claude->isConfigured()) {
-            return null;
+            return $none;
         }
         $list = implode("\n", array_map(fn ($k, $v) => "- $k: $v", array_keys(self::FLAGS), self::FLAGS));
         try {
             $result = $this->claude->stream([
                 'model' => $this->claude->fastModel(),
-                'max_tokens' => 200,
-                'system' => "You check messages that pet parents send to a dog-nutrition coach, before the coach sees them. "
-                    . "Decide whether the message says that their dog is in one of these situations RIGHT NOW (today or ongoing):\n$list\n\n"
-                    . "Not a red flag: general questions (\"is chocolate bad for dogs?\", \"what are bloat signs?\"), things that happened long ago or are already resolved, "
-                    . "a vet has already seen it and they ask about feeding afterwards, mild single episodes (one vomit, then fine; one soft stool), itching, weight, picky eating. "
-                    . "When it clearly describes one of the situations above for their dog, report it, even if they only ask about food. The message can be in any language. "
-                    . "Answer only with the triage tool.",
+                'max_tokens' => 500,
+                'system' => self::SYSTEM . "\n\nThe emergencies:\n$list",
                 'messages' => [['role' => 'user', 'content' => ($earlier ? "Their previous message: \"" . mb_substr($earlier, 0, 500) . "\"\n\n" : '')
                     . ($dogName ? "Dog's name: $dogName\n" : '') . "Message: \"" . mb_substr($message, 0, 2000) . '"']],
-                'tools' => [[
-                    'name' => 'triage',
-                    'description' => 'Report whether the message describes a red flag right now.',
-                    'input_schema' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'red_flag' => ['type' => 'string', 'enum' => array_merge(['none'], array_keys(self::FLAGS))],
-                        ],
-                        'required' => ['red_flag'],
-                    ],
-                ]],
+                'tools' => [self::tool()],
                 'tool_choice' => ['type' => 'tool', 'name' => 'triage'],
             ], static function (): void {});
         } catch (\Throwable $e) {
             $this->logger->warning('Safety check failed; the coach answers instead', ['exception' => $e]);
-            return null;
+            return $none;
         }
         foreach ($result['tool_uses'] as $use) {
-            $flag = $use['input']['red_flag'] ?? 'none';
-            if (isset(self::FLAGS[$flag])) {
-                return $flag;
+            $in = (array) ($use['input'] ?? []);
+            $situation = (string) ($in['situation'] ?? 'none');
+            $flag = (string) ($in['red_flag'] ?? 'none');
+            $facts = [];
+            foreach (\array_slice((array) ($in['health_facts'] ?? []), 0, 5) as $f) {
+                $kind = (string) ($f['kind'] ?? '');
+                $text = trim((string) ($f['text'] ?? ''));
+                if (\in_array($kind, ['condition', 'allergy', 'medicine'], true) && $text !== '') {
+                    $facts[] = ['kind' => $kind, 'text' => mb_substr($text, 0, 200)];
+                }
             }
+            return [
+                // Only something happening now gets the emergency reply; older answers without a situation still count.
+                'flag' => isset(self::FLAGS[$flag]) && \in_array($situation, ['happening_now', ''], true) ? $flag : null,
+                'situation' => $situation,
+                'facts' => $facts,
+            ];
         }
-        return null;
+        return $none;
+    }
+
+    public const SYSTEM = <<<'TXT'
+You check messages that pet parents send to a dog-nutrition coach, before the coach sees them. The message can be in any language (English, Lithuanian, Ukrainian, Polish, …).
+
+1. situation: what kind of message is it?
+- happening_now: their dog has just eaten, swallowed or been given something, or has symptoms today or ongoing ("my dog ate grapes", "she ate chocolate an hour ago", "he's been vomiting since this morning", "šuo suėdė vynuogių").
+- safety_question: they ask whether something is safe or allowed, and nothing has happened yet ("can I give ibuprofen?", "can dogs eat grapes?", "ar galima duoti vynuogių?", "чи можна давати виноград?", "czy mogę dać psu winogrona?", "is xylitol dangerous?").
+- history: something in the past that is over, or a diagnosis they mention for context ("he had pancreatitis two years ago", "she was treated for colitis last spring", "the vet saw him yesterday and he's fine now").
+- none: anything else (feeding, weight, itching, picky eating, one soft stool, one vomit and then fine).
+
+2. red_flag: only for happening_now, the emergency it matches from the list below, else "none". For safety_question, history and none it is always "none": the coach answers those.
+
+3. health_facts: lasting facts about THEIR dog stated in this message, to save to the dog's notes: medical conditions now or in the past (with when, if said: "pancreatitis two years ago"), allergies or intolerances ("allergic to chicken"), medicines or supplements given regularly. Short, in the language of the message. Not questions, not guesses, not things about other dogs. Empty when there are none.
+
+Answer only with the triage tool.
+TXT;
+
+    private static function tool(): array
+    {
+        return [
+            'name' => 'triage',
+            'description' => 'Sort the message and pick out lasting health facts.',
+            'input_schema' => [
+                'type' => 'object',
+                'properties' => [
+                    'situation' => ['type' => 'string', 'enum' => ['happening_now', 'safety_question', 'history', 'none']],
+                    'red_flag' => ['type' => 'string', 'enum' => array_merge(['none'], array_keys(self::FLAGS))],
+                    'health_facts' => [
+                        'type' => 'array',
+                        'maxItems' => 5,
+                        'items' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'kind' => ['type' => 'string', 'enum' => ['condition', 'allergy', 'medicine']],
+                                'text' => ['type' => 'string'],
+                            ],
+                            'required' => ['kind', 'text'],
+                        ],
+                    ],
+                ],
+                'required' => ['situation', 'red_flag', 'health_facts'],
+            ],
+        ];
     }
 
     /** The approved reply for a red flag, in the pet parent's language. */

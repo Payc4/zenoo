@@ -57,6 +57,7 @@ class ChatController extends AbstractController
         private readonly TranslatorInterface $translator,
         private readonly ChatFiles $files,
         #[Autowire('%kernel.environment%')] private readonly string $environment,
+        private readonly \App\Chat\ReplyGuard $guard,
     ) {
     }
 
@@ -318,7 +319,8 @@ class ChatController extends AbstractController
                 break;
             }
         }
-        $response = new StreamedResponse(function () use ($agent, $safety, $dog, $locale, $earlier, $text, $conversation, $userMessage, $isNew, $remaining, $logger, $stream, $quota, $user, $translator) {
+        $guard = $this->guard;
+        $response = new StreamedResponse(function () use ($agent, $safety, $guard, $dog, $locale, $earlier, $text, $conversation, $userMessage, $isNew, $remaining, $logger, $stream, $quota, $user, $translator) {
             ignore_user_abort(true); // finish and save the reply even if the tab is closed
             if ($stream) {
                 while (ob_get_level() > 0) {
@@ -335,8 +337,22 @@ class ChatController extends AbstractController
             $emit('meta', ['remaining' => $remaining, 'files' => $this->fileUrls($userMessage)]);
 
             // Safety first: a red flag gets the approved "call your vet now" reply and nothing else.
-            // It doesn't use up a message.
-            if ($flag = $safety->check($text, $dog?->getName(), $earlier)) {
+            // It doesn't use up a message. The same check picks out lasting health facts (conditions,
+            // past ones too, allergies, medicines), saved to the dog's notes before the coach answers (F6).
+            $triage = $safety->triage($text, $dog?->getName(), $earlier);
+            if ($dog && $triage['facts']) {
+                $saved = [];
+                foreach ($triage['facts'] as $f) {
+                    if ($dog->addNote($f['kind'], $f['text'], new \DateTimeImmutable(), null, 'chat')) {
+                        $saved[] = $f['text'];
+                    }
+                }
+                if ($saved) {
+                    $this->em->flush();
+                    $emit('note', ['text' => $translator->trans('Saved to %dog%’s notes: %facts%', ['%dog%' => $dog->getName(), '%facts%' => implode('; ', $saved)])]);
+                }
+            }
+            if ($flag = $triage['flag']) {
                 $reply = SafetyCheck::reply($flag, $locale, $dog?->getName());
                 $emit('delta', ['text' => $reply]);
                 $this->em->persist((new ChatMessage($conversation, ChatMessage::ROLE_ASSISTANT, $reply))->setFlag('red_flag:' . $flag));
@@ -354,6 +370,15 @@ class ChatController extends AbstractController
                     // Treated like a failed call below: nothing is saved and the message doesn't count.
                     throw new \RuntimeException('Empty reply from Claude (stop_reason: ' . ($result['stop_reason'] ?? 'none') . ')');
                 }
+                // The safety net for the dog's rules (allergies, conditions, medicines): a reply that
+                // goes against them is replaced with the corrected one, and that's said (F6).
+                $corrected = null;
+                if ($dog && ($review = $guard->review($reply, $dog)) && !$review['ok']) {
+                    $logger->warning('Coach reply corrected against the dog\'s notes', ['problem' => $review['problem']]);
+                    $reply = $review['corrected'];
+                    $corrected = $review['problem'];
+                    $emit('replace', ['text' => $reply]);
+                }
                 if (($result['stop_reason'] ?? null) === 'max_tokens') {
                     $logger->warning('Chat reply hit max_tokens and was trimmed', ['usage' => $result['usage']]);
                 }
@@ -361,6 +386,9 @@ class ChatController extends AbstractController
                 $assistant = (new ChatMessage($conversation, ChatMessage::ROLE_ASSISTANT, $reply))
                     ->setQuestions($result['questions'])
                     ->setUsage($result['usage']['input'], $result['usage']['output']);
+                if ($corrected !== null) {
+                    $assistant->setFlag('corrected');
+                }
                 $this->em->persist($assistant);
                 $conversation->touch();
                 $this->em->flush();
@@ -375,7 +403,10 @@ class ChatController extends AbstractController
                     $emit('note', ['text' => $translator->trans('The coach will check in on %date%.', ['%date%' => (new \DateTimeImmutable($result['followup']['due']))->format('Y-m-d')])]);
                 }
                 if ($result['remembered'] ?? []) {
-                    $emit('note', ['text' => $translator->trans('Added to your dog’s profile: %facts%', ['%facts%' => implode('; ', $result['remembered'])])]);
+                    $emit('note', ['text' => $translator->trans('Saved to %dog%’s notes: %facts%', ['%dog%' => $dog?->getName() ?? '', '%facts%' => implode('; ', $result['remembered'])])]);
+                }
+                if ($corrected !== null) {
+                    $emit('note', ['text' => $translator->trans('Corrected to respect %dog%’s notes: %problem%', ['%dog%' => $dog?->getName() ?? '', '%problem%' => $corrected])]);
                 }
                 $emit('done', []);
             } catch (\Throwable $e) {
