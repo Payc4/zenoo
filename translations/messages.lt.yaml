@@ -597,3 +597,5 @@
 '1 month': '1 mėn.'
 '%n% months': '%n% mėn.'
 '1 year': '1 m.'
+'%dog%’s Bowl Score: %score%/100. Your plan is below.': 'Dubenėlio balas (%dog%): %score%/100. Planas – žemiau.'
+'%dog%’s new Bowl Score: %score%/100 (was %before%). Your plan is below.': 'Naujas Dubenėlio balas (%dog%): %score%/100 (buvo %before%). Planas – žemiau.'

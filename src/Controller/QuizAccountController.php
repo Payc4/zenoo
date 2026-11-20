@@ -95,6 +95,12 @@ final class QuizAccountController extends AbstractController
             }
             $dog = $this->dogs->saveQuizResult($user, $data, $locale, $dogId, $asNew, $answers);
             $this->em->flush();
+            // Members skip the result page: the new score arrives as a banner on the dashboard (proposal 5).
+            $history = $dog->getScoreHistory();
+            $before = \count($history) > 1 ? $history[\count($history) - 2]['score'] : null;
+            $this->addFlash('success', $before === null
+                ? $this->translator->trans('%dog%’s Bowl Score: %score%/100. Your plan is below.', ['%dog%' => $dog->getName(), '%score%' => $dog->getBowlScore()])
+                : $this->translator->trans('%dog%’s new Bowl Score: %score%/100 (was %before%). Your plan is below.', ['%dog%' => $dog->getName(), '%score%' => $dog->getBowlScore(), '%before%' => $before]));
             // Started from "New chat": straight on to this pet's chat.
             if (\is_array($body) && ($body['then'] ?? null) === 'chat') {
                 return $this->json(['status' => 'saved', 'dashboard' => $this->generateUrl('app_chat', ['pet' => $dog->getId()]), 'go' => true, 'dog_id' => $dog->getId()]);

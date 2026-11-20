@@ -130,7 +130,7 @@ window.ZQ_CONTENT = {
   bands: {
     great: { title: 'MAITINASI TIKRAI GERAI', text: '{name} daugeliu atžvilgių puikios formos. Štai keli nedideli patobulinimai, kuriuos verta išbandyti.' },
     good: { title: 'GERAI, BET GALI BŪTI DAR GERIAU', text: '{name} laikosi puikiai, o dubenėlyje ir pasivaikščiojimuose dar yra ką lengvai pagerinti.' },
-    look: { title: 'VERTA PAŽIŪRĖTI ATIDŽIAU', text: 'Keli paprasti pokyčiai gali tikrai daug pakeisti – {name} tai pajus. Pradėkite nuo pirmųjų dviejų žemiau.' },
+    look: { title: 'VERTA PAŽIŪRĖTI ATIDŽIAU', text: 'Keli paprasti pokyčiai gali tikrai daug pakeisti – {name} tai pajus. Pradėkite nuo pirmojo žemiau.' },
     wins: { title: 'YRA KĄ LENGVAI PAGERINTI', text: 'Gera žinia: tai, kaip {name} ėda ir juda kasdien, galima nemažai pagerinti, o viską keisti iš karto nereikia.' },
   },
   subLabels: { protein: 'Baltymai', carbs: 'Angliavandeniai', freshness: 'Šviežumas', body: 'Kūno forma', activity: 'Aktyvumas', signals: 'Dubenėlio signalai', routine: 'Porcijos ir rutina' },

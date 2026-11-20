@@ -38,3 +38,21 @@ h1 { font-size: 28px; }
 h2 { font-size: 20px; }
 .zq-step { opacity: 1; color: #935a00; }
 .zq-plan h2, .zq-card h3 { font-size: 17px; }
+
+/* Shorter quiz (proposal 4): the intro on the first question, info cards under the next question. */
+.zq-intro .zq-photo { border-radius: 16px; max-height: 180px; width: 100%; object-fit: cover; margin-bottom: 14px; }
+.zq-intro h1 { margin: 0 0 6px; }
+.zq-intro + h2 { margin-top: 18px; }
+.zq-fact { display: flex; gap: 12px; align-items: flex-start; margin: 18px 0 4px; padding: 14px; border-radius: 16px; background: var(--mist, #dde5dc); }
+.zq-fact .zq-photo { width: 64px; height: 64px; flex: none; object-fit: cover; border-radius: 12px; margin: 0; }
+.zq-fact h3 { font-size: 17px; margin: 2px 0 6px; }
+.zq-fact p { margin: 0 0 6px; font-size: 15px; }
+.zq-fact .zq-tag { background: #fff; color: #935a00; margin-bottom: 4px; }
+
+/* Result (proposal 5): one main action fixed at the bottom, sharing and restarting as quiet links. */
+.zq-result { padding-bottom: 96px; }
+.zq-fixed { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: rgba(248, 247, 242, .96); box-shadow: 0 -6px 18px rgba(47, 63, 46, .12); z-index: 20; }
+.zq-fixed .zq-btn { max-width: 520px; margin: 0 auto; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.zq-quiet { text-align: center; margin: 20px 0; color: var(--ink-muted); }
+.zq-quiet .zq-back { display: inline-flex; align-items: center; }
+.zq-todo ol li { margin-bottom: 6px; }

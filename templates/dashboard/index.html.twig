@@ -123,6 +123,7 @@
         <ol>
           <li>{{ dog.get('fix_1_text') ?: 'Keep doing what you’re doing!'|trans }}</li>
           {% if dog.get('fix_2_text') %}<li>{{ dog.get('fix_2_text') }}</li>{% endif %}
+          {% if dog.get('fix_3_text') %}<li>{{ dog.get('fix_3_text') }}</li>{% endif %}
         </ol>
       </section>
 

@@ -124,7 +124,7 @@ window.ZQ_CONTENT = {
   bands: {
     great: { title: 'EATING REALLY WELL', text: '{name} is in great shape on most fronts. Here are a couple of small tweaks worth trying.' },
     good: { title: 'GOOD, WITH ROOM TO GROW', text: '{name} is doing well, and there are some easy wins in the bowl and on the lead.' },
-    look: { title: 'WORTH A CLOSER LOOK', text: 'A few simple changes could make a real difference for {name}. Start with the first two below.' },
+    look: { title: 'WORTH A CLOSER LOOK', text: 'A few simple changes could make a real difference for {name}. Start with the first one below.' },
     wins: { title: 'PLENTY OF EASY WINS', text: 'Good news: there\'s lots of room to make {poss} day-to-day better, and you don\'t have to change everything at once.' },
   },
   subLabels: { protein: 'Protein', carbs: 'Carb load', freshness: 'Freshness', body: 'Body shape', activity: 'Activity', signals: 'Bowl signals', routine: 'Portions & routine' },

@@ -131,7 +131,7 @@ window.ZQ_CONTENT = {
   bands: {
     great: { title: 'JE NAPRAWDĘ DOBRZE', text: '{name} jest w świetnej formie pod większością względów. Oto kilka drobnych zmian, które warto wypróbować.' },
     good: { title: 'DOBRZE, ALE MOŻE BYĆ JESZCZE LEPIEJ', text: '{name} ma się dobrze, a w misce i na spacerach jest kilka łatwych rzeczy do poprawienia.' },
-    look: { title: 'WARTO PRZYJRZEĆ SIĘ BLIŻEJ', text: 'Kilka prostych zmian może naprawdę wiele zmienić – {name} to odczuje. Zacznij od dwóch pierwszych poniżej.' },
+    look: { title: 'WARTO PRZYJRZEĆ SIĘ BLIŻEJ', text: 'Kilka prostych zmian może naprawdę wiele zmienić – {name} to odczuje. Zacznij od pierwszej poniżej.' },
     wins: { title: 'WIELE MOŻNA ŁATWO POPRAWIĆ', text: 'Dobra wiadomość: codzienność twojego psa ({name}) można sporo poprawić, i to bez zmieniania wszystkiego naraz.' },
   },
   subLabels: { protein: 'Białko', carbs: 'Węglowodany', freshness: 'Świeżość', body: 'Sylwetka', activity: 'Aktywność', signals: 'Sygnały z miski', routine: 'Porcje i rytm posiłków' },

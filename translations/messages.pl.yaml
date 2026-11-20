@@ -597,3 +597,5 @@
 '1 month': 'wiek: 1 mies.'
 '%n% months': 'wiek: %n% mies.'
 '1 year': 'wiek: 1 rok'
+'%dog%’s Bowl Score: %score%/100. Your plan is below.': 'Wynik miski (%dog%): %score%/100. Plan jest poniżej.'
+'%dog%’s new Bowl Score: %score%/100 (was %before%). Your plan is below.': 'Nowy wynik miski (%dog%): %score%/100 (było %before%). Plan jest poniżej.'

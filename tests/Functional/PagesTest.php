@@ -39,7 +39,7 @@ class PagesTest extends AppTestCase
         // to be signed off by a vet). The hashes guard against silent edits: update them with any
         // deliberate change. app.js and content.*.js are changed on purpose all the time.
         $expected = [
-            'scoring.js' => '2c0cb9d39ae83583fc86a2e91587090cec7086070845eb8d073c259eae2c0e9c',
+            'scoring.js' => 'dd9ac46d6e08c5a5bc1acbc9d5becbcc3806d6cd7ac30b385fc3922aa941e5ea',
             'styles.css' => '3341429afe83cb14429dee3f008dc3276a014ecef9e02352b0ec0f62e2d02572',
         ];
         foreach ($expected as $file => $hash) {
@@ -75,7 +75,7 @@ class PagesTest extends AppTestCase
         $this->assertSame('maria@example.com', $config()['user']['email']);
         // The email step is skipped for them, and the opt-in is unticked by default.
         $app = (string) file_get_contents(dirname(__DIR__, 2) . '/public/quiz/app.js');
-        $this->assertStringContainsString("{ id: 'gate', why: 'gate', when: () => !CFG.user", $app);
+        $this->assertMatchesRegularExpression("/{ id: 'gate',[^}]*when: \(\) => !CFG.user/", $app);
         $this->assertStringContainsString("data-check=\"marketing\" \${a.marketing ? 'checked' : ''}", $app);
         $this->assertStringContainsString('p.marketing && klaviyo(\'subscriptions\'', $app);
     }

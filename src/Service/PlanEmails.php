@@ -122,7 +122,7 @@ final class PlanEmails
         return [
             'dog' => $dog->getName(),
             'score' => $dog->getBowlScore(),
-            'fixes' => array_values(array_filter([(string) $dog->get('fix_1_text'), (string) $dog->get('fix_2_text')])),
+            'fixes' => array_values(array_filter([(string) $dog->get('fix_1_text'), (string) $dog->get('fix_2_text'), (string) $dog->get('fix_3_text')])),
             'food' => (string) $dog->get('plan_food'),
             'meals' => (string) $dog->get('plan_meals'),
             'kcal' => $dog->get('kcal_target') !== null ? (int) $dog->get('kcal_target') : null,

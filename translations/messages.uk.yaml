@@ -597,3 +597,5 @@
 '1 month': '1 міс.'
 '%n% months': '%n% міс.'
 '1 year': '1 р.'
+'%dog%’s Bowl Score: %score%/100. Your plan is below.': 'Оцінка миски (%dog%): %score%/100. План — нижче.'
+'%dog%’s new Bowl Score: %score%/100 (was %before%). Your plan is below.': 'Нова оцінка миски (%dog%): %score%/100 (було %before%). План — нижче.'

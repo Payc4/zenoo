@@ -213,7 +213,7 @@
       .map(([key, v]) => ({ key, gain: v.max - v.score }))
       .filter((x) => x.gain > 0)
       .sort((x, y) => (portionsFirst && !guard.keep ? (y.key === 'routine') - (x.key === 'routine') : 0) || y.gain - x.gain)
-      .slice(0, 2)
+      .slice(0, 3) // three things to do, first on the result (proposal 5)
       .map((x) => x.key);
     return {
       total, band: band(total), subs,

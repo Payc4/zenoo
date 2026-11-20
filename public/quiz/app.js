@@ -20,7 +20,7 @@
   const owner = CFG.user ? CFG.user.id : null;
   let stored = load();
   if (stored && stored._owner && stored._owner !== owner) { stored = null; clearStore(); }
-  let a = retake ? { ...blank(), ...(retake.answers || {}), name: retake.name, _dogId: retake.id, _step: 1 }
+  let a = retake ? { ...blank(), ...(retake.answers || {}), name: retake.name, _dogId: retake.id, _step: 0 }
     : fresh ? { ...blank(), _new: true }
       : { ...blank(), ...(stored || {}) };
   delete a._rid; if (retake || fresh) delete a._saved;
@@ -109,33 +109,29 @@
   const amountsValid = () => a.foods.every((t) => { const x = amount(t); return x.ns || num(x.v) > 0; });
 
   // ---------- screens ----------
+  // Shorter quiz (test report proposal 4): no intro screen (it's on the name screen), no info
+  // screens (each fact sits under the next question: fact), and one tap per answer on
+  // single-choice screens (auto: moves on once these answers are set; no Next button).
+  // part: the section shown above the question (0 about the dog, 1 activity, 2 food, 3 health);
+  // why: the reason shown when Next is tapped with something missing (U.why).
   const steps = [
-    { id: 'intro' },
-    // part: the section shown above the question (0 about the dog, 1 activity, 2 food, 3 health);
-    // why: the reason shown when Next is tapped with something missing (U.why).
     { id: 'name', part: 0, valid: () => (a.name || '').trim().length > 0 },
-    { id: 'breed', part: 0, valid: () => !!a.breedId },
-    { id: 'mixed', part: 0, when: () => a.breedId === 'mixed', valid: () => a.mixedSize && a.mixedType },
-    { id: 'slideBreed', slide: true },
+    { id: 'breed', part: 0, auto: ['breedId'], valid: () => !!a.breedId },
+    { id: 'mixed', part: 0, auto: ['mixedSize', 'mixedType'], when: () => a.breedId === 'mixed', valid: () => a.mixedSize && a.mixedType },
     // Months alone are fine for a puppy (N4).
-    { id: 'age', part: 0, why: 'age', valid: () => { const y = ageYears(); return (num(a.ageY) != null || num(a.ageM) != null) && y > 0 && y < 25; } },
-    { id: 'slideAge', slide: true },
-    { id: 'sex', part: 0, valid: () => a.sex && a.neutered },
+    { id: 'age', part: 0, why: 'age', fact: 'slideBreed', valid: () => { const y = ageYears(); return (num(a.ageY) != null || num(a.ageM) != null) && y > 0 && y < 25; } },
+    { id: 'sex', part: 0, auto: ['sex', 'neutered'], fact: 'slideAge', valid: () => a.sex && a.neutered },
     { id: 'weight', part: 0, why: 'weight', valid: () => num(a.weight) >= 0.2 && num(a.weight) < 110 },
-    { id: 'shape', part: 0, valid: () => !!a.bcs },
-    { id: 'slideBody', slide: true },
-    { id: 'activity', part: 1, valid: () => a.actBand && a.actType },
-    { id: 'slideActivity', slide: true },
-    { id: 'food', part: 2, valid: () => a.foods.length > 0 },
-    { id: 'foodMain', part: 2, when: () => a.foods.length > 1, valid: () => a.foods.includes(a.foodMain) },
+    { id: 'shape', part: 0, auto: ['bcs'], valid: () => !!a.bcs },
+    { id: 'activity', part: 1, auto: ['actBand', 'actType'], fact: 'slideBody', valid: () => a.actBand && a.actType },
+    { id: 'food', part: 2, fact: 'slideActivity', valid: () => a.foods.length > 0 },
+    { id: 'foodMain', part: 2, auto: ['foodMain'], when: () => a.foods.length > 1, valid: () => a.foods.includes(a.foodMain) },
     { id: 'amounts', part: 2, why: 'amounts', valid: () => amountsValid() },
-    { id: 'routine', part: 2, valid: () => a.meals && a.treats },
+    { id: 'routine', part: 2, auto: ['meals', 'treats'], valid: () => a.meals && a.treats },
     { id: 'label', part: 2, why: 'label', valid: () => labelValid() },
-    { id: 'slideBowl', slide: true },
-    { id: 'appetite', part: 3, valid: () => !!a.appetite },
+    { id: 'appetite', part: 3, auto: ['appetite'], fact: 'slideBowl', valid: () => !!a.appetite },
     { id: 'signs', part: 3, valid: () => true },
-    { id: 'slideSigns', slide: true, when: () => a.signs.length > 0 },
-    { id: 'gate', why: 'gate', when: () => !CFG.user, valid: () => (a.parentName || '').trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email || '') },
+    { id: 'gate', why: 'gate', fact: 'slideSigns', factWhen: () => a.signs.length > 0, when: () => !CFG.user, valid: () => (a.parentName || '').trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email || '') },
     { id: 'result' },
   ];
   const active = () => steps.filter((s) => !s.when || s.when());
@@ -154,7 +150,10 @@
   const photo = (file, alt, round) => `<img class="zq-photo${round ? ' round' : ''}" src="assets/photos/${file}.jpg" alt="${esc(alt)}">`;
   const nav = (label = U.next) => `<div class="zq-nav"><button class="zq-back" data-action="back">${U.back}</button><button class="zq-btn" data-action="next">${label}</button></div>`;
   const qhead = (title, lead) => `<h2>${title}</h2>${lead ? `<p class="zq-lead">${lead}</p>` : ''}`;
-  const slide = (tag, title, body, file, alt) => `<div class="zq-slide">${photo(file, alt)}<div class="zq-slide-body"><span class="zq-tag">${tag}</span><h2>${title}</h2>${body}</div></div>${nav(U.gotIt)}`;
+  // An info card, shown under the next question instead of on a screen of its own.
+  const slide = (tag, title, body, file, alt) => `<aside class="zq-fact">${file ? photo(file, alt, true) : ''}<div><span class="zq-tag">${tag}</span><h3>${title}</h3>${body}</div></aside>`;
+  // Single-choice screens move on by themselves, so they only need Back.
+  const backOnly = () => `<div class="zq-nav"><button class="zq-back" data-action="back">${U.back}</button><span></span></div>`;
 
   // Dog seen from above: snout, head, ears, four paws, body with chest (cw), waist (ww) and hip (hw) half-widths, tail.
   function shapeSvg(cw, ww, hw) {
@@ -178,27 +177,21 @@
   ];
 
   const R = {
-    intro: () => `
-      <div class="zq-slide">${photo('intro-hero', U.intro.alt)}
-      <div class="zq-slide-body">
-        <h1>${U.intro.title}</h1>
-        <p class="zq-lead">${U.intro.lead}</p>
-        <button class="zq-btn block" data-action="next">${U.intro.start}</button>
-        <p class="zq-small" style="margin-top:12px">${U.intro.small}</p>
-      </div></div>`,
-
-    name: () => `${qhead(tx(U.name.title))}
-      <input type="text" data-input="name" value="${esc(a.name)}" placeholder="${esc(U.name.placeholder)}" autocomplete="off" maxlength="30">${nav()}`,
+    // The first screen: what the check is, and the first question, in one.
+    name: () => `${retake ? '' : `<div class="zq-intro">${photo('intro-hero', U.intro.alt)}<h1>${U.intro.title}</h1><p class="zq-lead">${U.intro.lead}</p></div>`}
+      ${qhead(tx(U.name.title))}
+      <input type="text" data-input="name" value="${esc(a.name)}" placeholder="${esc(U.name.placeholder)}" autocomplete="off" maxlength="30">
+      <p class="zq-small" style="margin:8px 0 0">${U.intro.small}</p>${nav()}`,
 
     breed: () => `${qhead(tx(U.breed.title))}
         <input type="search" data-input="_breedQ" data-live="breed" value="${esc(a._breedQ)}" placeholder="${esc(U.breed.search)}" autocomplete="off">
-        <div class="zq-breedlist" id="zq-breedlist">${breedOptions(a._breedQ || '')}</div>${nav()}`,
+        <div class="zq-breedlist" id="zq-breedlist">${breedOptions(a._breedQ || '')}</div>${backOnly()}`,
 
     mixed: () => `${qhead(tx(U.mixed.title))}
       <label class="zq-label">${U.mixed.size}</label>
       <div class="zq-options">${C.mixedSizes.map((s) => opt('mixedSize', s.id, s.label, s.hint)).join('')}</div>
       <label class="zq-label">${U.mixed.type}</label>
-      <div class="zq-options">${C.mixedTypes.map((t) => opt('mixedType', t.id, t.label)).join('')}</div>${nav()}`,
+      <div class="zq-options">${C.mixedTypes.map((t) => opt('mixedType', t.id, t.label)).join('')}</div>${backOnly()}`,
 
     slideBreed: () => {
       const b = breed();
@@ -225,7 +218,7 @@
       <div class="zq-options two">${opt('sex', 'female', U.sex.girl)}${opt('sex', 'male', U.sex.boy)}</div>
       <label class="zq-label">${U.sex.neutered}</label>
       <div class="zq-options two">${opt('neutered', 'yes', U.sex.yes)}${opt('neutered', 'no', U.sex.no)}</div>
-      <p class="zq-small">${U.sex.note}</p>${nav()}`,
+      <p class="zq-small">${U.sex.note}</p>${backOnly()}`,
 
     weight: () => {
       const b = breed(); const w = num(a.weight);
@@ -239,7 +232,7 @@
 
     shape: () => `${qhead(tx(U.shape.title), U.shape.lead)}
       <div class="zq-shapes">${SHAPES.map((s) => `<button type="button" class="zq-shape" aria-pressed="${a.bcs === s.bcs}" data-set="bcs" data-val="${s.bcs}" data-num="1">${s.svg}${s.label}</button>`).join('')}</div>
-${nav()}`,
+${backOnly()}`,
 
     slideBody: () => {
       const iw = S.idealWeight(+a.weight, a.bcs);
@@ -253,7 +246,7 @@ ${nav()}`,
       <label class="zq-label">${U.activity.band}</label>
       <div class="zq-options">${C.activityBands.map((b) => opt('actBand', b.v, b.label)).join('')}</div>
       <label class="zq-label">${U.activity.type}</label>
-      <div class="zq-options">${C.activityTypes.map((t) => opt('actType', t.v, t.label)).join('')}</div>${nav()}`,
+      <div class="zq-options">${C.activityTypes.map((t) => opt('actType', t.v, t.label)).join('')}</div>${backOnly()}`,
 
     slideActivity: () => {
       const b = breed(); const act = S.activityScore(b.energy, stage(), S.activityLevel(a.actBand, a.actType));
@@ -269,7 +262,7 @@ ${nav()}`,
       <div class="zq-options">${C.foods.map((f) => opt('foods', f.v, f.label, f.hint, true)).join('')}</div>${nav()}`,
 
     foodMain: () => `${qhead(tx(U.foodMain.title))}
-      <div class="zq-options">${C.foods.filter((f) => a.foods.includes(f.v)).map((f) => opt('foodMain', f.v, f.label)).join('')}</div>${nav()}`,
+      <div class="zq-options">${C.foods.filter((f) => a.foods.includes(f.v)).map((f) => opt('foodMain', f.v, f.label)).join('')}</div>${backOnly()}`,
 
     amounts: () => {
       const rows = a.foods.map((t) => {
@@ -290,18 +283,18 @@ ${nav()}`,
       <label class="zq-label">${tx(U.routine.meals)}</label>
       <div class="zq-options">${C.meals.map((m) => opt('meals', m.v, m.label)).join('')}</div>
       <label class="zq-label">${U.routine.treats}</label>
-      <div class="zq-options">${C.treats.map((t) => opt('treats', t.v, t.label)).join('')}</div>${nav()}`,
+      <div class="zq-options">${C.treats.map((t) => opt('treats', t.v, t.label)).join('')}</div>${backOnly()}`,
 
     label: () => {
       const T = U.label;
+      // Typing first, the photo option second, skipping last (test report U11).
       return `${qhead(tx(T.title), T.lead)}
-        ${scanBox()}
-        <button class="zq-btn outline block" data-action="skipLabel">${T.skip}</button>
-        <p class="zq-small" style="text-align:center;margin:8px 0 18px">${tx(T.skipNote)}</p>
-        ${photo('label-closeup', T.alt, true)}
-        <div class="zq-label-grid" style="margin-top:14px">${['p', 'f', 'fi', 'a', 'm'].map((k) => `<div><label>${T.fields[k]} %</label><input type="number" inputmode="decimal" step="0.1" min="0" max="100" data-input="label.${k}" value="${esc(a.label[k])}"></div>`).join('')}</div>
+        <div class="zq-label-grid">${['p', 'f', 'fi', 'a', 'm'].map((k) => `<div><label>${T.fields[k]} %</label><input type="number" inputmode="decimal" step="0.1" min="0" max="100" data-input="label.${k}" value="${esc(a.label[k])}"></div>`).join('')}</div>
         <p class="zq-small">${T.moistureNote}</p>
-        <div class="zq-nav"><button class="zq-back" data-action="back">${U.back}</button><button class="zq-btn" data-action="next">${T.submit}</button></div>`;
+        <div class="zq-nav"><button class="zq-back" data-action="back">${U.back}</button><button class="zq-btn" data-action="next">${T.submit}</button></div>
+        <div style="margin-top:22px">${scanBox()}</div>
+        <button class="zq-btn outline block" data-action="skipLabel">${T.skip}</button>
+        <p class="zq-small" style="text-align:center;margin:8px 0 0">${tx(T.skipNote)}</p>`;
     },
 
     slideBowl: () => {
@@ -311,15 +304,14 @@ ${nav()}`,
       const bars = [[T.bars.p, d.pDm, ''], [T.bars.f, d.fDm, ''], [T.bars.c, d.cDm, 'carbs']]
         .map(([l, v, cls]) => `<div class="zq-bar"><div class="zq-bar-top"><span>${l}</span><span>${Math.round(v)}%</span></div><div class="zq-bar-track ${cls}"><div style="width:${Math.min(100, v)}%"></div></div></div>`).join('');
       const intro = tx(d.fromLabel ? T.introLabel : T.introTypical, food);
-      return `<div class="zq-slide"><div class="zq-slide-body"><span class="zq-tag">${T.tag}</span>
-        <h2>${tx(d.fromLabel ? T.titleLabel : T.titleTypical, food)}</h2>${intro}
+      return `<aside class="zq-fact"><div><span class="zq-tag">${T.tag}</span>
+        <h3>${tx(d.fromLabel ? T.titleLabel : T.titleTypical, food)}</h3>${intro}
         <div class="zq-bars">${bars}</div>
-        <p>${T.outro}</p>
-        </div></div>${nav(U.gotIt)}`;
+        <p>${T.outro}</p></div></aside>`;
     },
 
     appetite: () => `${qhead(tx(U.appetite.title))}
-      <div class="zq-options">${C.appetite.map((x) => opt('appetite', x.v, x.label)).join('')}</div>${nav()}`,
+      <div class="zq-options">${C.appetite.map((x) => opt('appetite', x.v, x.label)).join('')}</div>${backOnly()}`,
 
     signs: () => `${qhead(tx(U.signs.title), U.signs.lead)}
       <div class="zq-options two">${C.signs.map((s) => opt('signs', s.v, s.label, '', true)).join('')}</div>${nav(a.signs.length ? U.next : U.signs.none)}`,
@@ -405,20 +397,31 @@ ${nav()}`,
         <div class="zq-profile-body"><h1>${name().toUpperCase()}</h1>
           <dl>${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></div></div>`;
       const T = U.result;
+      // Members don't stay here: the result is saved and the dashboard shows the new score (proposal 5).
+      if (CFG.user) {
+        return `<div class="zq-scorecard"><div class="zq-small">${tx(T.scoreTitle)}</div>
+          <div class="zq-score-num">${r.total}<small>/100</small></div><h1>${bandC.title}</h1></div>
+          ${CFG.accountSubmitUrl ? `<div class="zq-sent zq-account" id="zq-account">${accountBox()}</div>` : ''}`;
+      }
+      // The first screen: the score, three things to do, and one main action fixed at the bottom.
+      const main = zp
+        ? `<a class="zq-btn block" href="${esc(zp.cartUrl)}" target="_blank" rel="noopener" data-track="plan_cart">${fill(U.result.zenoo.cta, { price: dec(zp.starterPrice.toFixed(2)) })}</a>`
+        : `<button class="zq-btn block" data-action="share">${T.share}</button>`;
       return `
-        ${profile}
         <div class="zq-scorecard"><div class="zq-small">${tx(T.scoreTitle)}</div>
           <div class="zq-score-num">${r.total}<small>/100</small></div>
           <h1>${bandC.title}</h1><p>${fill(bandC.text, vars)}</p></div>
-        <div class="zq-card"><h3>${T.firstTitle}</h3><ol style="margin:0;padding-left:20px">${first || `<li>${T.keepGoing}</li>`}</ol></div>
+        <div class="zq-card zq-todo"><h3>${T.firstTitle}</h3><ol style="margin:0;padding-left:20px">${first || `<li>${T.keepGoing}</li>`}</ol></div>
+        <div class="zq-sent" id="zq-inbox"><h3 style="font-family:var(--font-display);margin:0 0 6px">${T.inboxTitle}</h3>
+          <p style="margin:0">${tx(T.inboxText, { email: `<b>${esc(a.email)}</b>` })}</p></div>
+        ${CFG.accountSubmitUrl ? `<div class="zq-sent zq-account" id="zq-account">${accountBox()}</div>` : ''}
         ${plan}
         ${zenooCard}
         ${vets.map((v) => `<div class="zq-vet">${v}</div>`).join('')}
         <h2 style="margin-top:20px">${T.breakdown}</h2>${cards.join('')}
-        ${CFG.user ? '' : `<div class="zq-sent" id="zq-inbox"><h3 style="font-family:var(--font-display);margin:0 0 6px">${T.inboxTitle}</h3>
-          <p style="margin:0">${tx(T.inboxText, { email: `<b>${esc(a.email)}</b>` })}</p></div>`}
-        ${CFG.accountSubmitUrl ? `<div class="zq-sent zq-account" id="zq-account">${accountBox()}</div>` : ''}
-        <div class="zq-nav"><button class="zq-btn forest" data-action="share">${T.share}</button><button class="zq-back" data-action="edit">${U.editAnswers}</button><button class="zq-back" data-action="restart">${T.restart}</button></div>
+        ${profile}
+        <p class="zq-quiet">${zp ? `<button class="zq-back" data-action="share">${T.share}</button> · ` : ''}<button class="zq-back" data-action="edit">${U.editAnswers}</button> · <button class="zq-back" data-action="restart">${T.restart}</button></p>
+        <div class="zq-fixed">${main}</div>
         ${CFG.debug ? `<details class="zq-demo"><summary>${CFG.sendToKlaviyo ? T.demoSent : T.demoUnsent}</summary><pre>${esc(JSON.stringify(payload, null, 2))}</pre></details>` : ''}`;
     },
   };
@@ -501,7 +504,7 @@ ${nav()}`,
         quiz_top_fix_1: r.topFixes[0] || null, quiz_top_fix_2: r.topFixes[1] || null, quiz_kcal_target: r.kcal,
         // Ready-to-print lines for email #1
         quiz_score_title: bandC.title, quiz_score_text: fill(bandC.text, vars),
-        quiz_fix_1_text: fixes[0] || U.result.keepGoing, quiz_fix_2_text: fixes[1] || '',
+        quiz_fix_1_text: fixes[0] || U.result.keepGoing, quiz_fix_2_text: fixes[1] || '', quiz_fix_3_text: fixes[2] || '',
         quiz_plan_food: (r.planFeeds ? r.planFeeds.map((x) => fill(U.plan.emailFood, { food: foodLabel(x.type), grams: x.grams })).join(U.plan.emailFoodJoin)
           : r.grams ? fill(U.plan.gramsText, { grams: r.grams }) : U.plan.emailNoAmount)
           + (r.keep ? ' — ' + tx(U.plan.keep[r.keep], { target: r.targetKcal, intake: r.intakeKcal }) : ''),
@@ -524,7 +527,14 @@ ${nav()}`,
     else if (!a.foods.includes(a.foodMain)) a.foodMain = undefined;
     // Progress by part ("FOOD · PART 3 OF 4"): the total never changes as answers add or skip steps (M1).
     const head = s.part != null ? `<p class="zq-step">${tx(U.sections[s.part])} · ${fill(U.partOf, { n: s.part + 1, total: U.sections.length })}</p>` : '';
-    app.innerHTML = `<section class="zq-screen">${head}${R[s.id]()}</section>`;
+    let html = R[s.id]();
+    // The info card for the answer just given sits under this question (no screen of its own).
+    if (s.fact && (!s.factWhen || s.factWhen())) {
+      let card = ''; try { card = R[s.fact](); } catch (e) { /* missing answer: no card */ }
+      const at = html.lastIndexOf('<div class="zq-nav"');
+      html = at >= 0 ? html.slice(0, at) + card + html.slice(at) : html + card;
+    }
+    app.innerHTML = `<section class="zq-screen${s.id === 'result' ? ' zq-result' : ''}">${head}${html}</section>`;
     bar.style.width = `${(step / (list.length - 1)) * 100}%`;
     refreshNext();
     save();
@@ -633,6 +643,15 @@ ${nav()}`,
     return { option, grams: o.grams, cost: o.cost, starterPrice: s.qty * s.v.price, cartUrl };
   }
 
+  let autoTimer = null;
+  function goNext() {
+    step = Math.min(step + 1, active().length - 1);
+    if (step === 1) track('quiz_start');
+    if (active()[step].id === 'result') track('quiz_result', { value: r0()?.total });
+    if (active()[step].id === 'result' && !submitted) { submitted = true; a._rid = a._rid || newId(); submit(); }
+    render();
+  }
+
   function setPath(key, val) {
     if (key.startsWith('label.')) { a.label[key.slice(6)] = val; a.labelSkipped = false; } else a[key] = val;
   }
@@ -643,6 +662,12 @@ ${nav()}`,
     if (t.dataset.set) {
       a[t.dataset.set] = t.dataset.num || ['actBand'].includes(t.dataset.set) ? +t.dataset.val : t.dataset.val;
       render();
+      // One tap per answer: once this screen's answers are all set, move on after a short pause.
+      const cur = active()[step];
+      if (cur.auto && cur.auto.includes(t.dataset.set) && cur.valid()) {
+        const at = step; clearTimeout(autoTimer);
+        autoTimer = setTimeout(() => { if (step === at) goNext(); }, 350);
+      }
     } else if (t.dataset.multi) {
       const arr = a[t.dataset.multi]; const v = t.dataset.val;
       a[t.dataset.multi] = arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -650,12 +675,8 @@ ${nav()}`,
     } else if (t.dataset.action === 'next') {
       const cur = active()[step];
       if (cur.valid && !cur.valid()) { showWhy(cur); return; }
-      step = Math.min(step + 1, active().length - 1);
-      if (step === 1) track('quiz_start');
-      if (active()[step].id === 'result') track('quiz_result', { value: r0()?.total });
-      if (active()[step].id === 'result' && !submitted) { submitted = true; a._rid = a._rid || newId(); submit(); }
-      render();
-    } else if (t.dataset.action === 'back') { step = Math.max(0, step - 1); render(); }
+      goNext();
+    } else if (t.dataset.action === 'back') { clearTimeout(autoTimer); step = Math.max(0, step - 1); render(); }
     else if (t.dataset.action === 'scanLabel') { document.getElementById('zq-scanfile')?.click(); }
     else if (t.dataset.action === 'skipLabel') { a.labelSkipped = true; step += 1; render(); }
     else if (t.dataset.action === 'restart') {
@@ -761,7 +782,7 @@ ${nav()}`,
         // Saved to the account: nothing about it stays in this browser (F7).
         if (data.status === 'saved') { keep = false; clearStore(); if (data.dog_id) { a._dogId = data.dog_id; a._new = false; } }
         else { a._saved = 'sent'; save(); }
-        if (data.go && data.dashboard) location.assign(data.dashboard);
+        if (data.status === 'saved' && data.dashboard) location.assign(data.dashboard);
         if (data.status !== 'saved') track('quiz_submit');
       })
       .catch((err) => { console.error('[ZENOO quiz] account', err); setAccount({ state: 'error', error: err.message || '' }); });
