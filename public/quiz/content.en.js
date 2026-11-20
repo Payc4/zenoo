@@ -125,29 +125,29 @@ window.ZQ_CONTENT = {
     great: { title: 'EATING REALLY WELL', text: '{name} is in great shape on most fronts. Here are a couple of small tweaks worth trying.' },
     good: { title: 'GOOD, WITH ROOM TO GROW', text: '{name} is doing well, and there are some easy wins in the bowl and on the lead.' },
     look: { title: 'WORTH A CLOSER LOOK', text: 'A few simple changes could make a real difference for {name}. Start with the first two below.' },
-    wins: { title: 'PLENTY OF EASY WINS', text: 'Good news: there\'s lots of room to make {name}\'s day-to-day better, and you don\'t have to change everything at once.' },
+    wins: { title: 'PLENTY OF EASY WINS', text: 'Good news: there\'s lots of room to make {poss} day-to-day better, and you don\'t have to change everything at once.' },
   },
   subLabels: { protein: 'Protein', carbs: 'Carb load', freshness: 'Freshness', body: 'Body shape', activity: 'Activity', signals: 'Bowl signals', routine: 'Portions & routine' },
   // why/fix per sub-score; "ok" when full marks
   subCopy: {
     protein: {
       ok: 'Protein is where it should be: about {p}% of the dry food comes from protein.',
-      why: 'About {p}% of {name}\'s food (without the water) is protein. Dogs evolved on far more.',
+      why: 'About {p}% of {poss} food (without the water) is protein. Dogs evolved on far more.',
       fix: 'Look for a named meat as the first ingredient and a higher protein number on the label.',
     },
     carbs: {
       ok: 'Carbs are low, at about {c}% of the dry food. That\'s close to what dogs evolved eating.',
-      why: 'Roughly {c}% of {name}\'s food (without the water) is carbohydrate, mostly starch.',
+      why: 'Roughly {c}% of {poss} food (without the water) is carbohydrate, mostly starch.',
       fix: 'Swap part of the bowl for a fresher, meat-rich food to bring the starch down.',
     },
     freshness: {
-      ok: '{name}\'s main food is minimally processed. Nice.',
+      ok: '{poss} main food is minimally processed. Nice.',
       why: 'The more a food is cooked and processed, the further it gets from fresh ingredients.',
       fix: 'Try adding something fresher to the bowl, even as a topper, and see how {name} responds.',
     },
     body: {
       ok: '{name} looks to be at a healthy weight. Keep checking the ribs and waist every month.',
-      why: 'From the body shape you picked, {name}\'s ideal weight is around {ideal} kg.',
+      why: 'From the body shape you picked, {poss} ideal weight is around {ideal} kg.',
       fix: 'Aim for about {kcal} kcal a day and check body shape every 2 weeks.',
       thin: 'From the body shape you picked, {name} may be a little light. Ideal is around {ideal} kg.',
       puppy: '{name} is still growing, so there’s no target weight yet. Steady weekly gain and a visible waist are what you want.',
@@ -156,8 +156,8 @@ window.ZQ_CONTENT = {
       fixKeep: 'Keep today’s amounts for now, and check body shape every 2 weeks.',
     },
     activity: {
-      ok: '{name} gets plenty of activity for a {breed}.',
-      why: '{breeds} typically need {need}. {name} currently gets {got} a day.',
+      ok: '{name} gets plenty of activity for {breeds}.',
+      why: '{Breeds} typically need {need}. {name} currently gets {got} a day.',
       fix: 'Add a 15–20 minute sniff walk or a game of fetch to the daily routine.',
     },
     // routine picks the most useful line in app.js
@@ -170,9 +170,9 @@ window.ZQ_CONTENT = {
       once: 'One big meal a day works for some dogs, but most do better on two.',
       puppy: 'Growing puppies do best on three or more smaller meals a day.',
       treats: 'Treats and table bites can add up to a fifth of the day’s energy.',
-      fixOver: 'Weigh the food for a week and follow the gram amounts in {name}’s daily plan.',
-      fixUnder: 'Follow the gram amounts in {name}’s daily plan and keep an eye on body shape.',
-      fixUnknown: 'Weigh {name}’s food for a few days. It’s the easiest way to get portions right.',
+      fixOver: 'Weigh the food for a week and follow the gram amounts in {poss} daily plan.',
+      fixUnder: 'Follow the gram amounts in {poss} daily plan and keep an eye on body shape.',
+      fixUnknown: 'Weigh {poss} food for a few days. It’s the easiest way to get portions right.',
       vet: '{name} eats roughly {intake} kcal a day, and our estimate is about {target}. That’s a big gap, and estimates can be off for some dogs.',
       fixVet: 'Keep today’s amounts and check them with your vet before changing them.',
       fixMeals: 'Split the day’s food into two set meals, morning and evening.',
@@ -192,10 +192,10 @@ window.ZQ_CONTENT = {
     chooseUpdate: 'UPDATE {name}',
     chooseNew: 'ADD A SECOND {name}',
     title: 'YOUR FREE ZENOO ACCOUNT',
-    sending: 'Saving {name}’s profile…',
-    sent: 'We’ve sent a confirmation link to {email}. Click it and we’ll create your free account with {name}’s dashboard: the score, the plan and lessons picked for {name}.',
+    sending: 'Saving {poss} profile…',
+    sent: 'We’ve sent a confirmation link to {email}. Click it and we’ll create your free account with {poss} dashboard: the score, the plan and lessons picked for {name}.',
     savedTitle: 'SAVED TO YOUR DASHBOARD',
-    saved: '{name}’s profile is saved to your ZENOO account.',
+    saved: '{poss} profile is saved to your ZENOO account.',
     open: 'OPEN THE DASHBOARD',
     error: 'We couldn’t save the profile just now. Your result is all here, so take a screenshot to keep it.',
   },
@@ -211,6 +211,11 @@ window.ZQ_CONTENT = {
     next: 'NEXT',
     gotIt: 'GOT IT',
     questionOf: 'QUESTION {n} OF {total}',
+    // Progress by part, so the total never changes (test report M1)
+    partOf: 'PART {n} OF {total}', sections: ['ABOUT {NAME}', 'ACTIVITY', 'FOOD', 'HEALTH'],
+    // Shown beside the answer when Next is tapped with something missing (N4)
+    why: { generic: 'Answer this to go on.', age: 'Add the age in years, months or both.', weight: 'Enter a weight between 0.2 and 110 kg.', label: 'Fill in all five values. Together they can’t be more than 100%.', gate: 'Add your name and a valid email address.', amounts: 'Add an amount for each food, or tick that you’re not sure.' },
+    editAnswers: 'Edit answers',
     shapes: { 2: 'Very thin', 4: 'Slim', 5: 'Just right', 7: 'A bit heavy', 8: 'Heavy' },
     stages: { puppy: 'puppy', adult: 'adult', senior: 'senior' },
 
@@ -276,7 +281,7 @@ window.ZQ_CONTENT = {
       title: 'WHAT’S IN {POSS} MAIN FOOD?',
       lead: 'Grab the bag or can and find “analytical constituents”. Type in the percentages and we’ll show you what’s really in the bowl.',
       skip: 'I DON’T HAVE THE LABEL INFO',
-      skipNote: 'No problem. We’ll use typical values for {name}’s type of food.',
+      skipNote: 'No problem. We’ll use typical values for {poss} type of food.',
       alt: 'Pointing at the nutrition panel on a pet food bag',
       fields: { p: 'Protein', f: 'Fat', fi: 'Fibre', a: 'Ash', m: 'Moisture' },
       moistureNote: 'No moisture listed? Dry food is usually around 8–10%.',
@@ -341,7 +346,7 @@ window.ZQ_CONTENT = {
       body: '{poss} body shape is worth a check-in with your vet before changing portions a lot.',
     },
     // Values for the {breed} and {signs} placeholders in subCopy and bands
-    vars: { breedMixed: 'Dogs like {name}', noSigns: 'a fussy appetite' },
+    vars: { breedMixed: 'dogs like {name}', noSigns: 'a fussy appetite' },
     result: {
       // The personal ZENOO plan on the result (from the store catalogue; {product} links to it)
       zenoo: { title: 'FRESHER FOOD FOR {NAME}', text: 'Our pick: {product} {option}, about <b>{grams} g a day</b> (around €{cost} a day).', options: { topper: 'as a topper', half: 'as half the bowl', full: 'as the whole bowl' }, cta: 'Order a 2-week starter (€{price})', code: 'Starter offer: the code {code} is added at checkout.', note: 'An estimate from the pack’s energy value. Switch over gradually across about a week.', dashboard: 'All options in your dashboard' },

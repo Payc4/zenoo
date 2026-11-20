@@ -39,7 +39,7 @@ class PagesTest extends AppTestCase
         // to be signed off by a vet). The hashes guard against silent edits: update them with any
         // deliberate change. app.js and content.*.js are changed on purpose all the time.
         $expected = [
-            'scoring.js' => '04456c4ee414aa9bdd093195214bbc09a48a543efdbb022fbe54e881c743ba41',
+            'scoring.js' => '2c0cb9d39ae83583fc86a2e91587090cec7086070845eb8d073c259eae2c0e9c',
             'styles.css' => '3341429afe83cb14429dee3f008dc3276a014ecef9e02352b0ec0f62e2d02572',
         ];
         foreach ($expected as $file => $hash) {

@@ -216,6 +216,11 @@ window.ZQ_CONTENT = {
     next: 'ДАЛІ',
     gotIt: 'ЗРОЗУМІЛО',
     questionOf: 'ПИТАННЯ {n} З {total}',
+    // Progress by part, so the total never changes (test report M1)
+    partOf: 'ЧАСТИНА {n} З {total}', sections: ['ПРО СОБАКУ', 'АКТИВНІСТЬ', 'ХАРЧУВАННЯ', 'ЗДОРОВʼЯ'],
+    // Shown beside the answer when Next is tapped with something missing (N4)
+    why: { generic: 'Дайте відповідь, щоб продовжити.', age: 'Вкажіть вік у роках, місяцях або і те, і те.', weight: 'Вкажіть вагу від 0,2 до 110 кг.', label: 'Заповніть усі пʼять значень. Разом вони не можуть перевищувати 100 %.', gate: 'Вкажіть своє імʼя та правильну електронну адресу.', amounts: 'Вкажіть кількість для кожного корму або позначте, що не знаєте.' },
+    editAnswers: 'Змінити відповіді',
     shapes: { 2: 'Дуже худий', 4: 'Стрункий', 5: 'Саме те', 7: 'Трохи завеликий', 8: 'Завеликий' },
     stages: { puppy: 'цуценя', adult: 'дорослий', senior: 'літній' },
 

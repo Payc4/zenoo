@@ -225,7 +225,7 @@
       intakeKcal: eat ? Math.round(eat.total / 10) * 10 : null,
       ratio: eat ? Math.round(eat.ratio * 100) / 100 : null,
       planFeeds, grams,
-      targets: nutrientTargets(energy.kcal, a.stage),
+      targets: nutrientTargets(guard.kcal, a.stage),
       topFixes: fixes,
     };
   }

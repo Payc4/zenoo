@@ -216,6 +216,11 @@ window.ZQ_CONTENT = {
     next: 'TOLIAU',
     gotIt: 'SUPRATAU',
     questionOf: 'KLAUSIMAS {n} IŠ {total}',
+    // Progress by part, so the total never changes (test report M1)
+    partOf: 'DALIS {n} IŠ {total}', sections: ['APIE ŠUNĮ', 'AKTYVUMAS', 'MAISTAS', 'SVEIKATA'],
+    // Shown beside the answer when Next is tapped with something missing (N4)
+    why: { generic: 'Atsakykite į šį klausimą, kad galėtumėte tęsti.', age: 'Įrašykite amžių metais, mėnesiais arba abiem.', weight: 'Įrašykite svorį nuo 0,2 iki 110 kg.', label: 'Užpildykite visas penkias reikšmes. Kartu jos negali viršyti 100 %.', gate: 'Įrašykite savo vardą ir teisingą el. pašto adresą.', amounts: 'Įrašykite kiekvieno maisto kiekį arba pažymėkite, kad nežinote.' },
+    editAnswers: 'Keisti atsakymus',
     shapes: { 2: 'Labai liesas', 4: 'Lieknas', 5: 'Kaip tik', 7: 'Kiek per sunkus', 8: 'Per sunkus' },
     stages: { puppy: 'šuniukas', adult: 'suaugęs', senior: 'senjoras' },
 

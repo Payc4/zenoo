@@ -23,3 +23,6 @@
 
 /* "You already have a dog called Max": update it or add a second one. */
 .zq-choose { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Next tapped with something missing: the reason, beside the answer (N4). */
+.zq-why { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #FFF4E0; color: #6B4200; font-size: 15px; border-left: 4px solid #935A00; }

@@ -217,6 +217,11 @@ window.ZQ_CONTENT = {
     next: 'DALEJ',
     gotIt: 'ROZUMIEM',
     questionOf: 'PYTANIE {n} Z {total}',
+    // Progress by part, so the total never changes (test report M1)
+    partOf: 'CZĘŚĆ {n} Z {total}', sections: ['O PSIE', 'AKTYWNOŚĆ', 'JEDZENIE', 'ZDROWIE'],
+    // Shown beside the answer when Next is tapped with something missing (N4)
+    why: { generic: 'Odpowiedz, aby przejść dalej.', age: 'Podaj wiek w latach, miesiącach lub w obu.', weight: 'Podaj wagę od 0,2 do 110 kg.', label: 'Wypełnij wszystkie pięć wartości. Razem nie mogą przekroczyć 100%.', gate: 'Podaj swoje imię i poprawny adres e-mail.', amounts: 'Podaj ilość dla każdej karmy albo zaznacz, że nie wiesz.' },
+    editAnswers: 'Zmień odpowiedzi',
     shapes: { 2: 'Duża niedowaga', 4: 'Szczupła sylwetka', 5: 'W sam raz', 7: 'Lekka nadwaga', 8: 'Nadwaga' },
     stages: { puppy: 'szczeniak', adult: 'dorosły pies', senior: 'senior' },
 

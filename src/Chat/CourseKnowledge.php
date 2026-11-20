@@ -146,7 +146,7 @@ class CourseKnowledge
         $facts = array_filter([
             'Name' => $dog->getName(),
             'Breed' => $g('breed') === 'mixed' ? 'mixed breed (' . $g('breed_size') . ')' : $g('breed'),
-            'Age' => $g('age_years') !== null ? $g('age_years') . ' years (' . $g('life_stage') . ')' : null,
+            'Age' => $g('age_years') !== null ? ((float) $g('age_years') < 1 ? (int) round((float) $g('age_years') * 52) . ' weeks' : $g('age_years') . ' years') . ' (' . $g('life_stage') . ')' : null,
             'Sex' => $g('sex') ? $g('sex') . ($g('neutered') ? ', neutered' : ', not neutered') : null,
             'Weight' => $g('weight_kg') ? $g('weight_kg') . ' kg' . ($g('ideal_weight_kg') ? ' (ideal about ' . $g('ideal_weight_kg') . ' kg)' : '') : null,
             'Growth' => $g('life_stage') === 'puppy' ? 'still growing: no target weight; weigh weekly and expect steady gain' . ($g('adult_weight_kg') ? ', to about ' . $g('adult_weight_kg') . ' kg as an adult' : '') : null,

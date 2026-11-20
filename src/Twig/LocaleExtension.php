@@ -23,7 +23,7 @@ final class LocaleExtension extends AbstractExtension
 
     public function getFilters(): array
     {
-        return [new TwigFilter('local_date', $this->format(...))];
+        return [new TwigFilter('local_date', $this->format(...)), new TwigFilter('dog_age', $this->dogAge(...))];
     }
 
     public function getFunctions(): array
@@ -34,6 +34,30 @@ final class LocaleExtension extends AbstractExtension
             new \Twig\TwigFunction('site_locales', fn () => Locale::NAMES),
             new \Twig\TwigFunction('decimal_sep', fn (?string $code = null) => Locale::decimalSeparator($code ?? ($this->translator instanceof LocaleAwareInterface ? $this->translator->getLocale() : 'en'))),
         ];
+    }
+
+    /**
+     * A dog's age in the page's language: weeks under 3 months, months under a year, then years
+     * ("10 weeks", "5 months", "3.5 years"), never "0.2 years" (test report M2).
+     */
+    public function dogAge(mixed $years, ?string $locale = null): string
+    {
+        if (!is_numeric($years)) {
+            return '';
+        }
+        $years = (float) $years;
+        $locale ??= $this->translator instanceof LocaleAwareInterface ? $this->translator->getLocale() : 'en';
+        if ($years < 0.25) {
+            $n = max(1, (int) round($years * 52));
+            $key = $n === 1 && $locale === 'en' ? '1 week' : '%n% weeks';
+        } elseif ($years < 1) {
+            $n = max(1, (int) round($years * 12));
+            $key = $n === 1 && $locale === 'en' ? '1 month' : '%n% months';
+        } else {
+            $n = str_replace('.', Locale::decimalSeparator($locale), (string) (round($years * 2) / 2));
+            $key = $n === '1' && $locale === 'en' ? '1 year' : '%n% years';
+        }
+        return $this->translator->trans($key, ['%n%' => $n], null, $locale);
     }
 
     public function format(?\DateTimeInterface $date, string $style = 'long', ?string $locale = null): string

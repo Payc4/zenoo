@@ -111,28 +111,31 @@
   // ---------- screens ----------
   const steps = [
     { id: 'intro' },
-    { id: 'name', valid: () => (a.name || '').trim().length > 0 },
-    { id: 'breed', valid: () => !!a.breedId },
-    { id: 'mixed', when: () => a.breedId === 'mixed', valid: () => a.mixedSize && a.mixedType },
+    // part: the section shown above the question (0 about the dog, 1 activity, 2 food, 3 health);
+    // why: the reason shown when Next is tapped with something missing (U.why).
+    { id: 'name', part: 0, valid: () => (a.name || '').trim().length > 0 },
+    { id: 'breed', part: 0, valid: () => !!a.breedId },
+    { id: 'mixed', part: 0, when: () => a.breedId === 'mixed', valid: () => a.mixedSize && a.mixedType },
     { id: 'slideBreed', slide: true },
-    { id: 'age', valid: () => { const y = ageYears(); return (a.ageY !== undefined && a.ageY !== '') && y > 0 && y < 25; } },
+    // Months alone are fine for a puppy (N4).
+    { id: 'age', part: 0, why: 'age', valid: () => { const y = ageYears(); return (num(a.ageY) != null || num(a.ageM) != null) && y > 0 && y < 25; } },
     { id: 'slideAge', slide: true },
-    { id: 'sex', valid: () => a.sex && a.neutered },
-    { id: 'weight', valid: () => num(a.weight) > 0.5 && num(a.weight) < 110 },
-    { id: 'shape', valid: () => !!a.bcs },
+    { id: 'sex', part: 0, valid: () => a.sex && a.neutered },
+    { id: 'weight', part: 0, why: 'weight', valid: () => num(a.weight) >= 0.2 && num(a.weight) < 110 },
+    { id: 'shape', part: 0, valid: () => !!a.bcs },
     { id: 'slideBody', slide: true },
-    { id: 'activity', valid: () => a.actBand && a.actType },
+    { id: 'activity', part: 1, valid: () => a.actBand && a.actType },
     { id: 'slideActivity', slide: true },
-    { id: 'food', valid: () => a.foods.length > 0 },
-    { id: 'foodMain', when: () => a.foods.length > 1, valid: () => a.foods.includes(a.foodMain) },
-    { id: 'amounts', valid: () => amountsValid() },
-    { id: 'routine', valid: () => a.meals && a.treats },
-    { id: 'label', valid: () => labelValid() },
+    { id: 'food', part: 2, valid: () => a.foods.length > 0 },
+    { id: 'foodMain', part: 2, when: () => a.foods.length > 1, valid: () => a.foods.includes(a.foodMain) },
+    { id: 'amounts', part: 2, why: 'amounts', valid: () => amountsValid() },
+    { id: 'routine', part: 2, valid: () => a.meals && a.treats },
+    { id: 'label', part: 2, why: 'label', valid: () => labelValid() },
     { id: 'slideBowl', slide: true },
-    { id: 'appetite', valid: () => !!a.appetite },
-    { id: 'signs', valid: () => true },
+    { id: 'appetite', part: 3, valid: () => !!a.appetite },
+    { id: 'signs', part: 3, valid: () => true },
     { id: 'slideSigns', slide: true, when: () => a.signs.length > 0 },
-    { id: 'gate', when: () => !CFG.user, valid: () => (a.parentName || '').trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email || '') },
+    { id: 'gate', why: 'gate', when: () => !CFG.user, valid: () => (a.parentName || '').trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email || '') },
     { id: 'result' },
   ];
   const active = () => steps.filter((s) => !s.when || s.when());
@@ -415,7 +418,7 @@ ${nav()}`,
         ${CFG.user ? '' : `<div class="zq-sent" id="zq-inbox"><h3 style="font-family:var(--font-display);margin:0 0 6px">${T.inboxTitle}</h3>
           <p style="margin:0">${tx(T.inboxText, { email: `<b>${esc(a.email)}</b>` })}</p></div>`}
         ${CFG.accountSubmitUrl ? `<div class="zq-sent zq-account" id="zq-account">${accountBox()}</div>` : ''}
-        <div class="zq-nav"><button class="zq-btn forest" data-action="share">${T.share}</button><button class="zq-back" data-action="restart">${T.restart}</button></div>
+        <div class="zq-nav"><button class="zq-btn forest" data-action="share">${T.share}</button><button class="zq-back" data-action="edit">${U.editAnswers}</button><button class="zq-back" data-action="restart">${T.restart}</button></div>
         ${CFG.debug ? `<details class="zq-demo"><summary>${CFG.sendToKlaviyo ? T.demoSent : T.demoUnsent}</summary><pre>${esc(JSON.stringify(payload, null, 2))}</pre></details>` : ''}`;
     },
   };
@@ -438,10 +441,12 @@ ${nav()}`,
       name: name(), p: Math.round(d.pDm), c: Math.round(d.cDm), kcal: r.kcal,
       breed: b.mixed ? tx(U.vars.breedMixed) : esc(b.name),
       breeds: b.mixed ? tx(U.vars.breedMixed) : esc(b.name) + 's', need: C.activityNeed[r.subs.activity.recommended],
+      poss: poss(), POSS: poss().toUpperCase(),
       got: C.activityBands.find((x) => x.v === a.actBand).label.toLowerCase(),
       signs: listJoin(a.signs.map((s) => C.signs.find((x) => x.v === s).label.toLowerCase())) || U.vars.noSigns,
     };
     vars.intake = r.intakeKcal; vars.target = r.targetKcal;
+    vars.Breeds = vars.breeds.charAt(0).toUpperCase() + vars.breeds.slice(1);
     vars.ideal = r.idealKg == null ? '' : kgText(r.idealKg);
     const text = (k) => {
       const copy = C.subCopy[k]; const v = r.subs[k];
@@ -517,9 +522,8 @@ ${nav()}`,
     const s = list[step];
     if (a.foods.length === 1) a.foodMain = a.foods[0];
     else if (!a.foods.includes(a.foodMain)) a.foodMain = undefined;
-    const qNum = list.slice(0, step + 1).filter((x) => !x.slide && x.id !== 'intro' && x.id !== 'result').length;
-    const qTotal = list.filter((x) => !x.slide && x.id !== 'intro' && x.id !== 'result').length;
-    const head = !s.slide && !['intro', 'result', 'gate'].includes(s.id) ? `<p class="zq-step">${fill(U.questionOf, { n: qNum, total: qTotal })}</p>` : '';
+    // Progress by part ("FOOD · PART 3 OF 4"): the total never changes as answers add or skip steps (M1).
+    const head = s.part != null ? `<p class="zq-step">${tx(U.sections[s.part])} · ${fill(U.partOf, { n: s.part + 1, total: U.sections.length })}</p>` : '';
     app.innerHTML = `<section class="zq-screen">${head}${R[s.id]()}</section>`;
     bar.style.width = `${(step / (list.length - 1)) * 100}%`;
     refreshNext();
@@ -529,10 +533,23 @@ ${nav()}`,
     window.scrollTo({ top: 0 });
   }
 
+  // Next is never greyed out (N4): tapped with something missing, it says what, beside the answer.
   function refreshNext() {
     const s = active()[step];
-    const btn = app.querySelector('[data-action="next"]');
-    if (btn && s.valid) btn.disabled = !s.valid();
+    if (!s.valid || s.valid()) app.querySelector('.zq-why')?.remove();
+  }
+  function showWhy(s) {
+    let box = app.querySelector('.zq-why');
+    if (!box) {
+      box = document.createElement('p');
+      box.className = 'zq-why'; box.setAttribute('role', 'alert');
+      const nav = app.querySelector('.zq-nav');
+      nav ? nav.before(box) : app.querySelector('.zq-screen').append(box);
+    }
+    box.textContent = tx(U.why[s.why] || U.why.generic);
+    const empty = [...app.querySelectorAll('input:not([type=hidden]):not([disabled])')].find((x) => x.type !== 'checkbox' && x.value === '');
+    (empty || box).scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (empty) empty.focus({ preventScroll: true });
   }
 
   // One free try: the AI reads a photo of the food label and fills the numbers in (QuizLabelController).
@@ -631,7 +648,8 @@ ${nav()}`,
       a[t.dataset.multi] = arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
       render();
     } else if (t.dataset.action === 'next') {
-      if (t.disabled) return;
+      const cur = active()[step];
+      if (cur.valid && !cur.valid()) { showWhy(cur); return; }
       step = Math.min(step + 1, active().length - 1);
       if (step === 1) track('quiz_start');
       if (active()[step].id === 'result') track('quiz_result', { value: r0()?.total });
@@ -643,6 +661,12 @@ ${nav()}`,
     else if (t.dataset.action === 'restart') {
       // Start again, same dog or not: keep who's signed in and which dog this was for (N3).
       a = { ...blank(), _dogId: a._dogId, _new: a._new }; withUser(); step = 0; submitted = false; keep = true; account = { state: 'idle' }; render();
+    }
+    // "Edit answers" (M4): back to the last question with every answer kept; a new result is saved to the same dog.
+    else if (t.dataset.action === 'edit') {
+      const list = active();
+      step = list.map((x, i) => (!x.slide && x.part != null ? i : -1)).filter((i) => i >= 0).pop();
+      submitted = false; delete a._rid; account = { state: 'idle' }; keep = true; render();
     }
     else if (t.dataset.action === 'chooseUpdate') { a._dogId = account.dog.id; a._new = false; submitAccount(klaviyoPayload(S.evaluate(answers()))); }
     else if (t.dataset.action === 'chooseNew') { a._new = true; a._dogId = undefined; submitAccount(klaviyoPayload(S.evaluate(answers()))); }
@@ -700,9 +724,9 @@ ${nav()}`,
   function accountBox() {
     const T = C.account;
     const msg = {
-      idle: '', sending: fill(T.sending, { name: name() }),
-      sent: fill(T.sent, { email: `<b>${esc(a.email)}</b>`, name: name() }),
-      saved: fill(T.saved, { name: name() }), error: account.error ? esc(account.error) : T.error,
+      idle: '', sending: tx(T.sending),
+      sent: tx(T.sent, { email: `<b>${esc(a.email)}</b>` }),
+      saved: tx(T.saved), error: account.error ? esc(account.error) : T.error,
       choose: T.choose,
     }[account.state];
     if (account.state === 'choose') {
@@ -735,7 +759,7 @@ ${nav()}`,
         if (data.status === 'choose') { setAccount({ state: 'choose', dog: data.dog }); return; }
         setAccount(data.status === 'saved' ? { state: 'saved', dashboard: data.dashboard } : { state: 'sent' });
         // Saved to the account: nothing about it stays in this browser (F7).
-        if (data.status === 'saved') { keep = false; clearStore(); }
+        if (data.status === 'saved') { keep = false; clearStore(); if (data.dog_id) { a._dogId = data.dog_id; a._new = false; } }
         else { a._saved = 'sent'; save(); }
         if (data.go && data.dashboard) location.assign(data.dashboard);
         if (data.status !== 'saved') track('quiz_submit');

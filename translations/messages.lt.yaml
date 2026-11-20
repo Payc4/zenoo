@@ -592,3 +592,8 @@
 'Remove %dog%, their chat and everything saved about them? This can’t be undone.': 'Pašalinti šunį (%dog%), jo pokalbį ir viską, kas apie jį išsaugota? To nebus galima atšaukti.'
 'Saved to %dog%’s notes: %facts%': 'Išsaugota šuns (%dog%) užrašuose: %facts%'
 'Corrected to respect %dog%’s notes: %problem%': 'Pataisyta pagal šuns (%dog%) užrašus: %problem%'
+'1 week': '1 sav.'
+'%n% weeks': '%n% sav.'
+'1 month': '1 mėn.'
+'%n% months': '%n% mėn.'
+'1 year': '1 m.'

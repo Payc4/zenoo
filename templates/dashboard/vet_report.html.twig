@@ -23,7 +23,7 @@
   <h2>{{ 'The dog'|trans }}</h2>
   <table class="vet-report__table">
     <tr><th>{{ 'Breed'|trans }}</th><td>{{ dog.get('breed') ?: '—' }}</td></tr>
-    <tr><th>{{ 'Age'|trans }}</th><td>{{ dog.get('age_years') ? dog.get('age_years') ~ ' ' ~ 'years'|trans : '—' }} ({{ dog.get('life_stage')|default('—')|trans }})</td></tr>
+    <tr><th>{{ 'Age'|trans }}</th><td>{{ dog.get('age_years') ? dog.get('age_years')|dog_age : '—' }} ({{ dog.get('life_stage')|default('—')|trans }})</td></tr>
     <tr><th>{{ 'Sex'|trans }}</th><td>{{ dog.get('sex')|default('—')|trans }}{% if dog.get('neutered') %} · {{ dog.get('neutered') == 'yes' ? 'neutered'|trans : 'not neutered'|trans }}{% endif %}</td></tr>
     <tr><th>{{ 'Weight'|trans }}</th><td>{{ facts.weight_kg ? facts.weight_kg ~ ' kg' : '—' }}{% if dog.latestLog('weight') %} ({{ dog.latestLog('weight').d }}){% endif %}</td></tr>
     <tr><th>{{ 'Body shape'|trans }}</th><td>{{ facts.bcs }}/9{% if energy %} · {{ 'ideal weight about %kg% kg'|trans({'%kg%': energy.ideal_weight_kg}) }}{% endif %}</td></tr>

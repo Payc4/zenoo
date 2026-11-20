@@ -592,3 +592,8 @@
 'Remove %dog%, their chat and everything saved about them? This can’t be undone.': 'Видалити %dog%, чат і все, що про нього збережено? Це не можна скасувати.'
 'Saved to %dog%’s notes: %facts%': 'Збережено в нотатках про %dog%: %facts%'
 'Corrected to respect %dog%’s notes: %problem%': 'Виправлено з урахуванням нотаток про %dog%: %problem%'
+'1 week': '1 тиж.'
+'%n% weeks': '%n% тиж.'
+'1 month': '1 міс.'
+'%n% months': '%n% міс.'
+'1 year': '1 р.'

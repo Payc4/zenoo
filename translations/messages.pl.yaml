@@ -592,3 +592,8 @@
 'Remove %dog%, their chat and everything saved about them? This can’t be undone.': 'Usunąć %dog%, czat i wszystko, co o nim zapisano? Tego nie można cofnąć.'
 'Saved to %dog%’s notes: %facts%': 'Zapisano w notatkach o %dog%: %facts%'
 'Corrected to respect %dog%’s notes: %problem%': 'Poprawiono zgodnie z notatkami o %dog%: %problem%'
+'1 week': 'wiek: 1 tydz.'
+'%n% weeks': 'wiek: %n% tyg.'
+'1 month': 'wiek: 1 mies.'
+'%n% months': 'wiek: %n% mies.'
+'1 year': 'wiek: 1 rok'
