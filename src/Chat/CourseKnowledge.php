@@ -149,6 +149,7 @@ class CourseKnowledge
             'Age' => $g('age_years') !== null ? $g('age_years') . ' years (' . $g('life_stage') . ')' : null,
             'Sex' => $g('sex') ? $g('sex') . ($g('neutered') ? ', neutered' : ', not neutered') : null,
             'Weight' => $g('weight_kg') ? $g('weight_kg') . ' kg' . ($g('ideal_weight_kg') ? ' (ideal about ' . $g('ideal_weight_kg') . ' kg)' : '') : null,
+            'Growth' => $g('life_stage') === 'puppy' ? 'still growing: no target weight; weigh weekly and expect steady gain' . ($g('adult_weight_kg') ? ', to about ' . $g('adult_weight_kg') . ' kg as an adult' : '') : null,
             'Body condition score' => $g('bcs') ? $g('bcs') . '/9' : null,
             'Activity' => $g('activity_band') ? 'level ' . $g('activity_band') . ' (recommended ' . $g('recommended_activity_band') . ')' : null,
             'Main food' => $g('food_main'),
@@ -158,7 +159,13 @@ class CourseKnowledge
             'Signs the pet parent noticed' => \is_array($g('signs')) && $g('signs') ? implode(', ', $g('signs')) : 'none',
             'Meals per day' => $g('meals_per_day'),
             'Treats' => $g('treats'),
-            'Daily energy target' => $g('kcal_target') ? round((float) $g('kcal_target')) . ' kcal' : null,
+            'Daily energy target' => $g('kcal_target') ? round((float) $g('kcal_target')) . ' kcal' . match ($g('plan_keep')) {
+                'heavy' => ' (held at today\'s intake: above ideal shape, so never advise more)',
+                'thin' => ' (held at today\'s intake: below ideal shape, so never advise less)',
+                'vet' => ' (today\'s intake; the formula was over 20% away, so the amounts are for the vet to check)',
+                default => '',
+            } : null,
+            'Eats now' => $g('intake_kcal') ? round((float) $g('intake_kcal')) . ' kcal a day (food and treats, at the quiz)' : null,
         ], fn ($v) => $v !== null && $v !== '');
         foreach ($facts as $k => $v) {
             $lines[] = "- $k: $v";

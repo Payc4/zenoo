@@ -77,9 +77,23 @@ final class QuizAccountController extends AbstractController
             return $this->json(['error' => $this->translator->trans('Invalid quiz result.')], 400);
         }
 
+        // The quiz's own answers, so a retake can start from them (N2). Not the email.
+        $answers = \is_array($body) && \is_array($body['answers'] ?? null) ? $body['answers'] : null;
+
         $user = $this->getUser();
         if ($user instanceof User) {
-            $dog = $this->dogs->saveQuizResult($user, $data, $locale);
+            // Which dog: "Retake the quiz for Max" sends its id, "+ Add another dog" says new. A plain
+            // quiz with a name already on the account asks first: update that dog or add a second one (F1).
+            $dogId = \is_array($body) && is_numeric($body['dog_id'] ?? null) ? (int) $body['dog_id'] : null;
+            $asNew = \is_array($body) && !empty($body['new']);
+            if ($dogId !== null && !\in_array($dogId, array_map(fn ($d) => $d->getId(), $this->dogs->findAllForUser($user)), true)) {
+                return $this->json(['error' => $this->translator->trans('Invalid quiz result.')], 400);
+            }
+            if ($dogId === null && !$asNew && ($same = $this->dogs->findByName($user, (string) ($data['quiz_dog_name'] ?? '')))
+                && !(($data['quiz_result_id'] ?? '') !== '' && $same->get('result_id') === $data['quiz_result_id'])) {
+                return $this->json(['status' => 'choose', 'dog' => ['id' => $same->getId(), 'name' => $same->getName()]]);
+            }
+            $dog = $this->dogs->saveQuizResult($user, $data, $locale, $dogId, $asNew, $answers);
             $this->em->flush();
             // Started from "New chat": straight on to this pet's chat.
             if (\is_array($body) && ($body['then'] ?? null) === 'chat') {
@@ -104,7 +118,8 @@ final class QuizAccountController extends AbstractController
         $token = bin2hex(random_bytes(32));
         // Where this lead came from, kept with it until the account is made (see Attribution).
         $source = $this->attribution->get($request);
-        $submission = new QuizSubmission($email, $firstName !== '' ? $firstName : null, $locale, $data + ($source ? ['_attribution' => $source] : []), $token, $ipHash);
+        $extra = ($source ? ['_attribution' => $source] : []) + ($answers !== null && \strlen((string) json_encode($answers)) <= 12000 ? ['_answers' => $answers] : []);
+        $submission = new QuizSubmission($email, $firstName !== '' ? $firstName : null, $locale, $data + $extra, $token, $ipHash);
         $this->em->persist($submission);
         $this->em->flush();
         $this->funnel->record('quiz_submit');
@@ -152,7 +167,7 @@ final class QuizAccountController extends AbstractController
             $this->em->persist($user);
             $this->funnel->record('account_created', \App\Tracking\Attribution::label($user->getAttribution()));
         }
-        $dog = $this->dogs->saveQuizResult($user, array_diff_key($submission->getData(), ['_attribution' => 1]), $submission->getLocale());
+        $dog = $this->dogs->saveQuizResult($user, array_diff_key($submission->getData(), ['_attribution' => 1, '_answers' => 1]), $submission->getLocale(), null, false, $submission->getData()['_answers'] ?? null);
         if (!empty($submission->getData()['quiz_marketing_consent'])) {
             $user->setMarketingEmails(true); // the quiz's tips-and-offers tick
         }

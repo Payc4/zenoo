@@ -16,6 +16,12 @@ final class Calculators
     /** kcal per kg^0.75 by activity level 1–5. */
     private const K = [1 => 95, 2 => 110, 3 => 130, 4 => 160, 5 => 200];
     private const TREAT_SHARE = ['none' => 0, 'few' => 0.05, 'several' => 0.1, 'lots' => 0.2];
+    /** Typical adult weight by size, for puppies of mixed or unknown breed (as the quiz). */
+    public const ADULT_KG = ['toy' => 4, 'small' => 8, 'medium' => 18, 'large' => 33, 'giant' => 55];
+    /** Feeding guard, as guardPlan() in the quiz: body shape sets the direction; bigger changes go to the vet. */
+    public const HEAVY_FROM = 6;
+    public const THIN_UP_TO = 4;
+    public const MAX_CHANGE = 0.2;
 
     public static function tool(): array
     {
@@ -93,7 +99,34 @@ final class Calculators
             'age_years' => $num($dog?->get('age_years')) ?? 3.0,
             'meals' => (int) ($num($dog?->get('meals_per_day')) ?? 2) ?: 2,
             'treats' => (string) ($dog?->get('treats') ?: 'few'),
+            // What the dog ate a day at the quiz (food + treats), and the expected adult weight for puppies.
+            'intake_kcal' => $newerBody ? null : $num($dog?->get('intake_kcal')),
+            'adult_kg' => $num($dog?->get('adult_weight_kg')) ?? (self::ADULT_KG[(string) $dog?->get('breed_size')] ?? null),
         ];
+    }
+
+    /**
+     * The day's energy for the plan: the calculated need, held at today's intake when body shape
+     * says not to go that way (heavy: never more, thin: never less), or when the change would be
+     * more than 20% (then: check the amounts with the vet). Same as guardPlan() in the quiz.
+     *
+     * @return array{kcal: float, calculated: float, ideal_kg: ?float, keep: ?string}
+     */
+    public static function planKcal(array $f): array
+    {
+        $e = self::dailyKcal((float) $f['weight_kg'], $f['bcs'], $f['level'], $f['neutered'], $f['stage'], $f['age_years'], $f['ideal_kg'], $f['adult_kg'] ?? null);
+        $now = $f['intake_kcal'] ?? null;
+        $keep = null;
+        if ($now && $now > 0) {
+            if ($f['bcs'] >= self::HEAVY_FROM && $e['kcal'] > $now) {
+                $keep = 'heavy';
+            } elseif ($f['bcs'] <= self::THIN_UP_TO && $e['kcal'] < $now) {
+                $keep = 'thin';
+            } elseif (abs($e['kcal'] - $now) / $now > self::MAX_CHANGE) {
+                $keep = 'vet';
+            }
+        }
+        return ['kcal' => $keep ? (float) $now : $e['kcal'], 'calculated' => $e['kcal'], 'ideal_kg' => $e['ideal_kg'], 'keep' => $keep];
     }
 
     public static function idealWeight(float $kg, int $bcs): float
@@ -102,11 +135,15 @@ final class Calculators
     }
 
     /** Same as dailyKcal() in the quiz. */
-    public static function dailyKcal(float $weightKg, int $bcs, int $level, bool $neutered, string $stage, float $ageYears, ?float $idealKg = null): array
+    public static function dailyKcal(float $weightKg, int $bcs, int $level, bool $neutered, string $stage, float $ageYears, ?float $idealKg = null, ?float $adultKg = null): array
     {
         $ideal = $idealKg ?? self::idealWeight($weightKg, $bcs);
         if ($stage === 'puppy') {
-            return ['kcal' => 70 * $weightKg ** 0.75 * ($ageYears < 0.34 ? 3 : 2), 'ideal_kg' => $weightKg];
+            // Growing (NRC 2006): from today's and the expected adult weight. No target weight.
+            $kcal = $adultKg && $adultKg > $weightKg
+                ? 130 * $weightKg ** 0.75 * 3.2 * (exp(-0.87 * $weightKg / $adultKg) - 0.1)
+                : 70 * $weightKg ** 0.75 * ($ageYears < 0.34 ? 3 : 2);
+            return ['kcal' => $kcal, 'ideal_kg' => null];
         }
         if ($bcs >= 7) {
             $level = max(1, $level - 1); // weight-loss goal
@@ -129,22 +166,24 @@ final class Calculators
     private static function dailyEnergy(array $in, ?DogProfile $dog): array
     {
         $f = self::dogFacts($dog, $in);
-        $r = self::dailyKcal(self::needWeight($f), $f['bcs'], $f['level'], $f['neutered'], $f['stage'], $f['age_years'], $f['ideal_kg']);
+        self::needWeight($f);
+        $r = self::planKcal($f);
         $treats = $r['kcal'] * (self::TREAT_SHARE[$f['treats']] ?? 0.05);
         return [
             'kcal_per_day' => (int) round($r['kcal'], -1),
-            'ideal_weight_kg' => round($r['ideal_kg'], 1),
+            'ideal_weight_kg' => $r['ideal_kg'] === null ? null : self::roundKg($r['ideal_kg']),
             'treats_kcal_within_that' => (int) round($treats, -1),
             'based_on' => sprintf('%s kg, body score %d/9, activity %d/5, %s, %s', $f['weight_kg'], $f['bcs'], $f['level'], $f['neutered'] ? 'neutered' : 'not neutered', $f['stage'])
                 . ($f['bcs'] >= 7 ? '; set for slow weight loss' : ''),
-            'note' => 'A starting point: check the weight every 2 weeks and adjust by about 10%.',
+            'note' => self::keepNote($r, $f),
         ];
     }
 
     private static function portion(array $in, ?DogProfile $dog): array
     {
         $f = self::dogFacts($dog, $in);
-        $energy = self::dailyKcal(self::needWeight($f), $f['bcs'], $f['level'], $f['neutered'], $f['stage'], $f['age_years'], $f['ideal_kg']);
+        self::needWeight($f);
+        $energy = self::planKcal($f);
         if (is_numeric($in['kcal_per_100g'] ?? null) && $in['kcal_per_100g'] > 0) {
             $k100 = (float) $in['kcal_per_100g'];
             $source = 'the pack\'s energy value';
@@ -169,7 +208,7 @@ final class Calculators
             'share_of_day' => $share,
             'energy_value_used' => round($k100) . ' kcal per 100 g, from ' . $source,
             'treats_allowance_kcal' => (int) round($energy['kcal'] * $treatShare, -1),
-            'note' => 'Weigh it on a kitchen scale. Check the weight every 2 weeks and adjust by about 10%.',
+            'note' => 'Weigh it on a kitchen scale. ' . self::keepNote($energy, $f),
         ];
     }
 
@@ -177,6 +216,10 @@ final class Calculators
     {
         $f = self::dogFacts($dog, $in);
         $now = self::needWeight($f);
+        if ($f['stage'] === 'puppy' && !is_numeric($in['target_kg'] ?? null)) {
+            return ['current_kg' => $now, 'expected_adult_kg' => $f['adult_kg'] ? self::roundKg($f['adult_kg']) : null,
+                'note' => 'A growing puppy has no target weight: weigh weekly and expect steady gain. Don\'t plan weight loss for a puppy without the vet.'];
+        }
         $target = is_numeric($in['target_kg'] ?? null) ? (float) $in['target_kg'] : ($f['ideal_kg'] ?? self::idealWeight($now, $f['bcs']));
         if ($target >= $now) {
             return ['current_kg' => $now, 'target_kg' => round($target, 1), 'note' => 'No weight loss needed for this target.'];
@@ -243,6 +286,25 @@ final class Calculators
             'dry_matter_percent' => ['protein' => $toDm($p), 'fat' => $toDm($fat), 'carbs' => $toDm($carbs), 'fibre' => $toDm($fi)],
             'note' => 'Estimated energy; the pack\'s own kcal value is better if it gives one.',
         ];
+    }
+
+    /** What to tell the pet parent about the plan's energy (see planKcal()). */
+    private static function keepNote(array $r, array $f): string
+    {
+        return match ($r['keep']) {
+            'heavy' => sprintf('Held at what the dog eats now (%d kcal; the formula says %d): it is above ideal shape, so never advise MORE than today. Weigh every 2 weeks; if the weight doesn\'t drop, cut about 10%%.', round($r['kcal'], -1), round($r['calculated'], -1)),
+            'thin' => sprintf('Held at what the dog eats now (%d kcal; the formula says %d): it is below ideal shape, so never advise LESS than today. Weigh every 2 weeks; if there\'s no gain, add about 10%%.', round($r['kcal'], -1), round($r['calculated'], -1)),
+            'vet' => sprintf('The formula (%d kcal) is more than 20%% away from what the dog eats now (%d kcal). Don\'t give a new amount: say to keep today\'s amounts and check them with the vet.', round($r['calculated'], -1), round($r['kcal'], -1)),
+            default => $f['stage'] === 'puppy'
+                ? 'A growing puppy: weigh weekly and expect steady gain; adjust with the vet as it grows.'
+                : 'A starting point: check the weight every 2 weeks and adjust by about 10%.',
+        };
+    }
+
+    /** Two decimals below 2 kg, one above (as the quiz). */
+    public static function roundKg(float $kg): float
+    {
+        return $kg < 2 ? round($kg, 2) : round($kg, 1);
     }
 
     private static function roundGrams(float $g): int

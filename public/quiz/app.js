@@ -8,18 +8,39 @@
   const STORE_KEY = 'zq-proto-v1';
 
   const blank = () => ({ foods: [], signs: [], label: {}, amounts: {} });
-  // Site only: "+ Add another dog" (?new=1) starts a fresh quiz instead of the saved one.
-  const fresh = new URLSearchParams(location.search).has('new');
+  const params = new URLSearchParams(location.search);
+  // Site only: "+ Add another dog" (?new=1) starts a fresh quiz for a new dog.
+  const fresh = params.has('new');
+  // Site only: "Retake the quiz for Max" (?dog=<id>): Max's own saved answers, saved to Max.
+  const retake = CFG.retake || null;
   // Site only: from the chat's "New chat" (?then=chat): open the new pet's chat once saved.
-  const thenChat = new URLSearchParams(location.search).get('then') === 'chat';
-  let a = { ...blank(), ...(fresh ? {} : (load() || {})) };
-  if (fresh) history.replaceState(null, '', location.pathname);
+  const thenChat = params.get('then') === 'chat';
+  // The browser keeps the quiz between visits, but never the email or the parent's name (F7), and a
+  // member's quiz is only for that member: signed out, or someone else signed in, it's dropped.
+  const owner = CFG.user ? CFG.user.id : null;
+  let stored = load();
+  if (stored && stored._owner && stored._owner !== owner) { stored = null; clearStore(); }
+  let a = retake ? { ...blank(), ...(retake.answers || {}), name: retake.name, _dogId: retake.id, _step: 1 }
+    : fresh ? { ...blank(), _new: true }
+      : { ...blank(), ...(stored || {}) };
+  delete a._rid; if (retake || fresh) delete a._saved;
+  if (retake || fresh) history.replaceState(null, '', location.pathname);
   // Site only: a logged-in pet parent doesn't have to type their name and email again.
-  if (CFG.user) { a.parentName = a.parentName || CFG.user.firstName || ''; a.email = a.email || CFG.user.email || ''; }
+  const withUser = () => { if (CFG.user) { a.parentName = a.parentName || CFG.user.firstName || ''; a.email = a.email || CFG.user.email || ''; } };
+  withUser();
   let step = a._step || 0;
+  if (stored && stored._rid && !retake && !fresh) a._rid = stored._rid;
+  let keep = true; // false once the result is saved to the account: nothing left in the browser
 
   function load() { try { return JSON.parse(localStorage.getItem(STORE_KEY)); } catch (e) { return null; } }
-  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify({ ...a, _step: step })); } catch (e) { /* storage blocked: quiz still works */ } }
+  function clearStore() { try { localStorage.removeItem(STORE_KEY); } catch (e) { /* blocked */ } }
+  function save() {
+    if (!keep) return;
+    const { email, parentName, ...rest } = a;
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ ...rest, _step: step, _owner: owner })); } catch (e) { /* storage blocked: quiz still works */ }
+  }
+  // The quiz's own answers sent with the result, so a retake can start from them.
+  const answersToSave = () => { const { email, parentName, marketing, _step, _saved, _owner, _dogId, _new, _rid, labelScanTriesLeft, ...rest } = a; return rest; };
 
   const U = C.ui; // all screen copy lives in content.<locale>.js
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -49,10 +70,17 @@
     return C.breeds.find((b) => b.id === a.breedId);
   }
   function ageYears() { return (num(a.ageY) || 0) + (num(a.ageM) || 0) / 12; }
+  // Size from the breed's adult weight (or the mixed size picked), so the life stage is the same
+  // on every screen and a puppy's size isn't taken from its weight today. Weight only as a fallback.
   function size() {
-    if (a.weight) return S.sizeClass(+a.weight);
-    if (a.breedId === 'mixed') return a.mixedSize || 'medium';
-    const b = breed(); return b ? S.sizeClass((b.kg[0] + b.kg[1]) / 2) : 'medium';
+    if (a.breedId === 'mixed') return a.mixedSize || (a.weight && ageYears() >= 1 ? S.sizeClass(+a.weight) : 'medium');
+    const b = breed(); if (b && b.kg) return S.sizeClass((b.kg[0] + b.kg[1]) / 2);
+    return a.weight ? S.sizeClass(+a.weight) : 'medium';
+  }
+  // Expected adult weight, for a puppy's growth energy.
+  function adultKg() {
+    const b = breed();
+    return b && b.kg ? (b.kg[0] + b.kg[1]) / 2 : S.CONFIG.adultKg[size()];
   }
   function stage() { return S.lifeStage(ageYears(), size()); }
   function diet() {
@@ -67,7 +95,7 @@
     return {
       diet: diet(), foodMain: a.foodMain, foodTypes: a.foods, bcs: a.bcs, breedEnergy: breed().energy,
       level: S.activityLevel(a.actBand, a.actType), stage: stage(), appetite: a.appetite, signs: a.signs,
-      weightKg: +a.weight, neutered: a.neutered === 'yes', ageYears: ageYears(),
+      weightKg: +a.weight, neutered: a.neutered === 'yes', ageYears: ageYears(), adultKg: adultKg(),
       feeds: a.foods.map((t) => ({ type: t, grams: gramsFor(t) })), meals: a.meals, treats: a.treats,
     };
   }
@@ -211,9 +239,10 @@
 ${nav()}`,
 
     slideBody: () => {
-      const iw = Math.round(S.idealWeight(+a.weight, a.bcs) * 10) / 10;
+      const iw = S.idealWeight(+a.weight, a.bcs);
       const small = ['toy', 'small'].includes(size());
-      const body = tx(a.bcs === 5 ? U.slideBody.ok : a.bcs > 5 ? (small ? U.slideBody.heavy : U.slideBody.heavyBig) : U.slideBody.thin, { ideal: dec(iw) });
+      const body = stage() === 'puppy' ? tx(U.slideBody.puppy)
+        : tx(a.bcs === 5 ? U.slideBody.ok : a.bcs > 5 ? (small ? U.slideBody.heavy : U.slideBody.heavyBig) : U.slideBody.thin, { ideal: kgText(iw) });
       return slide(U.slideBody.tag, U.slideBody.title, body, 'body-check', U.slideBody.alt);
     },
 
@@ -329,8 +358,9 @@ ${nav()}`,
       const first = r.topFixes.map((k) => `<li>${fill(text(k).fix, vars)}</li>`).join('');
       const foodLabel = (t) => C.foods.find((f) => f.v === t).label;
       const feedRows = r.planFeeds
-        ? r.planFeeds.map((x) => `<dt>${foodLabel(x.type)}</dt><dd>${fill(P.feedText, { grams: x.grams })} <span class="zq-small">${fill(P.feedNow, { now: Math.round(x.now) })}</span></dd>`).join('')
+        ? r.planFeeds.map((x) => `<dt>${foodLabel(x.type)}</dt><dd>${fill(P.feedText, { grams: x.grams })}${r.keep ? '' : ` <span class="zq-small">${fill(P.feedNow, { now: S.roundGrams(x.now) })}</span>`}</dd>`).join('')
         : r.grams ? `<dt>${P.currentFood}</dt><dd>${fill(P.gramsText, { grams: r.grams })}</dd>` : '';
+      const keepNote = r.keep ? `<p class="zq-plan-keep">${tx(P.keep[r.keep], { target: r.targetKcal, intake: r.intakeKcal })}</p>` : '';
       const vets = [];
       if (a.signs.length) vets.push(tx(U.vet.signs, { signs: vars.signs, vetLine: C.vetLine }));
       if (a.bcs <= 2 || a.bcs >= 8) vets.push(tx(U.vet.body));
@@ -338,6 +368,7 @@ ${nav()}`,
         <dl>
           <dt>${P.energy}</dt><dd>${fill(P.energyText, { kcal: r.kcal })}${ans.stage === 'puppy' ? P.puppyNote : ''}</dd>
           ${feedRows}
+          ${keepNote ? `<dd class="zq-plan-keep-row">${keepNote}</dd>` : ''}
           <dt>${P.meals}</dt><dd>${mealsAdvice}${a.treats !== 'none' ? P.treatsCounted : ''}</dd>
           ${r.targets ? `<dt>${P.protein}</dt><dd>${gramsRange(r.targets.proteinG)}</dd>
           <dt>${P.fat}</dt><dd>${gramsRange(r.targets.fatG)}</dd>
@@ -364,7 +395,7 @@ ${nav()}`,
       const facts = [
         [F.breed, b.mixed ? fill(F.mixed, { size: C.mixedSizes.find((x) => x.id === size()).label.toLowerCase() }) : esc(b.name)],
         [F.age, `${age} · ${U.stages[stage()]}`],
-        [F.weight, `${dec((+a.weight).toFixed(1).replace(/\.0$/, ''))} kg`],
+        [F.weight, `${kgText(+a.weight)} kg`],
         [F.sex, `${female ? F.girl : F.boy} · ${female ? (fixed ? F.spayed : F.notSpayed) : (fixed ? F.neutered : F.notNeutered)}`],
       ];
       const profile = `<div class="zq-profile">${photo(b.mixed ? `mixed-${size()}` : `breed-${a.breedId}`, b.mixed ? U.slideBreed.mixedAlt : b.name)}
@@ -381,7 +412,7 @@ ${nav()}`,
         ${zenooCard}
         ${vets.map((v) => `<div class="zq-vet">${v}</div>`).join('')}
         <h2 style="margin-top:20px">${T.breakdown}</h2>${cards.join('')}
-        ${CFG.user ? '' : `<div class="zq-sent"><h3 style="font-family:var(--font-display);margin:0 0 6px">${T.inboxTitle}</h3>
+        ${CFG.user ? '' : `<div class="zq-sent" id="zq-inbox"><h3 style="font-family:var(--font-display);margin:0 0 6px">${T.inboxTitle}</h3>
           <p style="margin:0">${tx(T.inboxText, { email: `<b>${esc(a.email)}</b>` })}</p></div>`}
         ${CFG.accountSubmitUrl ? `<div class="zq-sent zq-account" id="zq-account">${accountBox()}</div>` : ''}
         <div class="zq-nav"><button class="zq-btn forest" data-action="share">${T.share}</button><button class="zq-back" data-action="restart">${T.restart}</button></div>
@@ -391,9 +422,13 @@ ${nav()}`,
 
   // Plan lines shared by the result screen and the Klaviyo profile.
   const gramsRange = ([lo, hi]) => fill(U.plan.gramsRange, { min: Math.round(lo), max: Math.round(hi) });
-  const planWeight = (r) => (a.bcs === 5
-    ? tx(U.plan.keepWeight, { kg: dec((+a.weight).toFixed(1)) })
-    : tx(U.plan.aimWeight, { kg: dec(r.idealKg) }));
+  // Weights: two decimals below 2 kg, one above, no trailing zero.
+  const kgText = (kg) => dec(String(S.roundKg(kg)));
+  const planWeight = (r) => (r.idealKg == null
+    ? tx(U.plan.puppyGrowth, { adult: kgText(r.adultKg || adultKg()) })
+    : a.bcs === 5
+      ? tx(U.plan.keepWeight, { kg: kgText(+a.weight) })
+      : tx(U.plan.aimWeight, { kg: kgText(r.idealKg) }));
 
   // Copy shared by the result screen and the Klaviyo profile, so email #1 says what the screen said.
   function resultCopy(ans, r) {
@@ -406,13 +441,14 @@ ${nav()}`,
       got: C.activityBands.find((x) => x.v === a.actBand).label.toLowerCase(),
       signs: listJoin(a.signs.map((s) => C.signs.find((x) => x.v === s).label.toLowerCase())) || U.vars.noSigns,
     };
-    vars.intake = r.intakeKcal;
-    vars.ideal = dec(r.idealKg);
+    vars.intake = r.intakeKcal; vars.target = r.targetKcal;
+    vars.ideal = r.idealKg == null ? '' : kgText(r.idealKg);
     const text = (k) => {
       const copy = C.subCopy[k]; const v = r.subs[k];
       if (k === 'routine') {
         const p = v.parts;
         if (r.ratio == null) return { why: copy.unknown, fix: copy.fixUnknown };
+        if (p.portion < 6 && r.vetCheck) return { why: copy.vet, fix: copy.fixVet };
         if (p.portion < 6) return r.ratio > 1 ? { why: copy.over, fix: copy.fixOver } : { why: copy.under, fix: copy.fixUnder };
         if (p.mealPts < 2) {
           if (ans.stage === 'puppy') return { why: copy.puppy, fix: copy.fixPuppyMeals };
@@ -421,6 +457,8 @@ ${nav()}`,
         if (p.treatPts < 2) return { why: copy.treats, fix: copy.fixTreats };
         return { why: copy.ok, fix: '' };
       }
+      if (k === 'body' && ans.stage === 'puppy') return { why: v.score === v.max ? copy.puppyOk : copy.puppy, fix: copy.fixPuppy };
+      if (k === 'body' && r.keep) return { why: a.bcs < 5 ? copy.thin : copy.why, fix: copy.fixKeep };
       const why = k === 'body' && a.bcs < 5 ? copy.thin : v.score === v.max ? copy.ok : copy.why;
       return { why, fix: copy.fix };
     };
@@ -442,7 +480,8 @@ ${nav()}`,
         quiz_dog_name: a.name, quiz_breed: b.mixed ? 'mixed' : b.name, quiz_breed_size: size(),
         quiz_breed_photo_url: CFG.emailPhotoBase + (b.mixed ? `mixed-${size()}` : `breed-${a.breedId}`) + '.jpg',
         quiz_age_years: Math.round(ageYears() * 10) / 10, quiz_life_stage: stage(), quiz_sex: a.sex, quiz_neutered: a.neutered === 'yes',
-        quiz_weight_kg: +a.weight, quiz_bcs: a.bcs, quiz_ideal_weight_kg: r.idealKg,
+        quiz_weight_kg: +a.weight, quiz_bcs: a.bcs, quiz_ideal_weight_kg: r.idealKg, quiz_adult_weight_kg: ans.stage === 'puppy' ? S.roundKg(adultKg()) : null,
+        quiz_plan_keep: r.keep, quiz_kcal_calculated: r.targetKcal,
         quiz_activity_band: S.activityLevel(a.actBand, a.actType), quiz_recommended_activity_band: r.subs.activity.recommended,
         quiz_food_main: a.foodMain, quiz_food_types: a.foods, quiz_label_given: d.fromLabel,
         ...(() => { const zp = zenooPlan(r); return zp ? { quiz_plan_product: CFG.zenoo.title, quiz_plan_option: zp.option, quiz_plan_grams: zp.grams, quiz_plan_cost_day: +zp.cost.toFixed(2), quiz_plan_cart_url: zp.cartUrl } : {}; })(),
@@ -458,14 +497,15 @@ ${nav()}`,
         // Ready-to-print lines for email #1
         quiz_score_title: bandC.title, quiz_score_text: fill(bandC.text, vars),
         quiz_fix_1_text: fixes[0] || U.result.keepGoing, quiz_fix_2_text: fixes[1] || '',
-        quiz_plan_food: r.planFeeds ? r.planFeeds.map((x) => fill(U.plan.emailFood, { food: foodLabel(x.type), grams: x.grams })).join(U.plan.emailFoodJoin)
-          : r.grams ? fill(U.plan.gramsText, { grams: r.grams }) : U.plan.emailNoAmount,
+        quiz_plan_food: (r.planFeeds ? r.planFeeds.map((x) => fill(U.plan.emailFood, { food: foodLabel(x.type), grams: x.grams })).join(U.plan.emailFoodJoin)
+          : r.grams ? fill(U.plan.gramsText, { grams: r.grams }) : U.plan.emailNoAmount)
+          + (r.keep ? ' — ' + tx(U.plan.keep[r.keep], { target: r.targetKcal, intake: r.intakeKcal }) : ''),
         quiz_plan_meals: mealsAdvice + (a.treats !== 'none' ? U.plan.treatsCounted : ''),
         quiz_plan_protein_g: r.targets ? gramsRange(r.targets.proteinG) : null,
         quiz_plan_fat_g: r.targets ? gramsRange(r.targets.fatG) : null,
         quiz_plan_weight: planWeight(r),
         quiz_plan_activity: vars.need[0].toUpperCase() + vars.need.slice(1),
-        quiz_completed_at: new Date().toISOString(), quiz_locale: CFG.locale, quiz_version: CFG.quizVersion,
+        quiz_completed_at: new Date().toISOString(), quiz_locale: CFG.locale, quiz_version: CFG.quizVersion, quiz_result_id: a._rid || null,
       },
     };
   }
@@ -595,12 +635,17 @@ ${nav()}`,
       step = Math.min(step + 1, active().length - 1);
       if (step === 1) track('quiz_start');
       if (active()[step].id === 'result') track('quiz_result', { value: r0()?.total });
-      if (active()[step].id === 'result' && !submitted) { submitted = true; submit(); }
+      if (active()[step].id === 'result' && !submitted) { submitted = true; a._rid = a._rid || newId(); submit(); }
       render();
     } else if (t.dataset.action === 'back') { step = Math.max(0, step - 1); render(); }
     else if (t.dataset.action === 'scanLabel') { document.getElementById('zq-scanfile')?.click(); }
     else if (t.dataset.action === 'skipLabel') { a.labelSkipped = true; step += 1; render(); }
-    else if (t.dataset.action === 'restart') { a = blank(); step = 0; submitted = false; render(); }
+    else if (t.dataset.action === 'restart') {
+      // Start again, same dog or not: keep who's signed in and which dog this was for (N3).
+      a = { ...blank(), _dogId: a._dogId, _new: a._new }; withUser(); step = 0; submitted = false; keep = true; account = { state: 'idle' }; render();
+    }
+    else if (t.dataset.action === 'chooseUpdate') { a._dogId = account.dog.id; a._new = false; submitAccount(klaviyoPayload(S.evaluate(answers()))); }
+    else if (t.dataset.action === 'chooseNew') { a._new = true; a._dogId = undefined; submitAccount(klaviyoPayload(S.evaluate(answers()))); }
     else if (t.dataset.action === 'share') {
       const url = location.origin + location.pathname;
       if (navigator.share) navigator.share({ title: U.result.shareTitle, url }).catch(() => {});
@@ -658,7 +703,13 @@ ${nav()}`,
       idle: '', sending: fill(T.sending, { name: name() }),
       sent: fill(T.sent, { email: `<b>${esc(a.email)}</b>`, name: name() }),
       saved: fill(T.saved, { name: name() }), error: account.error ? esc(account.error) : T.error,
+      choose: T.choose,
     }[account.state];
+    if (account.state === 'choose') {
+      const n = esc(account.dog.name).toUpperCase();
+      return `<h3 style="font-family:var(--font-display);margin:0 0 6px">${fill(T.chooseTitle, { name: n })}</h3><p style="margin:0 0 10px">${msg}</p>
+        <div class="zq-choose"><button class="zq-btn" data-action="chooseUpdate">${fill(T.chooseUpdate, { name: n })}</button><button class="zq-btn forest" data-action="chooseNew">${fill(T.chooseNew, { name: n })}</button></div>`;
+    }
     const btn = account.state === 'saved' ? `<p style="margin:10px 0 0"><a class="zq-btn" href="${esc(account.dashboard)}">${T.open}</a></p>` : '';
     return `<h3 style="font-family:var(--font-display);margin:0 0 6px">${account.state === 'saved' ? T.savedTitle : T.title}</h3><p style="margin:0">${msg}</p>${btn}`;
   }
@@ -673,11 +724,19 @@ ${nav()}`,
     fetch(CFG.accountSubmitUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CFG.accountToken },
-      body: JSON.stringify({ email: p.email, first_name: p.first_name, locale: CFG.locale, properties: { ...p.properties, quiz_marketing_consent: p.marketing }, ...(thenChat && CFG.user ? { then: 'chat' } : {}) }),
+      body: JSON.stringify({
+        email: p.email, first_name: p.first_name, locale: CFG.locale, properties: { ...p.properties, quiz_marketing_consent: p.marketing }, answers: answersToSave(),
+        ...(CFG.user && a._dogId ? { dog_id: a._dogId } : {}), ...(CFG.user && a._new ? { new: true } : {}),
+        ...(thenChat && CFG.user ? { then: 'chat' } : {}),
+      }),
     }).then((res) => res.json().then((data) => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
         if (!ok) throw new Error(data.error || '');
+        if (data.status === 'choose') { setAccount({ state: 'choose', dog: data.dog }); return; }
         setAccount(data.status === 'saved' ? { state: 'saved', dashboard: data.dashboard } : { state: 'sent' });
+        // Saved to the account: nothing about it stays in this browser (F7).
+        if (data.status === 'saved') { keep = false; clearStore(); }
+        else { a._saved = 'sent'; save(); }
         if (data.go && data.dashboard) location.assign(data.dashboard);
         if (data.status !== 'saved') track('quiz_submit');
       })
@@ -693,6 +752,9 @@ ${nav()}`,
       body: JSON.stringify({ data: body }),
     }).then((res) => { if (!res.ok) throw new Error(`Klaviyo ${path}: ${res.status}`); });
   }
+
+  // One id per finished quiz, so the same result is never saved twice (sign-in and email link).
+  const newId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
 
   // Funnel steps and, with consent, GA4 / the Meta pixel (public/consent.js).
   const track = (step, params) => { try { window.znTrack && window.znTrack(step, params); } catch (e) { /* never break the quiz */ } };
@@ -722,11 +784,17 @@ ${nav()}`,
         },
       }),
     ]).catch((err) => {
+      // Only a visitor waiting for our email hears about it; a member's result is saved either way (N3).
       console.error('[ZENOO quiz]', err);
-      const box = document.querySelector('.zq-sent p');
+      const box = !CFG.user && document.querySelector('#zq-inbox p');
       if (box) box.textContent = U.result.sendError;
     });
   }
 
   render();
+
+  // A result finished before signing in, still only in this browser: save it to the account now (N1).
+  if (CFG.user && active()[step].id === 'result' && a._saved !== 'account' && stored && !stored._owner) {
+    submitted = true; a._rid = a._rid || newId(); submitAccount(klaviyoPayload(S.evaluate(answers())));
+  }
 })();

@@ -150,6 +150,10 @@ window.ZQ_CONTENT = {
       why: 'From the body shape you picked, {name}\'s ideal weight is around {ideal} kg.',
       fix: 'Aim for about {kcal} kcal a day and check body shape every 2 weeks.',
       thin: 'From the body shape you picked, {name} may be a little light. Ideal is around {ideal} kg.',
+      puppy: '{name} is still growing, so there’s no target weight yet. Steady weekly gain and a visible waist are what you want.',
+      puppyOk: '{name} looks to be growing in good shape. Keep weighing weekly.',
+      fixPuppy: 'Weigh {name} every week and check the ribs and waist. Ask your vet if the gain stalls or speeds up.',
+      fixKeep: 'Keep today’s amounts for now, and check body shape every 2 weeks.',
     },
     activity: {
       ok: '{name} gets plenty of activity for a {breed}.',
@@ -169,6 +173,8 @@ window.ZQ_CONTENT = {
       fixOver: 'Weigh the food for a week and follow the gram amounts in {name}’s daily plan.',
       fixUnder: 'Follow the gram amounts in {name}’s daily plan and keep an eye on body shape.',
       fixUnknown: 'Weigh {name}’s food for a few days. It’s the easiest way to get portions right.',
+      vet: '{name} eats roughly {intake} kcal a day, and our estimate is about {target}. That’s a big gap, and estimates can be off for some dogs.',
+      fixVet: 'Keep today’s amounts and check them with your vet before changing them.',
       fixMeals: 'Split the day’s food into two set meals, morning and evening.',
       fixPuppyMeals: 'Split the day’s food into three or four smaller meals.',
       fixTreats: 'Keep treats small, and count them as part of the day’s food.',
@@ -181,6 +187,10 @@ window.ZQ_CONTENT = {
   },
   // Site only: the ZENOO account box on the result screen (see submitAccount() in app.js).
   account: {
+    chooseTitle: 'YOU ALREADY HAVE A DOG CALLED {name}',
+    choose: 'Is this a new check for that dog, or another dog with the same name?',
+    chooseUpdate: 'UPDATE {name}',
+    chooseNew: 'ADD A SECOND {name}',
     title: 'YOUR FREE ZENOO ACCOUNT',
     sending: 'Saving {name}’s profile…',
     sent: 'We’ve sent a confirmation link to {email}. Click it and we’ll create your free account with {name}’s dashboard: the score, the plan and lessons picked for {name}.',
@@ -247,6 +257,7 @@ window.ZQ_CONTENT = {
       // Medium, large and giant dogs (the text above is for toy and small dogs)
       heavyBig: '<p>Extra weight is really common, and it creeps up slowly: a slightly generous scoop or a few treats a day soon add up. From the shape you picked, {poss} ideal weight is around <b>{ideal} kg</b>.</p><p>For a bigger dog, every kilo counts for the joints and energy, and it’s one of the easiest things to change.</p>',
       thin: '<p>From the shape you picked, {name} may be on the lean side. Ideal is around <b>{ideal} kg</b>. Some dogs are naturally slim, so a quick check with your vet is a good idea if you’re unsure.</p>',
+      puppy: '<p>{name} is still growing, so there’s no target weight yet. Weigh {name} once a week: steady gain is what you want. The ribs should be easy to feel but not see.</p>',
     },
     activity: { title: 'HOW ACTIVE IS {NAME} ON A TYPICAL DAY?', band: 'Walks and play, all added up', type: 'Mostly…' },
     slideActivity: {
@@ -317,6 +328,8 @@ window.ZQ_CONTENT = {
       carbs: 'Carbs', carbsText: 'As low as practical. Dogs evolved on very little.',
       fibre: 'Fibre', fibreText: 'A little (about 2–5% of the dry food) supports digestion.',
       weight: 'Weight', keepWeight: 'Keep {name} around {kg} kg', aimWeight: 'Aim for about {kg} kg, slowly',
+      keep: { heavy: 'Keep today’s amounts and don’t increase them while {name} is above ideal shape. Weigh every 2 weeks; if the weight doesn’t drop, cut the food by about 10%.', thin: 'Keep today’s amounts and don’t cut them while {name} is below ideal shape. Weigh every 2 weeks; if there’s no gain, add about 10%.', vet: 'Our estimate (about {target} kcal a day) is far from what {name} eats now (about {intake} kcal). Keep today’s amounts and check them with your vet before changing them.' },
+      puppyGrowth: 'Still growing: weigh weekly and expect steady gain, towards about {adult} kg as an adult.',
       activity: 'Activity',
       note: 'A starting point, not a prescription. Adjust by watching {poss} body shape every couple of weeks.',
       // Email-only lines (Klaviyo profile)

@@ -58,8 +58,18 @@ class HomeController extends AbstractController
         \App\Chat\ClaudeClient $claude,
         \App\Catalogue\PlanBuilder $plans,
         CsrfTokenManagerInterface $csrf,
+        \App\Repository\DogProfileRepository $dogs,
     ): Response {
         $user = $this->getUser();
+        // "Retake the quiz for Max" (?dog=<id>): start from Max's own saved answers, saved to Max (N2, F1).
+        $retake = null;
+        if ($user instanceof User && ($id = (int) $request->query->get('dog')) > 0) {
+            foreach ($dogs->findAllForUser($user) as $d) {
+                if ($d->getId() === $id) {
+                    $retake = ['id' => $d->getId(), 'name' => $d->getName(), 'answers' => $d->getQuizAnswers()];
+                }
+            }
+        }
         $locale = \App\Locale::normalize($request->getLocale());
         if (!is_file($this->getParameter('kernel.project_dir') . "/public/quiz/content.$locale.js")) {
             $locale = 'en';
@@ -91,7 +101,8 @@ class HomeController extends AbstractController
                 'accountToken' => $csrf->getToken('quiz')->getValue(),
                 // One-time "let our AI read the label" in the label step (QuizLabelController).
                 'labelScanUrl' => $claude->isConfigured() ? $this->generateUrl('app_quiz_label_scan') : null,
-                'user' => $user instanceof User ? ['firstName' => $user->getFirstName(), 'email' => $user->getEmail()] : null,
+                'user' => $user instanceof User ? ['id' => $user->getId(), 'firstName' => $user->getFirstName(), 'email' => $user->getEmail()] : null,
+                'retake' => $retake,
             ],
         ]);
     }

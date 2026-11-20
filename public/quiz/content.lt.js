@@ -156,6 +156,10 @@ window.ZQ_CONTENT = {
       why: 'Pagal pasirinktą kūno formą {name} idealiai turėtų sverti apie {ideal} kg.',
       fix: 'Siekite apie {kcal} kcal per dieną ir kūno formą tikrinkite kas 2 savaites.',
       thin: 'Pagal pasirinktą kūno formą {name} gali sverti kiek per mažai. Idealus svoris – apie {ideal} kg.',
+      puppy: '{name} dar auga, todėl tikslinio svorio kol kas nėra. Svarbiausia – tolygus svorio augimas kas savaitę ir matomas liemuo.',
+      puppyOk: '{name}, regis, auga gerai. Toliau sverkite kas savaitę.',
+      fixPuppy: 'Sverkite šuniuką kas savaitę ir apčiuopkite šonkaulius bei liemenį. Jei svoris nustoja didėti ar auga per greitai, pasitarkite su veterinaru.',
+      fixKeep: 'Kol kas palikite dabartinius kiekius ir kas 2 savaites patikrinkite kūno formą.',
     },
     activity: {
       ok: '{name} juda daug – tiek, kiek reikia pagal veislę ir amžių.',
@@ -175,6 +179,8 @@ window.ZQ_CONTENT = {
       fixOver: 'Savaitę sverkite maistą ir laikykitės gramų, nurodytų dienos plane.',
       fixUnder: 'Laikykitės gramų, nurodytų dienos plane, ir stebėkite kūno formą.',
       fixUnknown: 'Kelias dienas sverkite maistą, kurį ėda {name}. Tai lengviausias būdas nustatyti tinkamas porcijas.',
+      vet: '{name} per dieną gauna apie {intake} kcal, o mūsų įvertis – apie {target}. Skirtumas didelis, o kai kuriems šunims įverčiai gali netikti.',
+      fixVet: 'Palikite dabartinius kiekius ir prieš juos keisdami pasitarkite su veterinaru.',
       fixMeals: 'Dienos maistą padalykite į du valgius – rytą ir vakare, kasdien tuo pačiu metu.',
       fixPuppyMeals: 'Dienos maistą padalykite į tris ar keturis mažesnius valgius.',
       fixTreats: 'Skanėstus duokite mažus ir įskaičiuokite juos į dienos maisto kiekį.',
@@ -187,6 +193,10 @@ window.ZQ_CONTENT = {
   },
   // Site only: the ZENOO account box on the result screen (see submitAccount() in app.js).
   account: {
+    chooseTitle: 'JŪS JAU TURITE ŠUNĮ, VARDU {name}',
+    choose: 'Ar tai naujas to paties šuns patikrinimas, ar kitas šuo tuo pačiu vardu?',
+    chooseUpdate: 'ATNAUJINTI: {name}',
+    chooseNew: 'PRIDĖTI ANTRĄ: {name}',
     title: 'JŪSŲ NEMOKAMA ZENOO PASKYRA',
     sending: 'Išsaugome jūsų šuns ({name}) profilį…',
     sent: 'Išsiuntėme patvirtinimo nuorodą adresu {email}. Paspaudę ją gausite nemokamą paskyrą su jūsų šuns ({name}) suvestine: balu, planu ir pamokomis, parinktomis būtent jūsų šuniui.',
@@ -250,6 +260,7 @@ window.ZQ_CONTENT = {
       // Medium, large and giant dogs (the text above is for toy and small dogs)
       heavyBig: '<p>Antsvoris labai dažnas ir atsiranda pamažu: kiek didesnė porcija ar keli skanėstai per dieną greitai susideda. Pagal pasirinktą formą {name} idealiai turėtų sverti apie <b>{ideal} kg</b>.</p><p>Didesniam šuniui kiekvienas kilogramas svarbus sąnariams ir energijai, o svorį pakeisti – vienas lengviausių dalykų.</p>',
       thin: '<p>Pagal pasirinktą formą {name} gali sverti kiek per mažai. Idealus svoris – apie <b>{ideal} kg</b>. Kai kurie šunys iš prigimties liekni, tad jei abejojate, verta trumpai pasitarti su veterinaru.</p>',
+      puppy: '<p>{name} dar auga, todėl tikslinio svorio kol kas nėra. Sverkite kartą per savaitę: svoris turėtų tolygiai didėti. Šonkaulius turėtų būti lengva apčiuopti, bet ne matyti.</p>',
     },
     activity: { title: 'KIEK {NAME} JUDA ĮPRASTĄ DIENĄ?', band: 'Pasivaikščiojimai ir žaidimai, viską sudėjus', type: 'Daugiausia…' },
     slideActivity: {
@@ -316,6 +327,8 @@ window.ZQ_CONTENT = {
       carbs: 'Angliavandeniai', carbsText: 'Kuo mažiau, kiek tik įmanoma. Šunys evoliucionavo jų gaudami labai mažai.',
       fibre: 'Skaidulos', fibreText: 'Nedaug (apie 2–5 % sausosios medžiagos) – tai palaiko virškinimą.',
       weight: 'Svoris', keepWeight: 'Palaikykite apie {kg} kg svorį', aimWeight: 'Siekite apie {kg} kg, pamažu',
+      keep: { heavy: 'Palikite dabartinius kiekius ir nedidinkite jų, kol {name} sveria daugiau nei idealiai. Sverkite kas 2 savaites; jei svoris nemažėja, sumažinkite maisto apie 10 %.', thin: 'Palikite dabartinius kiekius ir nemažinkite jų, kol {name} sveria mažiau nei idealiai. Sverkite kas 2 savaites; jei svoris nedidėja, pridėkite apie 10 %.', vet: 'Mūsų įvertis (apie {target} kcal per dieną) labai skiriasi nuo to, kiek {name} ėda dabar (apie {intake} kcal). Palikite dabartinius kiekius ir prieš juos keisdami pasitarkite su veterinaru.' },
+      puppyGrowth: 'Dar auga: sverkite kas savaitę, svoris turėtų tolygiai didėti iki maždaug {adult} kg suaugus.',
       activity: 'Aktyvumas',
       note: 'Tai atspirties taškas, o ne receptas. Koreguokite kas porą savaičių, stebėdami jūsų šuns ({name}) kūno formą.',
       emailFood: '{food}: apie {grams} g per dieną', emailFoodJoin: ' · ',

@@ -16,3 +16,10 @@
 .zq-zenoo { display: flex; gap: 14px; align-items: flex-start; border: 2px solid var(--sun, #f7a223); }
 .zq-zenoo img { border-radius: 12px; object-fit: cover; flex: none; }
 .zq-zenoo .zq-btn { display: inline-block; text-decoration: none; }
+
+/* Feeding plan: keep today's amounts (body shape) or check with the vet (big gap). */
+.zq-plan dd.zq-plan-keep-row { grid-column: 1 / -1; }
+.zq-plan-keep { margin: 4px 0 0; padding: 10px 12px; border-radius: 10px; background: #fff; border-left: 4px solid #935A00; font-size: 15px; }
+
+/* "You already have a dog called Max": update it or add a second one. */
+.zq-choose { display: flex; flex-wrap: wrap; gap: 10px; }

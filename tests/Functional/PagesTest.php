@@ -34,11 +34,12 @@ class PagesTest extends AppTestCase
 
     public function testQuizScoringAndStylesMatchTheHandoff(): void
     {
-        // scoring.js and styles.css are untouched copies of the ZENOO handoff; the hashes guard against
-        // silent edits. app.js and content.*.js were changed on purpose: the quiz → account step and
-        // the Lithuanian translation.
+        // styles.css is an untouched copy of the ZENOO handoff; scoring.js was changed on purpose for the
+        // 20 Nov 2026 test report (feeding plan follows body shape, puppy growth, score caps: thresholds
+        // to be signed off by a vet). The hashes guard against silent edits: update them with any
+        // deliberate change. app.js and content.*.js are changed on purpose all the time.
         $expected = [
-            'scoring.js' => 'f288dafd778bb1dae7c79a19e121b2dbca1f4b1e468dad739e8fa2857cdbb1e7',
+            'scoring.js' => '04456c4ee414aa9bdd093195214bbc09a48a543efdbb022fbe54e881c743ba41',
             'styles.css' => '3341429afe83cb14429dee3f008dc3276a014ecef9e02352b0ec0f62e2d02572',
         ];
         foreach ($expected as $file => $hash) {

@@ -33,24 +33,57 @@ class DogProfileRepository extends ServiceEntityRepository
         return $this->findBy(['user' => $user], ['updatedAt' => 'DESC', 'id' => 'DESC']);
     }
 
+    /** The account's dog with this name (any capitals), if there is one. */
+    public function findByName(User $user, string $name): ?DogProfile
+    {
+        $name = mb_strtolower(trim($name));
+        foreach ($this->findAllForUser($user) as $dog) {
+            if ($name !== '' && mb_strtolower(trim($dog->getName())) === $name) {
+                return $dog;
+            }
+        }
+        return null;
+    }
+
     /**
-     * Saves a quiz result (not flushed): to the dog with that id, else to the account's dog with
-     * the same name (a retake), else as a new dog (another dog in the household). The saved dog
-     * becomes the selected one.
+     * Saves a quiz result (not flushed) and selects that dog. Never matched by name alone (F1):
+     * - $dogId: a retake for that dog ("Retake the quiz for Max", or "Update Max" when asked);
+     * - $asNew: "+ Add another dog", or "Add a second Max";
+     * - neither (a result confirmed by email or attached at sign-in, where nobody can be asked):
+     *   the same name AND the same breed is a retake of that dog, anything else is a new dog.
+     * The same result saved twice (sign-in and the email link, say) changes nothing the second time.
+     *
+     * @param array|null $answers the quiz's own answers, so a retake starts from them (N2)
      */
-    public function saveQuizResult(User $user, array $data, string $locale, ?int $dogId = null): DogProfile
+    public function saveQuizResult(User $user, array $data, string $locale, ?int $dogId = null, bool $asNew = false, ?array $answers = null): DogProfile
     {
         $dogs = $this->findAllForUser($user);
-        $name = mb_strtolower(trim((string) ($data['quiz_dog_name'] ?? '')));
-        $profile = null;
+        $resultId = (string) ($data['quiz_result_id'] ?? '');
         foreach ($dogs as $dog) {
-            if (($dogId !== null && $dog->getId() === $dogId) || ($dogId === null && $name !== '' && mb_strtolower(trim($dog->getName())) === $name)) {
-                $profile = $dog;
-                break;
+            if ($resultId !== '' && $dog->get('result_id') === $resultId) {
+                $user->setActiveDogId($dog->getId());
+                return $dog;
+            }
+        }
+        $profile = null;
+        if ($dogId !== null) {
+            foreach ($dogs as $dog) {
+                if ($dog->getId() === $dogId) {
+                    $profile = $dog;
+                }
+            }
+        } elseif (!$asNew) {
+            $same = $this->findByName($user, (string) ($data['quiz_dog_name'] ?? ''));
+            $breed = static fn ($b) => mb_strtolower(trim((string) $b));
+            if ($same && $breed($same->get('breed')) === $breed($data['quiz_breed'] ?? '')) {
+                $profile = $same;
             }
         }
         $profile ??= new DogProfile($user);
         $profile->fillFromQuiz($data, $locale);
+        if ($answers !== null) {
+            $profile->setQuizAnswers($answers);
+        }
         $this->getEntityManager()->persist($profile);
         if ($profile->getId() === null) {
             $this->getEntityManager()->flush(); // for the id

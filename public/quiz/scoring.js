@@ -15,6 +15,11 @@
     k: { 1: 95, 2: 110, 3: 130, 4: 160, 5: 200 },
     neuteredFactor: 0.9,
     seniorAge: { toy: 10, small: 10, medium: 8, large: 7, giant: 6 },
+    // Typical adult weight by size, for puppies of mixed or unknown breed (growth energy, NRC 2006).
+    adultKg: { toy: 4, small: 8, medium: 18, large: 33, giant: 55 },
+    // Feeding plan guard: body shape sets the direction, and a change bigger than this share of
+    // today's intake goes to the vet instead of a new portion. Thresholds to be signed off by a vet.
+    guard: { heavyFrom: 6, thinUpTo: 4, maxChange: 0.2 },
     // Share of the daily energy target that treats are assumed to add
     treatShare: { none: 0, few: 0.05, several: 0.1, lots: 0.2 },
     // Points per sub-score (total 100)
@@ -55,11 +60,20 @@
     return Math.min(5, minutesBand + (type === 'sport' ? 1 : 0));
   }
 
-  function dailyKcal({ weightKg, bcs, level, neutered, stage, ageYears }) {
+  // Growing puppies (NRC 2006): energy from today's weight and the expected adult weight.
+  // No target weight: a puppy should gain steadily, not hold its weight.
+  function puppyKcal(weightKg, adultKg, ageYears) {
+    if (!adultKg || adultKg <= weightKg) {
+      return 70 * Math.pow(weightKg, 0.75) * (ageYears < 0.34 ? 3 : 2);
+    }
+    const p = weightKg / adultKg;
+    return 130 * Math.pow(weightKg, 0.75) * 3.2 * (Math.exp(-0.87 * p) - 0.1);
+  }
+
+  function dailyKcal({ weightKg, bcs, level, neutered, stage, ageYears, adultKg }) {
     const iw = idealWeight(weightKg, bcs);
     if (stage === 'puppy') {
-      const rer = 70 * Math.pow(weightKg, 0.75);
-      return { kcal: rer * (ageYears < 0.34 ? 3 : 2), idealKg: weightKg };
+      return { kcal: puppyKcal(weightKg, adultKg, ageYears), idealKg: null, adultKg: adultKg || null };
     }
     let lvl = level;
     if (bcs >= 7) lvl = Math.max(1, lvl - 1); // weight-loss goal
@@ -78,6 +92,22 @@
 
   // feeds: [{ type, grams|null }]; mainKcal100 overrides the typical density for the main food (from its label).
   // Returns null when any amount is unknown.
+  // Body shape sets the direction: above ideal never more than today's intake, below it never less.
+  // A change of more than 20% shows "check the amounts with your vet" instead of a new portion.
+  function guardPlan(targetKcal, nowKcal, bcs) {
+    const G = CONFIG.guard;
+    if (nowKcal == null || nowKcal <= 0) return { kcal: targetKcal, keep: null, vetCheck: false };
+    if (bcs >= G.heavyFrom && targetKcal > nowKcal) return { kcal: nowKcal, keep: 'heavy', vetCheck: false };
+    if (bcs <= G.thinUpTo && targetKcal < nowKcal) return { kcal: nowKcal, keep: 'thin', vetCheck: false };
+    if (Math.abs(targetKcal - nowKcal) / nowKcal > G.maxChange) return { kcal: nowKcal, keep: 'vet', vetCheck: true };
+    return { kcal: targetKcal, keep: null, vetCheck: false };
+  }
+
+  // Grams for the plan: to the gram below 100 g a day, else to 5 g.
+  function roundGrams(g) {
+    return g < 100 ? Math.round(g) : Math.round(g / 5) * 5;
+  }
+
   function intake(feeds, mainType, mainKcal100, treats, targetKcal) {
     if (!feeds.length || feeds.some((x) => x.grams == null)) return null;
     const perFood = feeds.map((x) => {
@@ -137,6 +167,11 @@
     };
   }
 
+  // Two decimals below 2 kg, one above.
+  function roundKg(kg) {
+    return kg < 2 ? Math.round(kg * 100) / 100 : Math.round(kg * 10) / 10;
+  }
+
   function band(total) {
     return CONFIG.bands.find(([min]) => total >= min)[1];
   }
@@ -154,29 +189,39 @@
   function evaluate(a) {
     const energy = dailyKcal(a);
     const eat = intake(a.feeds || [], a.foodMain, a.diet.kcalPer100g, a.treats || 'none', energy.kcal);
-    const subs = subScores({ ...a, ratio: eat ? eat.ratio : null });
+    let guard = guardPlan(energy.kcal, eat ? eat.total : null, a.bcs);
+    // Treats stay as they are, so the food alone can move more than the total: limit that too.
+    if (eat && eat.foodKcal > 0 && !guard.keep && Math.abs((guard.kcal - eat.treatKcal) / eat.foodKcal - 1) > CONFIG.guard.maxChange) {
+      guard = { kcal: eat.total, keep: 'vet', vetCheck: true };
+    }
+    // Eating less than the target is fine for a heavy dog, and more is fine for a thin one.
+    const fine = eat && ((guard.keep === 'heavy' && eat.ratio < 1) || (guard.keep === 'thin' && eat.ratio > 1));
+    const subs = subScores({ ...a, ratio: eat ? (fine ? 1 : eat.ratio) : null });
     const total = Object.values(subs).reduce((s, x) => s + x.score, 0);
 
-    // Plan: scale today's amounts so food + treats land on the target.
+    // Plan: scale today's amounts so food + treats land on the (guarded) target.
     let planFeeds = null;
     if (eat && eat.foodKcal > 0) {
-      const factor = (energy.kcal - eat.treatKcal) / eat.foodKcal;
-      planFeeds = eat.perFood.map((x) => ({ type: x.type, grams: Math.round((x.grams * factor) / 5) * 5, now: x.grams }));
+      const factor = guard.keep ? 1 : (guard.kcal - eat.treatKcal) / eat.foodKcal;
+      planFeeds = eat.perFood.map((x) => ({ type: x.type, grams: roundGrams(x.grams * factor), now: x.grams }));
     }
-    const grams = !eat && a.diet.kcalPer100g ? Math.round(((energy.kcal / a.diet.kcalPer100g) * 100) / 5) * 5 : null;
+    const grams = !eat && a.diet.kcalPer100g ? roundGrams((energy.kcal / a.diet.kcalPer100g) * 100) : null;
 
     // Portions lead when the amount clearly works against body shape: heavy and overfed, or thin and underfed.
     const portionsFirst = eat && ((a.bcs >= 7 && eat.ratio > 1.1) || (a.bcs <= 4 && eat.ratio < 0.9));
     const fixes = Object.entries(subs)
       .map(([key, v]) => ({ key, gain: v.max - v.score }))
       .filter((x) => x.gain > 0)
-      .sort((x, y) => (portionsFirst ? (y.key === 'routine') - (x.key === 'routine') : 0) || y.gain - x.gain)
+      .sort((x, y) => (portionsFirst && !guard.keep ? (y.key === 'routine') - (x.key === 'routine') : 0) || y.gain - x.gain)
       .slice(0, 2)
       .map((x) => x.key);
     return {
       total, band: band(total), subs,
-      kcal: Math.round(energy.kcal / 10) * 10,
-      idealKg: Math.round(energy.idealKg * 10) / 10,
+      kcal: Math.round(guard.kcal / 10) * 10,
+      targetKcal: Math.round(energy.kcal / 10) * 10,
+      keep: guard.keep, vetCheck: guard.vetCheck,
+      idealKg: energy.idealKg == null ? null : roundKg(energy.idealKg),
+      adultKg: energy.adultKg ? roundKg(energy.adultKg) : null,
       intakeKcal: eat ? Math.round(eat.total / 10) * 10 : null,
       ratio: eat ? Math.round(eat.ratio * 100) / 100 : null,
       planFeeds, grams,
@@ -185,7 +230,7 @@
     };
   }
 
-  const api = { CONFIG, sizeClass, lifeStage, fromLabel, idealWeight, activityLevel, activityScore, dailyKcal, intake, routineScore, subScores, band, nutrientTargets, evaluate };
+  const api = { CONFIG, sizeClass, lifeStage, fromLabel, idealWeight, activityLevel, activityScore, dailyKcal, puppyKcal, guardPlan, roundGrams, roundKg, intake, routineScore, subScores, band, nutrientTargets, evaluate };
   if (typeof module !== 'undefined') module.exports = api;
   else root.ZQScoring = api;
 })(this);

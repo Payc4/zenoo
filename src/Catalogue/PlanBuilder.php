@@ -39,7 +39,7 @@ final class PlanBuilder
         if ($product === null || !$f['weight_kg']) {
             return null;
         }
-        $energy = Calculators::dailyKcal($f['weight_kg'], $f['bcs'], $f['level'], $f['neutered'], $f['stage'], $f['age_years'], $f['ideal_kg']);
+        $energy = Calculators::planKcal($f); // never against body shape
         $foodKcal = $energy['kcal'] * (1 - 0.05); // the quiz's "a few treats" allowance
         [$variant, $perGram] = $product->cheapestPerGram();
         $budget = (float) $this->dailyBudget;

@@ -32,6 +32,21 @@ class QuizSubmissionRepository extends ServiceEntityRepository
         $this->createQueryBuilder('q')->delete()->where('q.email = :e')->setParameter('e', mb_strtolower($email))->getQuery()->execute();
     }
 
+    /**
+     * Every result for this email still waiting for its link, oldest first.
+     *
+     * @return list<QuizSubmission>
+     */
+    public function findPendingForEmail(string $email): array
+    {
+        return $this->createQueryBuilder('q')
+            ->where('q.email = :e')->andWhere('q.confirmedAt IS NULL')->andWhere('q.createdAt >= :cutoff')
+            ->setParameter('e', mb_strtolower($email))
+            ->setParameter('cutoff', new \DateTimeImmutable('-' . ltrim(QuizSubmission::LIFETIME, '+')))
+            ->orderBy('q.createdAt', 'ASC')->addOrderBy('q.id', 'ASC')
+            ->getQuery()->getResult();
+    }
+
     /** Housekeeping: unconfirmed submissions older than their link's lifetime. */
     public function deleteExpired(): int
     {

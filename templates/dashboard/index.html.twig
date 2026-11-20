@@ -42,7 +42,7 @@
       {% endif %}
     </div>
     <div class="dash-head__actions">
-      <a class="btn btn-ghost-light btn-small dash-retake" href="{{ path('app_quiz') }}">{{ dog ? 'Retake the quiz for %dog%'|trans({'%dog%': dog.name}) : 'Take the quiz'|trans }}</a>
+      <a class="btn btn-ghost-light btn-small dash-retake" href="{{ dog ? path('app_quiz', {dog: dog.id}) : path('app_quiz') }}">{{ dog ? 'Retake the quiz for %dog%'|trans({'%dog%': dog.name}) : 'Take the quiz'|trans }}</a>
       {% if dog %}<a class="dash-add-dog" href="{{ path('app_quiz') }}?new=1">{{ '+ Add another dog'|trans }}</a>{% endif %}
     </div>
   </div>

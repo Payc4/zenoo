@@ -157,6 +157,10 @@ window.ZQ_CONTENT = {
       why: 'Na podstawie wybranej sylwetki idealna waga twojego psa ({name}) to około {ideal} kg.',
       fix: 'Celuj w około {kcal} kcal dziennie i sprawdzaj sylwetkę co 2 tygodnie.',
       thin: 'Na podstawie wybranej sylwetki {name} może mieć trochę za niską wagę. Idealna to około {ideal} kg.',
+      puppy: '{name} wciąż rośnie, więc nie ma jeszcze docelowej wagi. Liczy się równomierny przyrost co tydzień i widoczna talia.',
+      puppyOk: 'Wygląda na to, że {name} rośnie w dobrej formie. Waż dalej co tydzień.',
+      fixPuppy: 'Waż szczeniaka co tydzień i sprawdzaj żebra oraz talię. Jeśli przyrost staje albo jest za szybki, skonsultuj się z weterynarzem.',
+      fixKeep: 'Na razie zostaw obecne porcje i co 2 tygodnie sprawdzaj sylwetkę.',
     },
     activity: {
       ok: '{name} ma mnóstwo ruchu jak na psa tego typu.',
@@ -176,6 +180,8 @@ window.ZQ_CONTENT = {
       fixOver: 'Przez tydzień waż karmę i trzymaj się ilości w gramach z planu dnia.',
       fixUnder: 'Trzymaj się ilości w gramach z planu dnia i obserwuj sylwetkę psa.',
       fixUnknown: 'Przez kilka dni waż karmę, którą je {name}. To najprostszy sposób na dobre porcje.',
+      vet: '{name} je około {intake} kcal dziennie, a nasz szacunek to około {target}. To duża różnica, a dla niektórych psów szacunki bywają nietrafione.',
+      fixVet: 'Zostaw obecne porcje i skonsultuj je z weterynarzem, zanim je zmienisz.',
       fixMeals: 'Podziel dzienną porcję na dwa posiłki o stałych porach, rano i wieczorem.',
       fixPuppyMeals: 'Podziel dzienną porcję na trzy lub cztery mniejsze posiłki.',
       fixTreats: 'Dawaj małe przysmaki i wliczaj je do dziennej porcji jedzenia.',
@@ -188,6 +194,10 @@ window.ZQ_CONTENT = {
   },
   // Site only: the ZENOO account box on the result screen (see submitAccount() in app.js).
   account: {
+    chooseTitle: 'MASZ JUŻ PSA O IMIENIU {name}',
+    choose: 'Czy to nowe sprawdzenie tego psa, czy inny pies o tym samym imieniu?',
+    chooseUpdate: 'AKTUALIZUJ: {name}',
+    chooseNew: 'DODAJ DRUGIEGO: {name}',
     title: 'TWOJE DARMOWE KONTO ZENOO',
     sending: 'Zapisujemy profil twojego psa ({name})…',
     sent: 'Wysłaliśmy link potwierdzający na adres {email}. Kliknij go, a założymy ci darmowe konto z panelem twojego psa ({name}): wynikiem, planem i lekcjami dobranymi specjalnie dla niego.',
@@ -251,6 +261,7 @@ window.ZQ_CONTENT = {
       // Medium, large and giant dogs (the text above is for toy and small dogs)
       heavyBig: '<p>Nadwaga zdarza się naprawdę często i narasta powoli: trochę hojniejsza porcja albo kilka przysmaków dziennie szybko się sumują. Na podstawie wybranej sylwetki idealna waga twojego psa ({name}) to około <b>{ideal} kg</b>.</p><p>U większego psa każdy kilogram ma znaczenie dla stawów i energii, a waga to jedna z rzeczy, które najłatwiej zmienić.</p>',
       thin: '<p>Na podstawie wybranej sylwetki {name} może mieć nieco za niską wagę. Idealna to około <b>{ideal} kg</b>. Niektóre psy są z natury szczupłe, więc jeśli masz wątpliwości, warto krótko skonsultować się z weterynarzem.</p>',
+      puppy: '<p>{name} wciąż rośnie, więc nie ma jeszcze docelowej wagi. Waż raz w tygodniu: waga powinna równomiernie rosnąć. Żebra powinny być łatwe do wyczucia, ale niewidoczne.</p>',
     },
     activity: { title: 'ILE RUCHU MA {NAME} W ZWYKŁY DZIEŃ?', band: 'Spacery i zabawa, wszystko razem', type: 'Głównie…' },
     slideActivity: {
@@ -317,6 +328,8 @@ window.ZQ_CONTENT = {
       carbs: 'Węglowodany', carbsText: 'Tak mało, jak się da. W toku ewolucji psy jadły ich bardzo niewiele.',
       fibre: 'Włókno', fibreText: 'Trochę (około 2–5% suchej masy) wspiera trawienie.',
       weight: 'Waga', keepWeight: 'Utrzymuj wagę około {kg} kg', aimWeight: 'Dąż powoli do około {kg} kg',
+      keep: { heavy: 'Zostaw obecne porcje i nie zwiększaj ich, dopóki {name} ma wagę powyżej idealnej. Waż co 2 tygodnie; jeśli waga nie spada, zmniejsz karmę o około 10%.', thin: 'Zostaw obecne porcje i nie zmniejszaj ich, dopóki {name} ma wagę poniżej idealnej. Waż co 2 tygodnie; jeśli waga nie rośnie, dodaj około 10%.', vet: 'Nasz szacunek (około {target} kcal dziennie) bardzo różni się od tego, ile {name} je teraz (około {intake} kcal). Zostaw obecne porcje i skonsultuj je z weterynarzem, zanim je zmienisz.' },
+      puppyGrowth: 'Wciąż rośnie: waż co tydzień, waga powinna równomiernie rosnąć do około {adult} kg w dorosłości.',
       activity: 'Aktywność',
       note: 'To punkt wyjścia, a nie recepta. Dostosowuj go, obserwując co kilka tygodni sylwetkę twojego psa ({name}).',
       emailFood: '{food}: około {grams} g dziennie', emailFoodJoin: ' · ',

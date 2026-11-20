@@ -117,6 +117,26 @@ class DogProfile
     }
 
     /**
+     * The quiz's own answers (what was tapped and typed, without the email), so "Retake the quiz"
+     * starts from this dog's answers and not whatever the browser last held.
+     */
+    public function setQuizAnswers(array $answers): static
+    {
+        unset($answers['email'], $answers['parentName'], $answers['marketing'], $answers['_step'], $answers['_payload'], $answers['labelScanTriesLeft']);
+        $json = json_encode($answers);
+        if ($json !== false && \strlen($json) <= 12000) {
+            $this->data['answers'] = $answers;
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+        return $this;
+    }
+
+    public function getQuizAnswers(): ?array
+    {
+        return \is_array($this->data['answers'] ?? null) ? $this->data['answers'] : null;
+    }
+
+    /**
      * The food this dog eats, as far as we know it: what the coach read from a label or was told
      * in the chat (saved with setFood()), else the brand read from the label in the quiz.
      *

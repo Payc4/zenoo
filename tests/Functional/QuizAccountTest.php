@@ -207,16 +207,48 @@ final class QuizAccountTest extends AppTestCase
         $this->em->remove($pip);
         $this->em->flush();
 
-        // A retake for a dog with the same name updates that dog.
-        $this->submit(['email' => 'maria@example.com', 'properties' => self::result(['quiz_dog_name' => 'bella ', 'quiz_bowl_score' => 64])]);
+        // A name already on the account (any capitals) is never overwritten: they're asked (F1).
+        $user = $this->em->getRepository(User::class)->findOneBy(['email' => 'maria@example.com']);
+        $bella = $this->em->getRepository(DogProfile::class)->findOneBy(['name' => 'Bella']);
+        $retake = self::result(['quiz_dog_name' => 'bella ', 'quiz_bowl_score' => 64]);
+        $data = $this->submit(['properties' => $retake]);
+        $this->assertSame(['status' => 'choose', 'dog' => ['id' => $bella->getId(), 'name' => 'Bella']], $data);
+        $this->em->clear();
+        $this->assertCount(2, $this->em->getRepository(DogProfile::class)->findAll(), 'nothing saved yet');
+
+        // "Update Bella" (or "Retake the quiz for Bella") saves to that dog, by its id, with its answers.
+        $this->submit(['properties' => $retake, 'dog_id' => $bella->getId(), 'answers' => ['name' => 'bella', 'breedId' => 'beagle', 'email' => 'x@example.com']]);
         $this->em->clear();
         $this->assertCount(2, $this->em->getRepository(DogProfile::class)->findAll());
-        $bella = $this->em->getRepository(DogProfile::class)->findOneBy(['name' => 'bella']) ?? $this->em->getRepository(DogProfile::class)->findOneBy(['name' => 'Bella']);
+        $bella = $this->em->getRepository(DogProfile::class)->find($bella->getId());
         $this->assertSame(64, $bella->getBowlScore());
+        $this->assertSame(['name' => 'bella', 'breedId' => 'beagle'], $bella->getQuizAnswers(), 'never the email');
+
+        // The retake starts from Bella's own answers.
+        $this->client->request('GET', '/quiz/?dog=' . $bella->getId());
+        $this->assertStringContainsString('"retake":{"id":' . $bella->getId() . ',"name":"bella","answers":{"name":"bella","breedId":"beagle"}}', $this->client->getResponse()->getContent());
+        $this->client->request('GET', '/quiz/?dog=999');
+        $this->assertStringContainsString('"retake":null', $this->client->getResponse()->getContent(), 'only their own dogs');
+
+        // "Add a second Bella" (or "+ Add another dog") always makes a new dog.
+        $this->submit(['properties' => $retake, 'new' => true]);
+        $this->em->clear();
+        $this->assertCount(3, $this->em->getRepository(DogProfile::class)->findAll());
+
+        // Someone else's dog id is refused.
+        $this->submit(['properties' => $retake, 'dog_id' => 999]);
+        $this->assertResponseStatusCodeSame(400);
+
+        // The same finished quiz sent twice (sign-in and the email link, say) is saved once.
+        $once = self::result(['quiz_dog_name' => 'Nora', 'quiz_result_id' => 'r-123']);
+        $this->submit(['properties' => $once]);
+        $this->submit(['properties' => $once]);
+        $this->em->clear();
+        $this->assertCount(1, $this->em->getRepository(DogProfile::class)->findBy(['name' => 'Nora']));
 
         // The quiz page fills in the logged-in pet parent's name and email.
         $this->client->request('GET', '/quiz/');
-        $this->assertStringContainsString('"user":{"firstName":"Maria","email":"maria@example.com"}', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('"user":{"id":' . $user->getId() . ',"firstName":"Maria","email":"maria@example.com"}', $this->client->getResponse()->getContent());
     }
 
     public function testTooManySubmissionsAndBadLinks(): void
