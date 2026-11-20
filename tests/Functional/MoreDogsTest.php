@@ -42,12 +42,11 @@ final class MoreDogsTest extends AppTestCase
         $this->client->request('POST', '/chat/send', [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $csrf], json_encode(['message' => 'How much should she eat?']));
         $profile = end(FakeClaude::$requests)['system'][1]['text'];
         $this->assertStringContainsString('Name: Bella', $profile);
-        $this->assertStringContainsString('Their other dog (each pet has its own chat; they switch pets at the top of the chat): Max (Beagle', $profile);
+        $this->assertStringContainsString('Their other dog (each pet has its own chat; they switch pets in the chat list on the left, or add one with New chat): Max (Beagle', $profile);
 
         // Max's chat: opening it from the chat selects Max.
         $crawler = $this->client->request('GET', '/chat');
-        $this->client->click($crawler->filter('.chat-menu a[href="/chat/new"]')->link());
-        $this->client->click($this->client->getCrawler()->filter('.chat-new__pet')->link());
+        $this->client->click($crawler->filter('.chat-side__newlist a.chat-side__item')->first()->link());
         $this->assertSelectorTextContains('.chat-using', 'Max');
         $this->assertSelectorTextContains('.chat-empty h1', 'Max');
         $this->client->request('GET', '/dashboard');

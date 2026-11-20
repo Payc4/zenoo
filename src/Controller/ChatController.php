@@ -57,6 +57,7 @@ class ChatController extends AbstractController
         private readonly ChatFiles $files,
         #[Autowire('%kernel.environment%')] private readonly string $environment,
         private readonly \App\Chat\ReplyGuard $guard,
+        private readonly \App\Service\DogPhotoUploader $dogPhotos,
     ) {
     }
 
@@ -102,10 +103,23 @@ class ChatController extends AbstractController
             }
         }
 
-        // The pet chats shown at the top: pets that have a chat, plus this one.
+        // The sidebar (like a chat app): one chat per pet, the newest on top, with its last line.
+        // Pets without a chat yet sit under "New chat", with "Add a new dog" (the quiz).
+        $latest = $this->conversations->latestByDog($user);
         $withChat = $this->conversations->dogIdsWithChat($user);
         $allDogs = $dogs->findAllForUser($user);
-        usort($allDogs, fn (DogProfile $a, DogProfile $b) => $a->getId() <=> $b->getId()); // tabs keep their place
+        usort($allDogs, fn (DogProfile $a, DogProfile $b) => $a->getId() <=> $b->getId());
+        $sideChats = [];
+        foreach ($allDogs as $d) {
+            if ($d === $dog || \in_array($d->getId(), $withChat, true)) {
+                $sideChats[] = ['dog' => $d, 'last' => $latest[$d->getId()] ?? null, 'photo' => $this->dogPhotos->displayUrl($d)];
+            }
+        }
+        // Newest first. The open chat with no messages yet (just started) goes to the top, an
+        // emptied one of another pet to the bottom.
+        $when = fn (array $c) => $c['last']['at'] ?? new \DateTimeImmutable($c['dog'] === $dog ? '+1 day' : '@0');
+        usort($sideChats, fn (array $a, array $b) => [$when($b), $b['last']['id'] ?? 0] <=> [$when($a), $a['last']['id'] ?? 0]);
+        $newDogs = array_values(array_filter($allDogs, fn (DogProfile $d) => $d !== $dog && !\in_array($d->getId(), $withChat, true)));
 
         // "Using Max's profile: Beagle, 15.2 kg, allergic to chicken."
         $facts = array_filter([
@@ -117,7 +131,8 @@ class ChatController extends AbstractController
         return $this->render('chat/index.html.twig', [
             'usingFacts' => implode(', ', $facts),
             'dog' => $dog,
-            'chats' => array_values(array_filter($allDogs, fn (DogProfile $d) => $d === $dog || \in_array($d->getId(), $withChat, true))),
+            'sideChats' => $sideChats,
+            'newDogs' => array_map(fn (DogProfile $d) => ['dog' => $d, 'photo' => $this->dogPhotos->displayUrl($d)], $newDogs),
             'messages' => $messages,
             'cards' => $cards,
             'cardsAreIntro' => false,

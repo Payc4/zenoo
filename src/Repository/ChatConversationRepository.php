@@ -54,6 +54,36 @@ class ChatConversationRepository extends ServiceEntityRepository
         return array_map(fn (array $r) => (int) $r['dog'], $rows);
     }
 
+    /**
+     * The chat list in the chat's sidebar: each pet's newest message (who wrote it, when, and
+     * the start of its text), newest chat first.
+     *
+     * @return array<int, array{at: \DateTimeImmutable, id: int, mine: bool, text: string}> keyed by pet id
+     */
+    public function latestByDog(User $user): array
+    {
+        $em = $this->getEntityManager();
+        $ids = $em->createQuery('SELECT MAX(m.id) FROM App\Entity\ChatMessage m JOIN m.conversation c WHERE c.user = :u AND c.dog IS NOT NULL GROUP BY c.id')
+            ->setParameter('u', $user)->getSingleColumnResult();
+        if (!$ids) {
+            return [];
+        }
+        $rows = $em->createQuery('SELECT IDENTITY(c.dog) AS dog, m.id, m.role, m.content, m.createdAt FROM App\Entity\ChatMessage m JOIN m.conversation c WHERE m.id IN (:ids) ORDER BY m.id DESC')
+            ->setParameter('ids', $ids)->getArrayResult();
+        $out = [];
+        foreach ($rows as $r) {
+            // Plain text for a one-line preview: no Markdown marks, no line breaks.
+            $text = trim((string) preg_replace(['/[*_#>`~|]+/u', '/\[([^\]]*)\]\([^)]*\)/u', '/\s+/u'], ['', '$1', ' '], (string) $r['content']));
+            $out[(int) $r['dog']] = [
+                'at' => $r['createdAt'] instanceof \DateTimeImmutable ? $r['createdAt'] : new \DateTimeImmutable((string) $r['createdAt']),
+                'id' => (int) $r['id'],
+                'mine' => $r['role'] === \App\Entity\ChatMessage::ROLE_USER,
+                'text' => mb_substr($text, 0, 90),
+            ];
+        }
+        return $out;
+    }
+
     /** The newest message in any of this person's chats (used to hold back check-in emails). */
     public function lastMessageAt(User $user): ?\DateTimeImmutable
     {

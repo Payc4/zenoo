@@ -27,7 +27,21 @@ class DogPhotoUploader
         private readonly UrlGeneratorInterface $urls,
         #[Autowire('%kernel.project_dir%/public/uploads/private/dogs')] private readonly string $dir,
         #[Autowire('%kernel.project_dir%/public/uploads/dogs')] private readonly string $legacyDir,
+        #[Autowire('%kernel.project_dir%')] private readonly string $projectDir = '',
     ) {
+    }
+
+    /** The picture to show for the dog: its own photo, else the quiz's breed photo, else null. */
+    public function displayUrl(DogProfile $dog): ?string
+    {
+        if ($own = $this->url($dog)) {
+            return $own;
+        }
+        if (preg_match('/zq-email-([a-z0-9-]+)\.jpg$/', (string) $dog->get('breed_photo_url', ''), $m)
+            && is_file($this->projectDir . '/public/quiz/assets/photos/' . $m[1] . '.jpg')) {
+            return '/quiz/assets/photos/' . $m[1] . '.jpg';
+        }
+        return null;
     }
 
     /** The owner's URL for the photo (signed-in route), or null when the dog has none. */

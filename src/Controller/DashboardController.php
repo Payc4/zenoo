@@ -359,14 +359,7 @@ final class DashboardController extends AbstractController
     /** The dog's own photo, else the quiz's breed photo (public/quiz/assets/photos), matched from the email photo URL. */
     private function photo(DogProfile $dog): ?string
     {
-        if ($own = $this->dogPhotos->url($dog)) {
-            return $own;
-        }
-        if (preg_match('/zq-email-([a-z0-9-]+)\.jpg$/', (string) $dog->get('breed_photo_url', ''), $m)
-            && is_file($this->projectDir . '/public/quiz/assets/photos/' . $m[1] . '.jpg')) {
-            return '/quiz/assets/photos/' . $m[1] . '.jpg';
-        }
-        return null;
+        return $this->dogPhotos->displayUrl($dog);
     }
 
     /**

@@ -575,3 +575,22 @@ export function render(md) {
   }
   return html.join('\n');
 }
+
+// The chats sidebar is a drawer on phones: opened from the chat bar, closed with ×, the dimmed
+// background or Escape. Focus moves into it and back to the button.
+(() => {
+  const side = document.getElementById('chat-side');
+  const toggle = document.querySelector('[data-side-toggle]');
+  const backdrop = document.querySelector('.chat-side__backdrop');
+  if (!side || !toggle) return;
+  const open = (yes) => {
+    side.classList.toggle('is-open', yes);
+    toggle.setAttribute('aria-expanded', String(yes));
+    if (backdrop) backdrop.hidden = !yes;
+    if (yes) (side.querySelector('.chat-side__item.is-on') || side.querySelector('a, summary'))?.focus();
+    else toggle.focus();
+  };
+  toggle.addEventListener('click', () => open(!side.classList.contains('is-open')));
+  document.querySelectorAll('[data-side-close]').forEach((el) => el.addEventListener('click', () => open(false)));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && side.classList.contains('is-open')) open(false); });
+})();

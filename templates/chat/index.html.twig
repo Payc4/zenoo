@@ -6,7 +6,13 @@
 {% block importmap %}{{ importmap(['app', 'chat']) }}{% endblock %}
 {% block footer %}{% endblock %}
 
+{% macro avatar(dog, photo) %}
+    {%- if photo %}<img class="chat-side__avatar" src="{{ photo }}" alt="" width="40" height="40" loading="lazy">
+    {%- else %}<span class="chat-side__avatar chat-side__avatar--letter" aria-hidden="true">{{ dog.name|first|upper }}</span>{% endif -%}
+{% endmacro %}
+
 {% block body %}
+{% import _self as ui %}
 <div class="chat-app" id="chat"
      data-send-url="{{ path('app_chat_send', {pet: dog.id}) }}"
      data-checkin-url="{{ path('app_chat_checkin', {pet: dog.id}) }}"
@@ -45,10 +51,54 @@
         sending: 'Sending…'|trans,
      }|json_encode }}">
 
+    {# The chats, like a chat app: one per dog, newest on top, with its last line. On phones it's a
+       drawer opened from the chat bar. "New chat" starts one for a dog without a chat, or adds a dog. #}
+    <aside class="chat-side" id="chat-side" aria-labelledby="chat-side-title">
+        <div class="chat-side__head">
+            <h2 class="chat-side__title" id="chat-side-title">{{ 'Chats'|trans }}</h2>
+            <button type="button" class="chat-side__close" data-side-close aria-label="{{ 'Close'|trans }}">×</button>
+        </div>
+        <details class="chat-side__new"{{ app.request.query.has('new') ? ' open' }}>
+            <summary class="chat-side__newbtn"><span aria-hidden="true">+</span> {{ 'New chat'|trans }}</summary>
+            <div class="chat-side__newlist">
+                {% if newDogs %}
+                    <p class="chat-side__label">{{ 'Start a chat about'|trans }}</p>
+                    {% for n in newDogs %}
+                        <a class="chat-side__item" href="{{ path('app_chat', {pet: n.dog.id}) }}">
+                            {{ ui.avatar(n.dog, n.photo) }}
+                            <span class="chat-side__text"><strong>{{ n.dog.name }}</strong><span class="chat-side__preview">{{ 'No chat yet'|trans }}</span></span>
+                        </a>
+                    {% endfor %}
+                {% endif %}
+                <a class="chat-side__item chat-side__add" href="{{ path('app_quiz') }}?new=1&amp;then=chat">
+                    <span class="chat-side__avatar chat-side__avatar--add" aria-hidden="true">+</span>
+                    <span class="chat-side__text"><strong>{{ 'Add a new dog'|trans }}</strong><span class="chat-side__preview">{{ 'A 3-minute quiz makes its profile'|trans }}</span></span>
+                </a>
+            </div>
+        </details>
+        <ul class="chat-side__list">
+            {% for c in sideChats %}
+                {% set on = c.dog.id == dog.id %}
+                <li><a class="chat-side__item{{ on ? ' is-on' }}" href="{{ path('app_chat', {pet: c.dog.id}) }}"{{ on ? ' aria-current="page"' }}>
+                    {{ ui.avatar(c.dog, c.photo) }}
+                    <span class="chat-side__text">
+                        <strong>{{ '%dog%’s coach'|trans({'%dog%': c.dog.name}) }}</strong>
+                        <span class="chat-side__preview">{% if c.last %}{{ c.last.mine ? 'You: %text%'|trans({'%text%': c.last.text}) : c.last.text }}{% else %}{{ 'New chat'|trans }}{% endif %}</span>
+                    </span>
+                </a></li>
+            {% endfor %}
+        </ul>
+    </aside>
+    <div class="chat-side__backdrop" data-side-close hidden></div>
+
     <section class="chat-main">
         {# Calmer header (proposal 6): which profile the coach uses, the counter only when it's
-           getting low, and the rarer actions in a menu. The dog is switched in the top bar. #}
+           getting low, and the rarer actions in a menu. Dogs are switched in the sidebar. #}
         <div class="chat-bar">
+            <button type="button" class="chat-side-toggle" data-side-toggle aria-controls="chat-side" aria-expanded="false">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                <span>{{ '%dog%’s coach'|trans({'%dog%': dog.name}) }}</span>
+            </button>
             <p class="chat-using">{{ 'Using %dog%’s profile: %facts%.'|trans({'%dog%': dog.name, '%facts%': usingFacts}) }} <a href="{{ path('app_dog_tab') }}#knows-h">{{ 'Edit'|trans }}</a></p>
             {% if not unlimited %}
                 <span class="chat-quota" id="chat-quota" {{ remaining >= 10 ? 'hidden' }} title="{{ 'Resets at %time%'|trans({'%time%': resetLabel|trans}) }}">{{ '<strong id="chat-remaining">%remaining%</strong> of %limit% messages left today'|trans({'%remaining%': remaining, '%limit%': limit})|raw }}</span>
@@ -56,7 +106,6 @@
             <details class="chat-menu">
                 <summary aria-label="{{ 'More'|trans }}">⋯</summary>
                 <div class="chat-menu__list">
-                    <a href="{{ path('app_chat_new') }}">{{ 'New chat for another dog'|trans }}</a>
                     <a class="chat-human" href="mailto:support@myzenoo.com?subject={{ 'Question for the ZENOO team'|trans|url_encode }}">{{ 'Talk to a person'|trans }}</a>
                     {% if messages|length %}
                         <form method="post" action="{{ path('app_chat_clear', {pet: dog.id}) }}" data-confirm="{{ 'Clear %dog%’s chat history? This can’t be undone.'|trans({'%dog%': dog.name}) }}">

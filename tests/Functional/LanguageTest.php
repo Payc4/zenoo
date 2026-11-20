@@ -150,7 +150,7 @@ final class LanguageTest extends AppTestCase
         $this->assertStringContainsString('"sendToKlaviyo":false', $this->client->getResponse()->getContent(), 'no LT Klaviyo account set');
 
         $crawler = $this->client->request('GET', '/chat');
-        $this->assertSelectorTextContains('.chat-menu', 'Naujas pokalbis kitam šuniui');
+        $this->assertSelectorTextContains('.chat-side__newbtn', 'Naujas pokalbis');
         $this->assertStringContainsString('Praleisti', $crawler->filter('#chat')->attr('data-i18n'));
 
         $crawler = $this->client->request('GET', '/account');

@@ -225,7 +225,7 @@ class CourseKnowledge
         // Other dogs in the household (roadmap 07): the chat is about the selected one.
         $others = array_values(array_filter($this->dogs->findAllForUser($user), fn ($d) => $d->getId() !== $dog->getId()));
         if ($others) {
-            $lines[] = '- Their other dog' . (\count($others) > 1 ? 's' : '') . ' (each pet has its own chat; they switch pets at the top of the chat): '
+            $lines[] = '- Their other dog' . (\count($others) > 1 ? 's' : '') . ' (each pet has its own chat; they switch pets in the chat list on the left, or add one with New chat): '
                 . implode('; ', array_map(fn ($d) => $d->getName() . ' (' . ($d->get('breed') ?: 'breed not given') . ', ' . ($d->get('age_years') !== null ? $d->get('age_years') . ' years' : 'age not given') . ', Bowl Score ' . $d->getBowlScore() . ')', $others))
                 . '. Everything above is about ' . $dog->getName() . '; if they ask about another dog, say this chat is about ' . $dog->getName() . ' and suggest opening that dog\'s chat at the top.';
         }

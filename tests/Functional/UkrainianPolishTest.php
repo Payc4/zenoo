@@ -132,8 +132,9 @@ final class UkrainianPolishTest extends AppTestCase
 
         // Chat: the pet's chat in this language, and the instruction to answer in it.
         $this->client->request('GET', '/chat');
-        $this->assertSelectorTextContains('.chat-menu', $this->t('New chat for another dog', $l));
-        $this->assertNotSame('New chat for another dog', $this->t('New chat for another dog', $l));
+        $this->assertSelectorTextContains('.chat-side__newbtn', $this->t('New chat', $l));
+        $this->assertNotSame('New chat', $this->t('New chat', $l));
+        $this->assertSelectorTextContains('.chat-side__list', $this->t('%dog%’s coach', $l, ['%dog%' => 'Bella']));
         $this->assertStringContainsString('reply in ' . Locale::ENGLISH_NAMES[$l], static::getContainer()->get(CourseKnowledge::class)->language($user));
 
         // Emails (SMTP in tests) in the account's language.

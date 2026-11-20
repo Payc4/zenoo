@@ -108,7 +108,10 @@ class ChatTest extends AppTestCase
         $crawler = $this->client->request('GET', '/chat');
         $this->assertCount(4, $crawler->filter('.chat-msg'));
         $this->assertSelectorTextContains('.chat-using', 'Using Bella’s profile');
-        $this->assertSelectorExists('.chat-menu a[href="/chat/new"]');
+        // The sidebar lists Bella's chat; Max (no chat yet) is offered under New chat, with a new dog.
+        $this->assertSame(['Bella’s coach'], $crawler->filter('.chat-side__list .chat-side__item strong')->each(fn ($n) => $n->text()));
+        $this->assertSame('Hello! Weigh the food.', $crawler->filter('.chat-side__item.is-on .chat-side__preview')->text(), 'the last line, without Markdown');
+        $this->assertSame(['/chat?pet=' . $max->getId(), '/quiz/?new=1&then=chat'], $crawler->filter('.chat-side__newlist a')->each(fn ($a) => $a->attr('href')));
 
         // New chat offers Max (no chat yet), not Bella, plus a new pet through the quiz.
         $crawler = $this->client->request('GET', '/chat/new');
@@ -127,7 +130,11 @@ class ChatTest extends AppTestCase
         $this->assertSame([['role' => 'user', 'content' => 'About Max']], FakeClaude::$requests[2]['messages'], 'Bella’s chat isn’t mixed in');
         $this->assertStringContainsString('Name: Max', FakeClaude::$requests[2]['system'][1]['text'], 'the coach gets Max’s profile');
 
-        // Both pets now have a chat: New chat only offers a new pet.
+        // Both pets now have a chat: the sidebar lists both (Max's newest first), New chat only offers a new dog.
+        $crawler = $this->client->request('GET', '/chat?pet=' . $max->getId());
+        $this->assertSame(['Max’s coach', 'Bella’s coach'], $crawler->filter('.chat-side__list .chat-side__item strong')->each(fn ($n) => $n->text()));
+        $this->assertNotSame('New chat', $crawler->filter('.chat-side__item.is-on .chat-side__preview')->text());
+        $this->assertSame(['/quiz/?new=1&then=chat'], $crawler->filter('.chat-side__newlist a')->each(fn ($a) => $a->attr('href')));
         $crawler = $this->client->request('GET', '/chat/new');
         $this->assertCount(0, $crawler->filter('.chat-new__pet'));
         $this->assertSelectorTextContains('.dog-switch summary', 'Max', 'the top-bar switcher shows the chat’s dog');
