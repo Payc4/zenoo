@@ -678,7 +678,12 @@ ${backOnly()}`,
       if (cur.valid && !cur.valid()) { showWhy(cur); return; }
       goNext();
     } else if (t.dataset.action === 'back') { clearTimeout(autoTimer); step = Math.max(0, step - 1); render(); }
-    else if (t.dataset.action === 'scanLabel') { document.getElementById('zq-scanfile')?.click(); }
+    else if (t.dataset.action === 'scanLabel') {
+      // The shared picker: the camera straight away on a phone; a file, the webcam or the phone
+      // (QR code) on a computer (public/photo-picker.js). Without it, the plain file input.
+      if (window.ZenooPhoto) window.ZenooPhoto.pick({ max: 1, direct: true, title: U.label.scan.button }).then(([f]) => { if (f) scanLabel(f); });
+      else document.getElementById('zq-scanfile')?.click();
+    }
     else if (t.dataset.action === 'skipLabel') { a.labelSkipped = true; step += 1; render(); }
     else if (t.dataset.action === 'restart') {
       // Start again, same dog or not: keep who's signed in and which dog this was for (N3).

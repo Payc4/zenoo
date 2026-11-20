@@ -3,12 +3,21 @@
  */
 import './styles/dashboard.css';
 
-// Dog photo: the form goes off as soon as a photo is picked.
+// Dog photo: the form goes off as soon as a photo is picked. The camera button opens the shared
+// picker (public/photo-picker.js: camera on a phone; file, webcam or phone QR on a computer).
 document.querySelectorAll('[data-photo-form] input[type=file]').forEach((input) => {
-  input.addEventListener('change', () => {
-    if (!input.files.length) return;
-    input.closest('form').classList.add('is-sending');
-    input.closest('form').submit();
+  const form = input.closest('form');
+  const send = () => { form.classList.add('is-sending'); form.submit(); };
+  input.addEventListener('change', () => { if (input.files.length) send(); });
+  input.closest('label')?.addEventListener('click', async (e) => {
+    if (!window.ZenooPhoto || e.target === input) return;
+    e.preventDefault();
+    const [file] = await window.ZenooPhoto.pick({ max: 1, title: input.closest('label').title });
+    if (!file) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    send();
   });
 });
 

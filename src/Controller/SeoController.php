@@ -17,7 +17,7 @@ final class SeoController extends AbstractController
     public function robots(): Response
     {
         $body = "User-agent: *\n"
-            . "Disallow: /admin\nDisallow: /account\nDisallow: /dashboard\nDisallow: /chat/\nDisallow: /courses/\nDisallow: /s/\nDisallow: /quiz/confirm\nDisallow: /login\nDisallow: /register\nDisallow: /reset-password\n\n"
+            . "Disallow: /admin\nDisallow: /account\nDisallow: /dashboard\nDisallow: /chat/\nDisallow: /courses/\nDisallow: /s/\nDisallow: /p/\nDisallow: /photo-handoff\nDisallow: /quiz/confirm\nDisallow: /login\nDisallow: /register\nDisallow: /reset-password\n\n"
             . 'Sitemap: ' . $this->generateUrl('app_sitemap', [], UrlGeneratorInterface::ABSOLUTE_URL) . "\n";
         return new Response($body, 200, ['Content-Type' => 'text/plain; charset=utf-8']);
     }

@@ -13,6 +13,7 @@
 {% set stages = {puppy: 'Puppy', adult: 'Adult', senior: 'Senior'} %}
 
 {% block body %}
+{{ include('_photo_picker.html.twig') }}
 <section class="dash-head">
   <div class="wrap dash-head__in">
     <form class="dash-photo-wrap" method="post" action="{{ path('app_dog_photo') }}" enctype="multipart/form-data" data-photo-form>

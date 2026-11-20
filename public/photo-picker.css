@@ -1,0 +1,51 @@
+/* The shared photo picker (public/photo-picker.js) and the phone page of "Send from your phone".
+   Works on the site (app.css) and on the quiz (its own styles), so it carries its own colours. */
+.znp { --znp-forest: #445942; --znp-muted: #5c6b5b; --znp-sun: #f7a223; --znp-on-sun: #2f3f2e; --znp-line: rgba(68, 89, 66, .16);
+  width: min(460px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 0; border-radius: 22px; color: var(--znp-forest);
+  background: #fff; box-shadow: 0 20px 60px rgba(0, 0, 0, .25); font-family: Inter, system-ui, sans-serif; overflow: auto; }
+.znp::backdrop { background: rgba(20, 30, 20, .45); }
+.znp__head { display: flex; align-items: center; gap: 4px; padding: 10px 10px 0 18px; }
+.znp__title { flex: 1; margin: 0; font: 800 19px/1.25 "Inter Tight", Inter, system-ui, sans-serif; text-transform: none; letter-spacing: 0; }
+.znp__back { margin-left: -12px; }
+.znp__close, .znp__back { flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--znp-forest); font: 400 28px/1 system-ui, sans-serif; cursor: pointer; }
+.znp__close:hover, .znp__back:hover { background: #eef2ed; }
+.znp__back[hidden] { display: none; }
+.znp__body { padding: 8px 18px 20px; display: grid; gap: 8px; }
+.znp__opt { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; padding: 10px 14px; border: 1.5px solid var(--znp-line); border-radius: 16px; background: #fff; color: var(--znp-forest); font: 600 16px/1.3 Inter, system-ui, sans-serif; text-align: left; cursor: pointer; }
+.znp__opt:hover { border-color: var(--znp-forest); }
+.znp__opt:focus-visible, .znp__btn:focus-visible, .znp__close:focus-visible, .znp__back:focus-visible { outline: 3px solid var(--znp-sun); outline-offset: 2px; }
+.znp__icon { font-size: 22px; width: 28px; text-align: center; }
+.znp__hint { margin: 0 0 4px; color: var(--znp-muted); font-size: 14.5px; line-height: 1.45; }
+.znp__status { margin: 4px 0 0; font-size: 15px; font-weight: 600; text-align: center; }
+.znp__status:empty { display: none; }
+.znp__status.is-error { color: #a3261c; }
+.znp__frame { position: relative; border-radius: 16px; overflow: hidden; background: #1d241c; aspect-ratio: 4 / 3; }
+.znp__video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.znp__video[hidden] { display: none; }
+.znp__actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 6px; }
+.znp__actions:empty { display: none; }
+.znp__btn { min-height: 48px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--znp-sun); color: var(--znp-on-sun); font: 700 16px "Inter Tight", Inter, system-ui, sans-serif; cursor: pointer; }
+.znp__btn:hover { background: #d9860c; }
+.znp__btn--quiet { background: #eef2ed; color: var(--znp-forest); }
+.znp__btn--quiet:hover { background: #dde5dc; }
+.znp__btn[hidden] { display: none; }
+.znp__qr { width: min(240px, 70vw); margin: 4px auto; padding: 8px; background: #fff; border: 1.5px solid var(--znp-line); border-radius: 16px; }
+.znp__qr[hidden] { display: none; }
+.znp__qr svg { display: block; width: 100%; height: auto; }
+.znp__thumbs, .handoff__thumbs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.znp__thumbs img, .handoff__thumbs img { width: 88px; height: 88px; object-fit: cover; border-radius: 12px; }
+@media (max-width: 560px) {
+  .znp { width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: 22px 22px 0 0; padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* The phone page (templates/handoff/phone.html.twig) */
+.handoff { max-width: 440px; margin: 32px auto 48px; padding: 0 20px; text-align: center; display: grid; gap: 14px; justify-items: center; }
+.handoff > img { border-radius: 14px; }
+.handoff h1 { margin: 0; }
+.handoff__lead { margin: 0; color: #5c6b5b; font-size: 17px; }
+.handoff__take { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; font-size: 19px; cursor: pointer; }
+.handoff__take[hidden], .handoff__gallery[hidden] { display: none; }
+.handoff__gallery { min-height: 44px; display: inline-flex; align-items: center; color: #445942; text-decoration: underline; cursor: pointer; font-weight: 600; }
+.handoff__status { margin: 0; font-weight: 700; font-size: 17px; }
+.handoff__status.is-error { color: #a3261c; }
+.handoff.is-busy .handoff__take { opacity: .6; pointer-events: none; }

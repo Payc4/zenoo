@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{# The page the QR code opens on the phone (App\Controller\PhotoHandoffController::phone).
+   "Take a photo" opens the camera straight away; each photo is shrunk and sent to the computer. #}
+{% block title %}{{ 'Send a photo to your computer'|trans }} · ZENOO{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block body_class %}handoff-page{% endblock %}
+{% block footer %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/photo-picker.css"><script src="/js/handoff-phone.js" defer></script>{% endblock %}
+
+{% block body %}
+<section class="handoff" id="handoff"
+    {% if handoff %}data-upload-url="{{ uploadUrl }}" data-max="{{ handoff.maxFiles }}" data-sent="{{ sent }}"{% endif %}
+    data-i18n="{{ {
+        sending: 'Sending…'|trans,
+        sent: 'Sent! It’s on your computer now.'|trans,
+        sentAll: 'All done. You can close this page and carry on on your computer.'|trans,
+        another: 'Take another photo'|trans,
+        error: 'Something went wrong. Please try again.'|trans,
+    }|json_encode }}">
+    <img src="/apple-touch-icon.png" alt="" width="56" height="56">
+    {% if handoff %}
+        <h1>{{ 'Take the photo with your phone'|trans }}</h1>
+        <p class="handoff__lead">{{ 'It appears on your computer straight away.'|trans }}</p>
+        <label class="btn handoff__take" id="handoff-take">
+            <span aria-hidden="true">📷</span> <span data-take-text>{{ 'Take a photo'|trans }}</span>
+            <input type="file" accept="image/*" capture="environment" hidden>
+        </label>
+        <label class="handoff__gallery">
+            {{ 'or choose one from your photos'|trans }}
+            <input type="file" accept="image/*" hidden>
+        </label>
+        <p class="handoff__status" id="handoff-status" role="status" aria-live="polite"></p>
+        <div class="handoff__thumbs" id="handoff-thumbs"></div>
+    {% else %}
+        <h1>{{ 'This link has ended'|trans }}</h1>
+        <p class="handoff__lead">{{ 'Make a new QR code on your computer: choose “Send from your phone” again.'|trans }}</p>
+    {% endif %}
+</section>
+{% endblock %}

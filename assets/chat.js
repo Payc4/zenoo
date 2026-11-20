@@ -153,7 +153,21 @@ if (app) {
     input.focus();
   };
 
-  document.querySelectorAll('[data-attach]').forEach((b) => b.addEventListener('click', () => { if (!input.disabled) fileInput.click(); }));
+  // Photos go through the shared picker (public/photo-picker.js): on a phone the camera opens
+  // ("Snap the food label" opens it straight away); on a computer: a file, the webcam, or the phone
+  // through a QR code. Without it, the plain file input.
+  document.querySelectorAll('[data-attach]').forEach((b) => b.addEventListener('click', async () => {
+    if (input.disabled) return;
+    const room = maxFiles - pendingFiles.length;
+    if (room <= 0) { limitNote.textContent = t('tooManyFiles', `You can send up to ${maxFiles} files at a time.`); return; }
+    if (!window.ZenooPhoto) { fileInput.click(); return; }
+    const label = b.dataset.attach === 'label';
+    const files = await window.ZenooPhoto.pick({
+      max: label ? 1 : room, pdf: !label, direct: label,
+      title: label ? t('labelTitle', 'Snap the food label') : t('photoTitle', 'Add a photo or PDF'),
+    });
+    if (files.length) addFiles(files);
+  }));
   fileInput?.addEventListener('change', () => { addFiles([...fileInput.files]); fileInput.value = ''; });
   if (app.dataset.attachHint === 'true') $('chat-attach')?.classList.add('is-pulsing');
 

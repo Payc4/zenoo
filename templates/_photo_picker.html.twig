@@ -1,0 +1,35 @@
+{# The shared photo picker (public/photo-picker.js): on phones "Take a photo" opens the camera;
+   on computers: choose a file, use the webcam, or send a photo from the phone with a QR code.
+   Include it on pages that take photos (chat, the dog's tab, the quiz's label scan). #}
+<link rel="stylesheet" href="/photo-picker.css">
+<script type="application/json" id="zn-photo-config">{{ {
+    createUrl: path('app_handoff_create'),
+    qrScript: '/js/qrcode.js',
+    i18n: {
+        title: 'Add a photo'|trans,
+        close: 'Close'|trans,
+        back: 'Back'|trans,
+        take: 'Take a photo'|trans,
+        choosePhone: 'Choose from your photos'|trans,
+        choosePhonePdf: 'Choose a photo or PDF'|trans,
+        choose: 'Choose a file on this computer'|trans,
+        webcam: 'Use this computer’s camera'|trans,
+        phone: 'Send from your phone'|trans,
+        phoneHint: 'Scan the code with your phone’s camera. It opens a page where you take the photo, and it appears here.'|trans,
+        waiting: 'Waiting for your phone…'|trans,
+        got: 'Got it!'|trans,
+        use: 'Use these photos'|trans,
+        expired: 'This code has ended.'|trans,
+        newCode: 'Make a new code'|trans,
+        starting: 'Starting the camera…'|trans,
+        snap: 'Take the photo'|trans,
+        retake: 'Retake'|trans,
+        usePhoto: 'Use this photo'|trans,
+        switchCam: 'Switch camera'|trans,
+        camBlocked: 'Camera access is blocked. Allow it in your browser’s address bar, or choose a file instead.'|trans,
+        noCam: 'No camera was found on this computer.'|trans,
+        error: 'Something went wrong. Please try again.'|trans,
+        webcamHint: 'Hold the label flat and close, in good light.'|trans,
+    },
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }}</script>
+<script src="/photo-picker.js" defer></script>

@@ -13,6 +13,7 @@
 
 {% block body %}
 {% import _self as ui %}
+{{ include('_photo_picker.html.twig') }}
 <div class="chat-app" id="chat"
      data-send-url="{{ path('app_chat_send', {pet: dog.id}) }}"
      data-checkin-url="{{ path('app_chat_checkin', {pet: dog.id}) }}"
@@ -49,6 +50,8 @@
         pdfTooBig: 'That file is too large. PDFs can be up to 8 MB.'|trans,
         photoAlt: 'Photo you sent'|trans,
         sending: 'Sending…'|trans,
+        labelTitle: 'Snap the food label'|trans,
+        photoTitle: 'Add a photo or PDF'|trans,
      }|json_encode }}">
 
     {# The chats, like a chat app: one per dog, newest on top, with its last line. On phones it's a
@@ -138,7 +141,7 @@
                             <div class="chat-onboard" id="chat-onboard">
                                 <p class="chat-onboard__title">{{ 'Let’s start with what %dog% eats.'|trans({'%dog%': dog.name}) }}</p>
                                 <p class="chat-muted">{{ 'Snap a photo of the food label (or a screenshot from the shop), or just type the food’s name. I’ll check it and tell you how it fits %dog%.'|trans({'%dog%': dog.name}) }}</p>
-                                <button type="button" class="btn chat-onboard__btn" data-attach>{{ '📷 Snap the food label'|trans }}</button>
+                                <button type="button" class="btn chat-onboard__btn" data-attach="label">{{ '📷 Snap the food label'|trans }}</button>
                             </div>
                         {% endif %}
                         {% if cardsAreIntro and configured %}
