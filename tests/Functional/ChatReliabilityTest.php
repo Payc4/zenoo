@@ -150,7 +150,7 @@ final class ChatReliabilityTest extends AppTestCase
         // Retaking the quiz keeps what the coach learned; the dashboard shows it.
         $dog->fillFromQuiz(QuizAccountTest::result(), 'en');
         $this->em->flush();
-        $this->client->request('GET', '/dashboard');
+        $this->client->request('GET', '/dashboard/dog');
         $this->assertSelectorTextContains('.dash-knows', 'Itching stopped after the food switch');
         $this->assertSelectorTextContains('.dash-facts', '31.5 kg');
     }
@@ -257,7 +257,7 @@ final class ChatReliabilityTest extends AppTestCase
     public function testTheOwnerCanAddAndRemoveFacts(): void
     {
         $this->userWithDog();
-        $crawler = $this->client->request('GET', '/dashboard');
+        $crawler = $this->client->request('GET', '/dashboard/dog');
         $form = $crawler->filter('.dash-knows__add')->form(['text' => 'Allergic to chicken']);
         $this->client->submit($form);
         $crawler = $this->client->followRedirect();
@@ -268,7 +268,7 @@ final class ChatReliabilityTest extends AppTestCase
         $this->send('What treats are OK?');
         $this->assertStringContainsString('added by the pet parent] Allergic to chicken', FakeClaude::$requests[0]['system'][1]['text']);
 
-        $crawler = $this->client->request('GET', '/dashboard');
+        $crawler = $this->client->request('GET', '/dashboard/dog');
         $this->client->submit($crawler->filter('.dash-knows__remove')->first()->selectButton('×')->form());
         $this->client->followRedirect();
         $this->assertSelectorTextNotContains('.dash-knows', 'Allergic to chicken');

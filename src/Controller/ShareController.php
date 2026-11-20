@@ -41,7 +41,7 @@ final class ShareController extends AbstractController
             $request->request->getBoolean('stop') ? $dog->stopSharing() : $dog->startSharing();
             $this->em->flush();
         }
-        return $this->redirect($this->generateUrl('app_dashboard') . '#share-h');
+        return $this->redirect($this->generateUrl('app_dog_tab') . '#share-h');
     }
 
     #[Route('/s/{code}', name: 'app_share', requirements: ['code' => '[a-f0-9]{12}'], methods: ['GET'])]

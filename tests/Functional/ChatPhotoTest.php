@@ -166,10 +166,12 @@ final class ChatPhotoTest extends AppTestCase
         $this->assertSelectorTextContains('#chat-onboard', 'Let’s start with what Bella eats.');
         $this->assertStringContainsString('Food brand: not known yet', static::getContainer()->get(\App\Chat\CourseKnowledge::class)->dog($this->dog()->getUser()));
 
-        $dash = $this->client->request('GET', '/dashboard');
-        $this->assertSelectorTextContains('.dash-finish', 'Finish Bella’s profile');
-        $this->assertSelectorExists('.dash-coach__photo[href="/chat?photo=1"]');
-        $form = $dash->filter('.dash-steps form')->form();
+        // Today's next step is the food; the photo is added on the dog's tab.
+        $this->client->request('GET', '/dashboard');
+        $this->assertSelectorTextContains('.today-next', 'Show the coach what Bella eats');
+        $this->assertSelectorExists('.today-next a[href="/chat?photo=1"]');
+        $dash = $this->client->request('GET', '/dashboard/dog');
+        $form = $dash->filter('form[data-photo-form]')->form();
         $form['photo']->upload($this->image('bella.png', 1200, 800)->getPathname());
         $this->client->submit($form);
         $this->client->followRedirect();

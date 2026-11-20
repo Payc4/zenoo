@@ -162,3 +162,89 @@
 .dash-remove-dog { margin-top: 12px; }
 .dash-remove-dog button { border: 0; background: none; padding: 0; font: inherit; font-size: 13px; color: #8f2f1f; text-decoration: underline; cursor: pointer; }
 @media (max-width: 700px) { .dash-head__actions { align-items: flex-start; } }
+
+/* ---------- Today (test report proposal 2) ---------- */
+.today-head { background: var(--forest); color: var(--white); padding: 24px 0 26px; }
+.today-head h1 { color: var(--white); margin: 0 0 14px; }
+.today-head .kicker { color: var(--label-on-dark); margin-bottom: 6px; }
+.today-score { display: inline-flex; align-items: center; gap: 14px; color: var(--white); text-decoration: none; }
+.today-score u { color: var(--label-on-dark); font-size: 14px; }
+.today-score__ring { --p: 0; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: conic-gradient(var(--sun) calc(var(--p) * 1%), rgba(255,255,255,.18) 0); }
+.today-score__ring span { width: 44px; height: 44px; border-radius: 50%; background: var(--forest); display: grid; place-items: center; font: 800 18px var(--font-display); }
+.today { display: grid; gap: 14px; padding-top: 16px; padding-bottom: 32px; max-width: 720px; }
+.today .card { margin: 0; }
+.today-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.today-row h2 { margin: 0; }
+.today-notice { margin: 0; font-size: 15px; }
+.today-next { border: 2px solid var(--sun); }
+.today-next h2 { margin: 2px 0 6px; }
+.today-next .kicker { margin-bottom: 4px; }
+.today-next .btn { margin-top: 10px; }
+.today-bowl .kicker { margin: 0; }
+.today-bowl__food { font: 800 20px/1.3 var(--font-display); margin: 8px 0 4px; }
+.today-bowl p.muted { margin: 0; }
+.today-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.today-tile { display: grid; gap: 2px; padding: 12px 14px; border-radius: 14px; background: var(--cream); border: 1.5px solid transparent; }
+.today-tile.is-new { border-color: var(--forest); }
+.today-tile__label { font: 800 12px var(--font-display); text-transform: uppercase; letter-spacing: .05em; color: var(--ink-muted); }
+.today-tile strong { font: 800 22px var(--font-display); }
+.today-tile .muted { font-size: 13px; }
+.today-undo { display: flex; align-items: center; gap: 4px; font-size: 13px; margin: 0; }
+.today-undo button { border: 0; background: none; padding: 0; font: inherit; text-decoration: underline; color: var(--forest); cursor: pointer; min-height: 32px; }
+.today-coach .kicker { color: var(--label-on-dark); }
+.today-ask { display: flex; align-items: center; gap: 8px; background: var(--white); border-radius: var(--radius-pill); padding: 4px 4px 4px 16px; }
+.today-ask input { flex: 1; border: 0; background: none; min-height: 44px; font: inherit; color: var(--forest); outline: none; }
+.today-ask button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--sun); color: var(--on-sun); font-size: 20px; font-weight: 800; cursor: pointer; }
+.today-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+/* The log sheet and the remove confirmation */
+.log-sheet { border: 0; border-radius: 22px; padding: 22px; width: min(560px, calc(100vw - 24px)); max-height: 90vh; color: var(--forest); }
+.log-sheet::backdrop { background: rgba(47, 63, 46, .55); }
+@media (max-width: 899.98px) { .log-sheet { margin: auto 0 0; width: 100vw; max-width: 100vw; border-radius: 22px 22px 0 0; } }
+.log-sheet h2 { margin: 0; }
+.log-sheet__close { width: 44px; height: 44px; border: 0; background: none; font-size: 28px; cursor: pointer; color: var(--forest); }
+.log-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; margin: 14px 0; border-radius: var(--radius-pill); background: var(--cream); }
+.log-tabs button { min-height: 44px; border: 0; border-radius: var(--radius-pill); background: none; font: 600 14px var(--font-sans); color: var(--forest); cursor: pointer; }
+.log-tabs button[aria-selected="true"] { background: var(--forest); color: var(--white); }
+.log-panel { display: grid; gap: 10px; }
+.log-panel label[for] , .log-q { font-weight: 700; margin: 0; }
+.log-weight { display: flex; align-items: center; gap: 8px; }
+.log-weight input { flex: 1; min-height: 48px; font-size: 20px; }
+.log-shapes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.log-shape { display: grid; justify-items: center; gap: 4px; padding: 8px 2px; border: 1.5px solid var(--line); border-radius: 12px; cursor: pointer; font-size: 12px; text-align: center; color: var(--forest-600); }
+.log-shape svg { width: 30px; height: 50px; }
+.log-shape input, .log-scale input { position: absolute; opacity: 0; pointer-events: none; }
+.log-shape:has(input:checked) { border-color: var(--forest); background: var(--mist); color: var(--forest); font-weight: 700; }
+.log-scale { display: flex; flex-wrap: wrap; gap: 6px; }
+.log-scale label { position: relative; }
+.log-scale span { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--line); font-weight: 700; cursor: pointer; }
+.log-scale input:checked + span { background: var(--forest); color: var(--white); border-color: var(--forest); }
+.log-scale input:focus-visible + span, .log-shape:has(input:focus-visible) { outline: 3px solid var(--sun); outline-offset: 2px; }
+.btn-danger-outline { background: transparent; color: var(--danger); box-shadow: inset 0 0 0 2px var(--danger); margin-top: 10px; }
+.btn-danger-outline:hover { background: var(--danger); color: var(--white); }
+
+/* ---------- The dog's tab (proposal 3) ---------- */
+.dog-tab { display: grid; gap: 14px; padding-top: 16px; padding-bottom: 32px; max-width: 720px; }
+.dog-tab .card { margin: 0; }
+.dog-score__row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.dog-score__band { margin: 4px 0 0; font-weight: 700; }
+.dog-score__chart { width: 170px; height: 74px; color: var(--forest); }
+.dog-score__chart text { fill: var(--forest); font-weight: 700; }
+.dog-breakdown summary { min-height: 44px; display: inline-flex; align-items: center; text-decoration: underline; cursor: pointer; }
+.dog-breakdown[open] { flex-basis: 100%; }
+.dog-fixes { margin: 12px 0 0; padding-left: 20px; }
+.dog-trend { padding: 10px 0; border-top: 1px solid var(--line); }
+.dog-trend:first-of-type { border-top: 0; }
+.dog-list { padding: 4px 18px; }
+.dog-list > details, .dog-list__row { border-top: 1px solid var(--line); }
+.dog-list > :first-child { border-top: 0; }
+.dog-list summary, .dog-list__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; list-style: none; cursor: pointer; color: var(--forest); text-decoration: none; font-weight: 600; }
+.dog-list summary::-webkit-details-marker { display: none; }
+.dog-list details[open] { padding-bottom: 14px; }
+.dog-remove { text-align: center; padding: 20px 0 8px; }
+.dog-remove p { margin: 4px 0 0; }
+.today-bowl__note { margin: 0 0 6px; font-size: 14px; }
+.log-panel[hidden] { display: none; }
+.log-tabs button { font-size: 13px; padding: 0 4px; }
+.today-head .wrap { max-width: 720px; }

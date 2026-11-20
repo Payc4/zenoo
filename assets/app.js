@@ -32,19 +32,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'password-toggle';
-    btn.textContent = 'Show';
-    btn.setAttribute('aria-label', 'Show password');
+    // Translated labels when the page gives them (data-show / data-hide on the input).
+    const label = (shown) => (shown ? input.dataset.hide || 'Hide' : input.dataset.show || 'Show');
+    btn.textContent = label(false);
+    btn.setAttribute('aria-pressed', 'false');
     btn.addEventListener('click', () => {
       const show = input.type === 'password';
       input.type = show ? 'text' : 'password';
-      btn.textContent = show ? 'Hide' : 'Show';
-      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      btn.textContent = label(show);
+      btn.setAttribute('aria-pressed', String(show));
     });
     wrap.appendChild(btn);
   });
 
   // Login tabs: password / email link
-  const tabs = document.querySelectorAll('[role="tab"]');
+  const tabs = document.querySelectorAll('[role="tab"][aria-controls]');
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => {
       tabs.forEach((t) => {
@@ -73,21 +75,3 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// "Show" toggle on password fields (sign-up asks for the password once).
-document.querySelectorAll('input[data-show-password]').forEach((input) => {
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'password-toggle';
-  btn.textContent = input.dataset.show || 'Show';
-  btn.setAttribute('aria-pressed', 'false');
-  btn.addEventListener('click', () => {
-    const show = input.type === 'password';
-    input.type = show ? 'text' : 'password';
-    btn.textContent = show ? (input.dataset.hide || 'Hide') : (input.dataset.show || 'Show');
-    btn.setAttribute('aria-pressed', String(show));
-  });
-  const wrap = document.createElement('div');
-  wrap.className = 'password-wrap';
-  input.parentNode.insertBefore(wrap, input);
-  wrap.append(input, btn);
-});

@@ -107,7 +107,15 @@ class ChatController extends AbstractController
         $allDogs = $dogs->findAllForUser($user);
         usort($allDogs, fn (DogProfile $a, DogProfile $b) => $a->getId() <=> $b->getId()); // tabs keep their place
 
+        // "Using Max's profile: Beagle, 15.2 kg, allergic to chicken."
+        $facts = array_filter([
+            $dog->get('breed') === 'mixed' ? $this->translator->trans('Mixed breed') : $dog->get('breed'),
+            ($w = $dog->latestLog('weight')['v'] ?? $dog->get('weight_kg')) ? str_replace('.', \App\Locale::decimalSeparator($request->getLocale()), (string) $w) . ' kg' : null,
+            ...\array_slice(\App\Chat\ReplyGuard::rules($dog), 0, 2),
+        ]);
+
         return $this->render('chat/index.html.twig', [
+            'usingFacts' => implode(', ', $facts),
             'dog' => $dog,
             'chats' => array_values(array_filter($allDogs, fn (DogProfile $d) => $d === $dog || \in_array($d->getId(), $withChat, true))),
             'messages' => $messages,

@@ -25,8 +25,8 @@ class AccountTest extends AppTestCase
         $this->assertNotSame('Password123', $user->getPassword(), 'password is hashed');
 
         $this->client->followRedirect();
-        $this->assertSelectorTextContains('.dash-head .kicker', 'Hi, Maria');
-        $this->assertSelectorTextContains('.dash-empty', 'Take the free 3-minute Bowl Score quiz');
+        $this->assertSelectorTextContains('.today-head h1', 'Welcome to ZENOO');
+        $this->assertSelectorTextContains('.today-next', 'Take the free 3-minute check');
     }
 
     public function testRegisterValidation(): void

@@ -46,25 +46,26 @@
      }|json_encode }}">
 
     <section class="chat-main">
+        {# Calmer header (proposal 6): which profile the coach uses, the counter only when it's
+           getting low, and the rarer actions in a menu. The dog is switched in the top bar. #}
         <div class="chat-bar">
-            {# One chat per pet. #}
-            <nav class="chat-pets" aria-label="{{ 'Your pets’ chats'|trans }}">
-                {% for d in chats %}
-                    <a class="chat-pet{{ d.id == dog.id ? ' is-on' }}" href="{{ path('app_chat', {pet: d.id}) }}"{% if d.id == dog.id %} aria-current="page"{% endif %}>{{ d.name }}</a>
-                {% endfor %}
-                <a class="chat-pet chat-pet--new" href="{{ path('app_chat_new') }}">+ {{ 'New chat'|trans }}</a>
-            </nav>
-            {% if unlimited %}
-                <span class="chat-quota">{{ 'Admin: no daily limit'|trans }}</span>
-            {% else %}
-                <span class="chat-quota" title="{{ 'Resets at %time%'|trans({'%time%': resetLabel|trans}) }}">{{ '<strong id="chat-remaining">%remaining%</strong> of %limit% messages left today'|trans({'%remaining%': remaining, '%limit%': limit})|raw }}</span>
+            <p class="chat-using">{{ 'Using %dog%’s profile: %facts%.'|trans({'%dog%': dog.name, '%facts%': usingFacts}) }} <a href="{{ path('app_dog_tab') }}#knows-h">{{ 'Edit'|trans }}</a></p>
+            {% if not unlimited %}
+                <span class="chat-quota" id="chat-quota" {{ remaining >= 10 ? 'hidden' }} title="{{ 'Resets at %time%'|trans({'%time%': resetLabel|trans}) }}">{{ '<strong id="chat-remaining">%remaining%</strong> of %limit% messages left today'|trans({'%remaining%': remaining, '%limit%': limit})|raw }}</span>
             {% endif %}
-            {% if messages|length %}
-                <form method="post" action="{{ path('app_chat_clear', {pet: dog.id}) }}" data-confirm="{{ 'Clear %dog%’s chat history? This can’t be undone.'|trans({'%dog%': dog.name}) }}">
-                    <input type="hidden" name="_token" value="{{ csrf_token('chat-clear') }}">
-                    <button type="submit" class="link-btn small">{{ 'Clear chat'|trans }}</button>
-                </form>
-            {% endif %}
+            <details class="chat-menu">
+                <summary aria-label="{{ 'More'|trans }}">⋯</summary>
+                <div class="chat-menu__list">
+                    <a href="{{ path('app_chat_new') }}">{{ 'New chat for another dog'|trans }}</a>
+                    <a class="chat-human" href="mailto:support@myzenoo.com?subject={{ 'Question for the ZENOO team'|trans|url_encode }}">{{ 'Talk to a person'|trans }}</a>
+                    {% if messages|length %}
+                        <form method="post" action="{{ path('app_chat_clear', {pet: dog.id}) }}" data-confirm="{{ 'Clear %dog%’s chat history? This can’t be undone.'|trans({'%dog%': dog.name}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('chat-clear') }}">
+                            <button type="submit">{{ 'Clear chat'|trans }}</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </details>
         </div>
 
         {% if not configured %}
@@ -166,7 +167,6 @@
             </div>
             <p class="chat-composer__meta">
                 <span id="chat-limit-note">{% if not unlimited and remaining == 0 %}{{ 'You’ve used all %limit% messages for today. You can chat again after %time%.'|trans({'%limit%': limit, '%time%': resetLabel|trans}) }}{% else %}{{ 'The assistant can make mistakes. For health questions, please ask your vet.'|trans }}{% endif %}</span>
-                <a class="chat-human" href="mailto:support@myzenoo.com?subject={{ 'Question for the ZENOO team'|trans|url_encode }}">{{ 'Talk to a person'|trans }}</a>
                 <span id="chat-counter"></span>
             </p>
         </form>

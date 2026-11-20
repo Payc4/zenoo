@@ -15,6 +15,25 @@
       {% if streak %}<p class="cl-streak">🔥 <strong>{{ streak }}</strong> {{ 'day streak'|trans }}</p>{% endif %}
     </header>
 
+    {% if picks %}
+      <section class="cl-picks" aria-labelledby="picks-h">
+        <h2 id="picks-h">{{ 'Picked for %dog%'|trans({'%dog%': dog.name}) }}</h2>
+        <ol class="dash-lessons">
+          {% for p in picks %}
+            {% set c = items[0].course %}
+            {% set isLocked = p.lesson.id in items[0].locked %}
+            <li class="card dash-lesson">
+              <span class="dash-lesson__n">{{ isLocked ? '🔒' : p.number }}</span>
+              <div>
+                <h3><a href="{{ isLocked ? '#unlock' : path('app_course_lesson', {slug: c.slug, id: p.lesson.id}) }}">{{ p.lesson.title }}</a></h3>
+                <p class="small">{{ p.reason|trans }}{% if p.lesson.durationMinutes %} · {{ '%n% min'|trans({'%n%': p.lesson.durationMinutes}) }}{% endif %}</p>
+              </div>
+            </li>
+          {% endfor %}
+        </ol>
+      </section>
+    {% endif %}
+
     {% if unlock %}
       {# One payment opens every locked lesson (admin: Products → "Unlocks locked lessons"). #}
       <section class="cl-unlock" id="unlock">

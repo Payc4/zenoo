@@ -32,7 +32,7 @@ final class ZenooPlanTest extends AppTestCase
     public function testABigDogGetsATopperPlanWithACartLink(): void
     {
         $this->bella(); // 31 kg Labrador
-        $crawler = $this->client->request('GET', '/dashboard');
+        $crawler = $this->client->request('GET', '/dashboard/dog');
         $this->assertSelectorTextContains('#zenoo-h', 'Bella’s ZENOO plan');
         $this->assertSelectorTextContains('.dash-zenoo', 'ZENOO RAW Jautiena šunims');
         // 1134 kcal × 0.95 × 25% / 172 kcal per 100 g = 157 g → 155 g, about €13 a day from the
@@ -88,7 +88,7 @@ final class ZenooPlanTest extends AppTestCase
     {
         $this->em->getConnection()->executeStatement('DELETE FROM catalogue_product');
         $this->bella();
-        $this->client->request('GET', '/dashboard');
+        $this->client->request('GET', '/dashboard/dog');
         // No plan, but the coach's plan link still lands on a section that links the shop (N7).
         $this->assertSelectorNotExists('.dash-zenoo__option');
         $this->assertSelectorExists('#zenoo-h');

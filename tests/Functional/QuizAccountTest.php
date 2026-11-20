@@ -152,18 +152,23 @@ final class QuizAccountTest extends AppTestCase
 
         $crawler = $this->client->followRedirect();
         $this->assertSelectorTextContains('.flash-success', 'Welcome to ZENOO! Your account is ready and Bella’s profile is saved.');
-        $this->assertSelectorTextContains('.dash-head h1', 'Bella’s dashboard');
+        $this->assertSelectorTextContains('.today-head h1', 'Today for Bella');
+        $this->assertSelectorTextContains('.today-score', '52');
+        $crawler = $this->client->request('GET', '/dashboard/dog');
         $this->assertSelectorTextContains('.dash-score__num', '52');
         $this->assertSame(7, $crawler->filter('.dash-bars li')->count());
-        $this->assertSelectorTextContains('.dash-tips', 'Look for a named meat');
+        $this->assertSelectorTextContains('.dog-fixes', 'Look for a named meat');
         $this->assertSelectorTextContains('.dash-plan', 'about 1210 kcal a day');
-        $this->assertSelectorExists('.dash-notice', 'asks for a password');
+        $this->assertStringContainsString('Choose a password', $this->client->request('GET', '/dashboard')->filter('.today-notice')->text(), 'asks for a password');
+        $crawler = $this->client->request('GET', '/dashboard/dog');
         $this->assertSelectorExists('img.dash-photo[src="/quiz/assets/photos/breed-labrador.jpg"]');
-        // One lesson per concern: weight (BCS 7) first, then the loose stools, then the itching.
+        // One lesson per concern on the Learn page: weight (BCS 7) first, then the loose stools, then the itching.
+        $crawler = $this->client->request('GET', '/courses');
+        $this->assertSelectorTextContains('.cl-picks h2', 'Picked for Bella');
         $lessons = $crawler->filter('.dash-lesson h3')->each(fn ($n) => $n->text());
         $this->assertSame(['Safe Weight Loss', 'The Poop Review', 'Paw Licking, Ears & the Gut'], $lessons);
         $this->assertSelectorTextContains('.dash-lesson', 'To reach a healthy weight');
-        $this->assertStringContainsString('/chat?ask=How%20much%20should%20Bella%20eat%20a%20day', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('/chat?ask=How%20much%20should%20Bella%20eat%20a%20day', $this->client->request('GET', '/dashboard')->html());
 
         // The link works once.
         $this->client->request('GET', parse_url($url, PHP_URL_PATH));
@@ -203,7 +208,7 @@ final class QuizAccountTest extends AppTestCase
         $pip = $this->em->getRepository(DogProfile::class)->findOneBy(['name' => 'Pip']);
         $this->assertSame(['status' => 'saved', 'dashboard' => '/chat?pet=' . $pip->getId(), 'go' => true, 'dog_id' => $pip->getId()], $data);
         $this->client->request('GET', $data['dashboard']);
-        $this->assertSelectorTextContains('.chat-pet.is-on', 'Pip');
+        $this->assertSelectorTextContains('.chat-using', 'Using Pip’s profile');
         $this->em->remove($pip);
         $this->em->flush();
 

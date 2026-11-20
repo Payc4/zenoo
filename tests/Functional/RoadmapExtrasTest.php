@@ -63,10 +63,10 @@ final class RoadmapExtrasTest extends AppTestCase
     public function testSharingTheScore(): void
     {
         $this->bella();
-        $crawler = $this->client->request('GET', '/dashboard');
-        $this->client->submit($crawler->filter('.dash-share form')->form());
+        $crawler = $this->client->request('GET', '/dashboard/dog');
+        $this->client->submit($crawler->filter('#share-h form')->form());
         $crawler = $this->client->followRedirect();
-        $link = $crawler->filter('.dash-share input[readonly]')->attr('value');
+        $link = $crawler->filter('#share-h input[readonly]')->attr('value');
         $this->assertMatchesRegularExpression('~/s/[a-f0-9]{12}$~', $link);
         $path = parse_url($link, PHP_URL_PATH);
 
@@ -87,8 +87,8 @@ final class RoadmapExtrasTest extends AppTestCase
         $this->em->clear();
         $dog = $this->em->getRepository(DogProfile::class)->findOneBy([]);
         $this->client->loginUser($dog->getUser());
-        $crawler = $this->client->request('GET', '/dashboard');
-        $this->client->submit($crawler->filter('.dash-share form')->form());
+        $crawler = $this->client->request('GET', '/dashboard/dog');
+        $this->client->submit($crawler->filter('#share-h form')->form());
         $this->client->request('GET', $path);
         $this->assertResponseStatusCodeSame(404);
     }

@@ -54,6 +54,8 @@ if (app) {
   const setRemaining = (n) => {
     if (n === null || n === undefined || !remainingEl) return;
     remainingEl.textContent = n;
+    // The counter only shows once fewer than 10 messages are left (proposal 6).
+    if (n < 10) document.getElementById('chat-quota')?.removeAttribute('hidden');
     if (n <= 0) {
       input.disabled = true;
       sendBtn.disabled = true;

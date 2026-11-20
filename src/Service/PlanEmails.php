@@ -50,7 +50,7 @@ final class PlanEmails
         try {
             $this->emails->sendPlanEmail($user, $this->planContent($dog), [
                 'dashboard' => $this->url('/dashboard'),
-                'plan' => $this->url('/dashboard#zenoo-h'),
+                'plan' => $this->url('/dashboard/dog#zenoo-h'),
             ]);
             $this->markSent($dog, 0);
         } catch (\Throwable $e) {
@@ -146,13 +146,13 @@ final class PlanEmails
                 'heading' => ['One week with %dog%’s plan', $d],
                 'text' => ['How is it going? Weigh %dog% and note the stool and any itching in the trackers on your dashboard. It takes a minute, and the coach uses it to keep the advice right.', $d],
                 'button' => 'Open the trackers',
-            ], '/dashboard#trackers-h'],
+            ], '/dashboard#log'],
             default => $this->plans->forDog($dog) ? [[
                 'subject' => ['Ready to try fresher food for %dog%?', $d],
                 'heading' => ['Fresher food for %dog%', $d],
                 'text' => ['We worked out how ZENOO would fit %dog%: as a topper, half the bowl or the whole bowl, with the grams and cost a day. A 2-week starter is the easiest way to see the difference.', $d],
                 'button' => ['See %dog%’s ZENOO plan', $d],
-            ], '/dashboard#zenoo-h'] : [[
+            ], '/dashboard/dog#zenoo-h'] : [[
                 'subject' => ['Two weeks with %dog%’s plan', $d],
                 'heading' => ['Two weeks with %dog%’s plan', $d],
                 'text' => ['Any questions about the food, portions or something you noticed? The coach knows %dog%’s profile and answers in a minute.', $d],

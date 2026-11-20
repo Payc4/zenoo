@@ -45,8 +45,34 @@ final class DashboardController extends AbstractController
     ) {
     }
 
+    /**
+     * "Today" (test report proposal 2): one next step, today's bowl, the log and the coach, in
+     * about a screen and a half. Everything occasional about the dog is on its own tab (dogTab()).
+     */
     #[Route('/dashboard', name: 'app_dashboard', methods: ['GET'])]
     public function index(Request $request): Response
+    {
+        $ctx = $this->context($request);
+        return $this->render('dashboard/index.html.twig', $ctx + ['nextStep' => $this->nextStep($ctx)]);
+    }
+
+    /** The dog's own tab (proposal 3): score and history, plan, trends, notes, vet report, sharing, removal. */
+    #[Route('/dashboard/dog', name: 'app_dog_tab', methods: ['GET'])]
+    public function dogTab(Request $request): Response
+    {
+        $ctx = $this->context($request);
+        if (!$ctx['dog']) {
+            return $this->redirectToRoute('app_dashboard');
+        }
+        if ($ctx['zenooPlan'] && !$request->getSession()->get('funnel_plan_view')) {
+            $request->getSession()->set('funnel_plan_view', true);
+            $this->funnel->record('plan_view');
+        }
+        return $this->render('dashboard/dog.html.twig', $ctx);
+    }
+
+    /** What both pages need. */
+    private function context(Request $request): array
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -63,9 +89,9 @@ final class DashboardController extends AbstractController
             $lessons = $course->getPublishedLessons();
             $total = \count($lessons);
             $done = \count(array_filter($completed));
-            foreach ($lessons as $lesson) {
+            foreach ($lessons as $i => $lesson) {
                 if (empty($completed[$lesson->getId()])) {
-                    $next = $lesson;
+                    $next = ['lesson' => $lesson, 'number' => $i + 1];
                     break;
                 }
             }
@@ -74,13 +100,7 @@ final class DashboardController extends AbstractController
             }
         }
 
-        $zenooPlan = $dog ? $this->plans->forDog($dog) : null;
-        if ($zenooPlan && !$request->getSession()->get('funnel_plan_view')) {
-            $request->getSession()->set('funnel_plan_view', true);
-            $this->funnel->record('plan_view');
-        }
-
-        return $this->render('dashboard/index.html.twig', [
+        return [
             'user' => $user,
             'dog' => $dog,
             'photo' => $dog ? $this->photo($dog) : null,
@@ -92,10 +112,49 @@ final class DashboardController extends AbstractController
             'next' => $next,
             'streak' => $this->progress->getStreak($user),
             'coachQuestions' => $dog ? $this->coachQuestions($dog) : [],
-            'zenooPlan' => $zenooPlan,
+            'zenooPlan' => $dog ? $this->plans->forDog($dog) : null,
             'shopUrl' => $this->plans->shopUrl('dashboard'),
             'dogs' => $this->dogs->findAllForUser($user),
-        ]);
+            'logged' => $request->getSession()->getFlashBag()->get('logged')[0] ?? null,
+        ];
+    }
+
+    /**
+     * The one next step on Today, with the screen's only orange button. In order: the food (the
+     * coach needs it), a check-in the coach planned, a weigh-in that's due (two weeks), the monthly
+     * check, then the next lesson.
+     *
+     * @return array{kind: string, title: string, text: string, cta: string, url: string, params?: array}|null
+     */
+    private function nextStep(array $ctx): ?array
+    {
+        $dog = $ctx['dog'];
+        if (!$dog) {
+            return ['kind' => 'quiz', 'title' => 'How is your dog really eating?', 'text' => 'Take the free 3-minute check. Your dog’s score, plan and lessons appear here.', 'cta' => 'Take the free check', 'url' => $this->generateUrl('app_quiz')];
+        }
+        $p = ['%dog%' => $dog->getName()];
+        if (!$dog->getFood()) {
+            return ['kind' => 'food', 'title' => 'Show the coach what %dog% eats', 'text' => 'A photo of the food label, or its name. Then the coach’s tips fit %dog%.', 'cta' => '📷 Snap the food label', 'url' => $this->generateUrl('app_chat', ['photo' => 1]), 'params' => $p];
+        }
+        $today = (new \DateTimeImmutable())->format('Y-m-d');
+        foreach ($dog->getFollowUps() as $f) {
+            if (!$f['done'] && $f['due'] <= $today) {
+                return ['kind' => 'checkin', 'title' => 'A check-in from the coach', 'text' => $f['question'], 'cta' => 'Answer in the chat', 'url' => $this->generateUrl('app_chat'), 'params' => $p];
+            }
+        }
+        $weight = $dog->latestLog('weight');
+        if ($weight && (new \DateTimeImmutable($weight['d']))->diff(new \DateTimeImmutable($today))->days >= 14) {
+            return ['kind' => 'weigh', 'title' => 'Time to weigh %dog%', 'text' => 'Two weeks since the last weight. It shows whether the plan is working.', 'cta' => 'Add the weight', 'url' => '#log-weight', 'params' => $p];
+        }
+        if ($dog->daysSinceScore(new \DateTimeImmutable()) >= 30) {
+            return ['kind' => 'check', 'title' => 'Time for %dog%’s monthly check', 'text' => 'A month since the Bowl Score. Take it again to see what has changed.', 'cta' => 'Retake the check', 'url' => $this->generateUrl('app_quiz', ['dog' => $dog->getId()]), 'params' => $p];
+        }
+        $pick = $ctx['picks'][0] ?? null;
+        $lesson = $pick ? ['lesson' => $pick['lesson'], 'number' => $pick['number']] : $ctx['next'];
+        if ($lesson && $ctx['course']) {
+            return ['kind' => 'lesson', 'title' => $lesson['lesson']->getTitle(), 'text' => '', 'cta' => 'Start the lesson', 'url' => $this->generateUrl('app_course_lesson', ['slug' => $ctx['course']->getSlug(), 'id' => $lesson['lesson']->getId()]), 'params' => $p, 'lesson' => $lesson];
+        }
+        return null;
     }
 
     /** The dog's own photo ("Finish the profile", or the camera on the dashboard photo). */
@@ -106,12 +165,12 @@ final class DashboardController extends AbstractController
         $user = $this->getUser();
         $dog = $this->dogs->findForUser($user);
         if (!$dog || !$this->isCsrfTokenValid('dog-photo', (string) $request->request->get('_token'))) {
-            return $this->redirectToRoute('app_dashboard');
+            return $this->redirectToRoute('app_dog_tab');
         }
         $file = $request->files->get('photo');
         if (!$file instanceof UploadedFile) {
             $this->addFlash('error', 'Choose a photo first.');
-            return $this->redirectToRoute('app_dashboard');
+            return $this->redirectToRoute('app_dog_tab');
         }
         try {
             $this->dogPhotos->store($dog, $file);
@@ -120,7 +179,7 @@ final class DashboardController extends AbstractController
         } catch (\InvalidArgumentException $e) {
             $this->addFlash('error', $e->getMessage());
         }
-        return $this->redirectToRoute('app_dashboard');
+        return $this->redirectToRoute('app_dog_tab');
     }
 
     /** The course in the page's language (English as a fallback), if pet parents can see it. */
@@ -154,7 +213,14 @@ final class DashboardController extends AbstractController
             }
         }
         $back = (string) $request->request->get('back', '');
-        return $this->redirect($back === '/chat' ? $this->generateUrl('app_chat') : $this->generateUrl('app_dashboard'));
+        // Back to the same kind of page, now about the other dog.
+        $to = match (true) {
+            str_starts_with($back, '/chat') => $this->generateUrl('app_chat'),
+            str_starts_with($back, '/courses') => $this->generateUrl('app_courses'),
+            $back === '/dashboard/dog' => $this->generateUrl('app_dog_tab'),
+            default => $this->generateUrl('app_dashboard'),
+        };
+        return $this->redirect($to);
     }
 
     /** Removes one of several dogs, with its photo. The last dog stays (delete the account instead). */
@@ -212,14 +278,30 @@ final class DashboardController extends AbstractController
         $dog = $this->dogs->findForUser($user);
         if ($dog && $this->isCsrfTokenValid('tracker', (string) $request->request->get('_token'))) {
             $value = str_replace(',', '.', (string) $request->request->get('value', ''));
-            if (is_numeric($value) && $dog->addLog((string) $request->request->get('type'), (float) $value, new \DateTimeImmutable(), 'owner')) {
+            $type = (string) $request->request->get('type');
+            if (is_numeric($value) && $dog->addLog($type, (float) $value, new \DateTimeImmutable(), 'owner')) {
                 $this->em->flush();
-                $this->addFlash('success', 'Saved. Thank you!');
+                $this->addFlash('logged', $type); // "Saved just now · Undo" on that tile
             } else {
                 $this->addFlash('error', 'That value doesn’t look right. Please check it.');
             }
         }
-        return $this->redirect($this->generateUrl('app_dashboard') . '#trackers-h');
+        return $this->redirect($this->generateUrl('app_dashboard') . '#log');
+    }
+
+    /** Undo the entry just added (proposal 2: Undo on the newest entry). */
+    #[Route('/dashboard/tracker/undo', name: 'app_dog_tracker_undo', methods: ['POST'])]
+    public function trackerUndo(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $dog = $this->dogs->findForUser($user);
+        if ($dog && $this->isCsrfTokenValid('tracker', (string) $request->request->get('_token'))
+            && $dog->undoLog((string) $request->request->get('type'), new \DateTimeImmutable())) {
+            $this->em->flush();
+            $this->addFlash('success', 'Removed.');
+        }
+        return $this->redirect($this->generateUrl('app_dashboard') . '#log');
     }
 
     /** The owner adds a fact about their dog, or removes one the coach saved (the dog record is theirs to edit). */
@@ -241,7 +323,7 @@ final class DashboardController extends AbstractController
             $this->em->flush();
             $this->addFlash('success', 'Added to your dog’s profile.');
         }
-        return $this->redirect($this->generateUrl('app_dashboard') . '#knows-h');
+        return $this->redirect($this->generateUrl('app_dog_tab') . '#knows-h');
     }
 
     private function courseFor(string $locale): ?Course

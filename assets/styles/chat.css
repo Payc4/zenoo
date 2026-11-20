@@ -188,3 +188,21 @@
 .chat-new__pet:hover { border-color: var(--forest, #445942); }
 .chat-new__pet small { color: var(--ink-muted); }
 .chat-new__or { color: var(--ink-muted); margin: 8px 0 16px; }
+
+/* Calmer header (proposal 6) */
+.chat-using { margin: 0; flex: 1; min-width: 0; font-size: 14px; color: var(--ink-muted); }
+.chat-using a { color: var(--forest); }
+.chat-menu { position: relative; flex: none; }
+.chat-menu summary { list-style: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font-size: 22px; cursor: pointer; color: var(--forest); }
+.chat-menu summary::-webkit-details-marker { display: none; }
+.chat-menu summary:hover { background: var(--mist); }
+.chat-menu__list { position: absolute; right: 0; top: 100%; min-width: 220px; padding: 6px; background: var(--white); border-radius: 14px; box-shadow: 0 12px 30px rgba(0,0,0,.16); z-index: 30; display: grid; }
+.chat-menu__list a, .chat-menu__list button { display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 10px; color: var(--forest); text-decoration: none; background: none; border: 0; font: inherit; text-align: left; cursor: pointer; width: 100%; }
+.chat-menu__list a:hover, .chat-menu__list button:hover { background: var(--mist); }
+.chat-menu__list form { margin: 0; }
+.chat-menu__list button { color: var(--danger); }
+
+/* Room for the tab bar on phones: the chat fills the screen above it. */
+@media (max-width: 899.98px) {
+  body.chat-page.has-tabbar { height: calc(100dvh - 72px - env(safe-area-inset-bottom)); padding-bottom: 0; }
+}

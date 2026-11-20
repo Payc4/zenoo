@@ -349,7 +349,7 @@ class ChatAgent
                 'daily_budget_eur' => $plan['budget'],
                 'switch_schedule' => $plan['schedule'],
                 'starter_code' => $plan['starter_code'],
-                'order_link' => '/dashboard#zenoo-h',
+                'order_link' => '/dashboard/dog#zenoo-h',
             ],
             // No plan (no product synced, or the weight isn't known): link the shop, never a dead section.
             'shop_link' => $plan === null ? $this->plans->shopUrl('coach') : null,

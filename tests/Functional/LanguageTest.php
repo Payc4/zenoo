@@ -89,7 +89,7 @@ final class LanguageTest extends AppTestCase
         $this->assertResponseHasCookie('zenoo_lang');
         $this->client->followRedirect();
         $this->assertSelectorExists('html[lang=lt]');
-        $this->assertSelectorTextContains('.dash-head h1', 'Mano šuo');
+        $this->assertSelectorTextContains('.today-head h1', 'Sveiki atvykę į ZENOO');
 
         // Emails go out in the account's language.
         $this->client->request('GET', '/logout');
@@ -150,7 +150,7 @@ final class LanguageTest extends AppTestCase
         $this->assertStringContainsString('"sendToKlaviyo":false', $this->client->getResponse()->getContent(), 'no LT Klaviyo account set');
 
         $crawler = $this->client->request('GET', '/chat');
-        $this->assertSelectorTextContains('.chat-pet--new', 'Naujas pokalbis');
+        $this->assertSelectorTextContains('.chat-menu', 'Naujas pokalbis kitam šuniui');
         $this->assertStringContainsString('Praleisti', $crawler->filter('#chat')->attr('data-i18n'));
 
         $crawler = $this->client->request('GET', '/account');

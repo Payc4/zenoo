@@ -1,339 +1,157 @@
 {% extends 'base.html.twig' %}
+{% import 'dashboard/_shapes.html.twig' as shapes %}
 
-{% block title %}{{ dog ? '%dog%’s dashboard'|trans({'%dog%': dog.name}) : 'My dog'|trans }} · ZENOO{% endblock %}
+{#
+  "Today" (test report proposal 2): one next step with the screen's only orange button, today's
+  bowl, the log, and the coach, in about a screen and a half. Everything occasional about the dog
+  (score history, plan, trends, notes, vet report, sharing, removal) is on its own tab.
+#}
+{% block title %}{{ dog ? 'Today for %dog%'|trans({'%dog%': dog.name}) : 'My dog'|trans }} · ZENOO{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block importmap %}{{ importmap(['app', 'dashboard']) }}{% endblock %}
 
-{% set subLabels = {protein: 'Protein', carbs: 'Carb load', freshness: 'Freshness', body: 'Body shape', activity: 'Activity', signals: 'Bowl signals', routine: 'Portions & routine'} %}
-{% set stages = {puppy: 'Puppy', adult: 'Adult', senior: 'Senior'} %}
+{% set trackers = {
+  weight: {label: 'Weight'|trans, help: 'Weigh on the same scale, at the same time of day.'|trans},
+  body: {label: 'Body shape'|trans, help: 'Ideal: ribs easy to feel, a waist seen from above.'|trans},
+  stool: {label: 'Stool'|trans, help: '2 is ideal: firm, segmented, easy to pick up. 7 is watery.'|trans},
+  itch: {label: 'Itching'|trans, help: '0 is none, 10 is scratching all the time.'|trans},
+} %}
+{% set bodyNames = {1: 'Too thin', 2: 'Too thin', 3: 'Thin', 4: 'Thin', 5: 'Ideal', 6: 'Heavy', 7: 'Heavy', 8: 'Too heavy', 9: 'Too heavy'} %}
 
 {% block body %}
-<section class="dash-head">
-  <div class="wrap dash-head__in">
+<section class="today-head">
+  <div class="wrap">
+    <p class="kicker">{{ date()|local_date('long') }}</p>
+    <h1>{{ dog ? 'Today for %dog%'|trans({'%dog%': dog.name}) : 'Welcome to ZENOO'|trans }}</h1>
     {% if dog %}
-      <form class="dash-photo-wrap" method="post" action="{{ path('app_dog_photo') }}" enctype="multipart/form-data" data-photo-form>
-        {% if photo %}<img class="dash-photo" src="{{ photo }}" alt="{{ ownPhoto ? dog.name : '' }}">{% else %}<span class="dash-photo dash-photo--empty" aria-hidden="true">🐾</span>{% endif %}
-        <input type="hidden" name="_token" value="{{ csrf_token('dog-photo') }}">
-        <label class="dash-photo-edit" title="{{ ownPhoto ? 'Change the photo'|trans : 'Add a photo of %dog%'|trans({'%dog%': dog.name}) }}">
-          <span aria-hidden="true">📷</span><span class="visually-hidden">{{ ownPhoto ? 'Change the photo'|trans : 'Add a photo of %dog%'|trans({'%dog%': dog.name}) }}</span>
-          <input type="file" name="photo" accept="image/*" hidden>
-        </label>
-        <noscript><button type="submit" class="btn btn-small">{{ 'Save'|trans }}</button></noscript>
-      </form>
+      <a class="today-score" href="{{ path('app_dog_tab') }}#score-h">
+        <span class="today-score__ring" style="--p: {{ dog.bowlScore }}"><span>{{ dog.bowlScore }}</span></span>
+        <span><strong>{{ 'Bowl Score'|trans }}{% if dog.get('score_title') %}: {{ dog.get('score_title')|lower }}{% endif %}</strong><br><u>{{ 'See the breakdown'|trans }}</u></span>
+      </a>
     {% endif %}
-    <div class="dash-head__text">
-      <p class="kicker">{{ 'Hi, %name%'|trans({'%name%': user.displayName}) }}</p>
-      <h1>{{ dog ? '%dog%’s dashboard'|trans({'%dog%': dog.name}) : 'My dog'|trans }}</h1>
-      {% if dog %}
-        <ul class="dash-facts">
-          {% if dog.get('breed') %}<li>{{ dog.get('breed') == 'mixed' ? 'Mixed breed'|trans : dog.get('breed') }}</li>{% endif %}
-          {% if dog.get('age_years') is not null %}<li>{{ dog.get('age_years')|dog_age }}{% if stages[dog.get('life_stage')] is defined %} · {{ stages[dog.get('life_stage')]|trans }}{% endif %}</li>{% endif %}
-          {% if dog.weightUpdate %}<li>{{ dog.weightUpdate.kg }} kg</li>{% elseif dog.get('weight_kg') %}<li>{{ dog.get('weight_kg') }} kg</li>{% endif %}
-        </ul>
-      {% endif %}
-      {# Several dogs (roadmap 07): switch between them; add another. #}
-      {% if dogs|length > 1 %}
-        <nav class="dash-dogs" aria-label="{{ 'Your dogs'|trans }}">
-          {% for d in dogs %}
-            {% if d.id == dog.id %}<span class="dash-dogs__dog is-current" aria-current="true">{{ d.name }}</span>
-            {% else %}<form method="post" action="{{ path('app_dog_select', {id: d.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('dog-select') }}"><button class="dash-dogs__dog" type="submit">{{ d.name }}</button></form>{% endif %}
-          {% endfor %}
-        </nav>
-      {% endif %}
-    </div>
-    <div class="dash-head__actions">
-      <a class="btn btn-ghost-light btn-small dash-retake" href="{{ dog ? path('app_quiz', {dog: dog.id}) : path('app_quiz') }}">{{ dog ? 'Retake the quiz for %dog%'|trans({'%dog%': dog.name}) : 'Take the quiz'|trans }}</a>
-      {% if dog %}<a class="dash-add-dog" href="{{ path('app_quiz') }}?new=1">{{ '+ Add another dog'|trans }}</a>{% endif %}
-    </div>
   </div>
 </section>
 
-<div class="wrap dash">
+<div class="wrap today">
   {% if not user.hasPassword %}
-    <div class="card card-sun-border dash-notice">
-      <p><strong>{{ 'Choose a password'|trans }}</strong> {{ 'so you can log in any time. Until then, use “Email me a login link” on the login page.'|trans }}</p>
-      <a class="btn btn-small" href="{{ path('app_account') }}#password">{{ 'Choose a password'|trans }}</a>
-    </div>
+    <p class="today-notice">{{ 'Choose a password so you can sign in any time.'|trans }} <a href="{{ path('app_account') }}#password">{{ 'Choose a password'|trans }}</a></p>
   {% endif %}
 
-  {% if dog and (not dog.food or not ownPhoto) %}
-    {# The two things the coach needs first. #}
-    <section class="card card-sun-border dash-finish" aria-labelledby="finish-h">
-      <h2 id="finish-h">{{ 'Finish %dog%’s profile'|trans({'%dog%': dog.name}) }}</h2>
-      <p>{{ 'Two quick steps, and the coach’s tips fit %dog% much better.'|trans({'%dog%': dog.name}) }}</p>
-      <ol class="dash-steps">
-        <li class="{{ dog.food ? 'is-done' }}">
-          {% if dog.food %}
-            <span>✓ {{ 'Food: %food%'|trans({'%food%': (dog.food.brand ~ ' ' ~ dog.food.product)|trim}) }}</span>
-          {% else %}
-            <span>{{ 'Show the coach what %dog% eats: a photo of the food label, or its name.'|trans({'%dog%': dog.name}) }}</span>
-            <a class="btn btn-small" href="{{ path('app_chat') }}">{{ '📷 Snap the food label'|trans }}</a>
-          {% endif %}
-        </li>
-        <li class="{{ ownPhoto ? 'is-done' }}">
-          {% if ownPhoto %}
-            <span>✓ {{ 'Photo added'|trans }}</span>
-          {% else %}
-            <span>{{ 'Add a photo of %dog%.'|trans({'%dog%': dog.name}) }}</span>
-            <form method="post" action="{{ path('app_dog_photo') }}" enctype="multipart/form-data" data-photo-form>
-              <input type="hidden" name="_token" value="{{ csrf_token('dog-photo') }}">
-              <label class="btn btn-small btn-outline">{{ '📷 Add a photo'|trans }}<input type="file" name="photo" accept="image/*" hidden></label>
-              <noscript><button type="submit" class="btn btn-small">{{ 'Save'|trans }}</button></noscript>
-            </form>
-          {% endif %}
-        </li>
-      </ol>
-    </section>
-  {% endif %}
-
-  {% if not dog %}
-    <section class="card dash-empty">
-      <h2>{{ 'How is your dog really eating?'|trans }}</h2>
-      <p>{{ 'Take the free 3-minute Bowl Score quiz. Your dog’s score, a daily plan and lessons picked for your dog will appear here.'|trans }}</p>
-      <a class="btn" href="{{ path('app_quiz') }}">{{ 'Take the quiz'|trans }}</a>
-    </section>
-  {% else %}
-    <div class="dash-grid">
-      {# ---------- Score ---------- #}
-      <section class="card dash-score" aria-labelledby="score-h">
-        <p class="kicker" id="score-h">{{ 'Bowl Score'|trans }}</p>
-        <div class="dash-score__num"><span>{{ dog.bowlScore }}</span><small>/100</small></div>
-        {% if dog.get('score_title') %}<h2>{{ dog.get('score_title') }}</h2>{% endif %}
-        {% if dog.get('score_text') %}<p>{{ dog.get('score_text') }}</p>{% endif %}
-        <p class="small muted">{{ 'From the quiz on %date%'|trans({'%date%': dog.updatedAt|local_date('long')}) }}</p>
-      </section>
-
-      {# ---------- Breakdown ---------- #}
-      <section class="card dash-breakdown" aria-labelledby="bd-h">
-        <h2 id="bd-h">{{ 'The breakdown'|trans }}</h2>
-        <ul class="dash-bars">
-          {% for s in dog.subScores %}
-            <li class="{{ s.percent < 60 ? 'is-low' }}">
-              <span class="dash-bars__label">{{ subLabels[s.key]|trans }}</span>
-              <span class="dash-bars__track" aria-hidden="true"><span style="width: {{ s.percent }}%"></span></span>
-              <span class="dash-bars__val">{{ s.score }}/{{ s.max }}</span>
-            </li>
-          {% endfor %}
-        </ul>
-      </section>
-
-      {# ---------- Tips ---------- #}
-      <section class="card dash-tips" aria-labelledby="tips-h">
-        <h2 id="tips-h">{{ 'What we’d do first'|trans }}</h2>
-        <ol>
-          <li>{{ dog.get('fix_1_text') ?: 'Keep doing what you’re doing!'|trans }}</li>
-          {% if dog.get('fix_2_text') %}<li>{{ dog.get('fix_2_text') }}</li>{% endif %}
-          {% if dog.get('fix_3_text') %}<li>{{ dog.get('fix_3_text') }}</li>{% endif %}
-        </ol>
-      </section>
-
-      {# ---------- Daily plan ---------- #}
-      <section class="card card-mist dash-plan" aria-labelledby="plan-h">
-        <h2 id="plan-h">{{ '%dog%’s daily plan'|trans({'%dog%': dog.name}) }}</h2>
-        <dl>
-          {% if dog.get('kcal_target') %}<div><dt>{{ 'Energy'|trans }}</dt><dd>{{ 'about %kcal% kcal a day'|trans({'%kcal%': dog.get('kcal_target')|round}) }}</dd></div>{% endif %}
-          {% if dog.get('plan_food') %}<div><dt>{{ 'Food'|trans }}</dt><dd>{{ dog.get('plan_food') }}</dd></div>{% endif %}
-          {% if dog.get('plan_meals') %}<div><dt>{{ 'Meals'|trans }}</dt><dd>{{ dog.get('plan_meals') }}</dd></div>{% endif %}
-          {% if dog.get('plan_protein_g') %}<div><dt>{{ 'Protein'|trans }}</dt><dd>{{ dog.get('plan_protein_g') }}</dd></div>{% endif %}
-          {% if dog.get('plan_fat_g') %}<div><dt>{{ 'Fat'|trans }}</dt><dd>{{ dog.get('plan_fat_g') }}</dd></div>{% endif %}
-        </dl>
-        <p class="small muted">{{ 'A starting point, not a prescription. Weigh %dog% every 2–3 weeks and adjust by about 10%.'|trans({'%dog%': dog.name}) }}</p>
-      </section>
-    </div>
-  {% endif %}
-
-  {# ---------- Trackers (roadmap 05) and the monthly re-score ---------- #}
-  {% if dog %}
-    {% set history = dog.scoreHistory %}
-    {% if dog.daysSinceScore(date()) >= 30 or history|length > 1 %}
-      <section class="card card-sun-border dash-rescore" aria-labelledby="rescore-h">
-        <h2 id="rescore-h">{{ history|length > 1 ? '%dog% went from %from% to %to%'|trans({'%dog%': dog.name, '%from%': history|first.score, '%to%': history|last.score}) : 'Time for %dog%’s monthly check'|trans({'%dog%': dog.name}) }}</h2>
-        {% if history|length > 1 %}<p class="dash-rescore__line">{{ history|map(h => h.score)|join(' → ') }}</p>{% endif %}
-        {% if dog.daysSinceScore(date()) >= 30 %}
-          <p>{{ 'It’s been a month since %dog%’s Bowl Score. Take it again (2 minutes) to see what has changed.'|trans({'%dog%': dog.name}) }}</p>
-          <a class="btn btn-small" href="{{ path('app_quiz') }}">{{ 'Re-check the Bowl Score'|trans }}</a>
-        {% endif %}
-      </section>
-    {% endif %}
-
-    {% set trackers = {
-      weight: {label: 'Weight'|trans, unit: 'kg', min: 0, max: 0, help: 'Weigh on the same scale, at the same time of day.'|trans},
-      body: {label: 'Body shape'|trans, unit: '/9', min: 1, max: 9, help: '5 is ideal: ribs easy to feel, a waist seen from above.'|trans},
-      stool: {label: 'Stool'|trans, unit: '/7', min: 1, max: 7, help: '2 is ideal: firm, segmented, easy to pick up. 7 is watery.'|trans},
-      itch: {label: 'Itching'|trans, unit: '/10', min: 0, max: 10, help: '0 is none, 10 is scratching all the time.'|trans},
-    } %}
-    <section class="dash-section" aria-labelledby="trackers-h">
-      <h2 id="trackers-h">{{ '%dog%’s trackers'|trans({'%dog%': dog.name}) }}</h2>
-      <div class="dash-trackers">
-        {% for type, t in trackers %}
-          {% set log = dog.log(type) %}
-          {% set last = log ? log|last : null %}
-          <div class="card dash-tracker">
-            <h3>{{ t.label }}</h3>
-            <p class="dash-tracker__value">{% if last %}{{ last.v|replace({'.': decimal_sep()}) }}<small>{{ t.unit != 'kg' ? t.unit : ' kg' }}</small> <span>{{ last.d|date('j M') }}</span>{% else %}—{% endif %}</p>
-            {{ tracker_chart(log, t.min, t.max, t.label) }}
-            <form method="post" action="{{ path('app_dog_tracker') }}" class="dash-tracker__add">
-              <input type="hidden" name="_token" value="{{ csrf_token('tracker') }}">
-              <input type="hidden" name="type" value="{{ type }}">
-              {% if type == 'weight' %}
-                <input name="value" inputmode="decimal" required placeholder="{{ last ? last.v : 'kg' }}" aria-label="{{ t.label }} (kg)">
-              {% else %}
-                <select name="value" aria-label="{{ t.label }}">{% for v in t.min..t.max %}<option value="{{ v }}" {{ last and last.v == v ? 'selected' }}>{{ v }}</option>{% endfor %}</select>
-              {% endif %}
-              <button class="btn btn-small btn-outline" type="submit">{{ 'Add today'|trans }}</button>
-            </form>
-            <p class="dash-tracker__help">{{ t.help }}</p>
-          </div>
-        {% endfor %}
-      </div>
-    </section>
-  {% endif %}
-
-  {# ---------- Share the score (roadmap 09) ---------- #}
-  {% if dog %}
-    <section class="card dash-share" aria-labelledby="share-h">
-      <h2 id="share-h">{{ 'Share %dog%’s score'|trans({'%dog%': dog.name}) }}</h2>
-      {% if dog.shareCode %}
-        {% set shareUrl = url('app_share', {code: dog.shareCode}) %}
-        <p>{{ 'Anyone with this link sees %dog%’s name, photo and Bowl Score, nothing else.'|trans({'%dog%': dog.name}) }}</p>
-        <div class="dash-share__row">
-          <input readonly value="{{ shareUrl }}" aria-label="{{ 'Share link'|trans }}" onclick="this.select()">
-          <button class="btn btn-small" type="button" data-share="{{ shareUrl }}" data-share-title="{{ '%dog%’s Bowl Score: %score%/100'|trans({'%dog%': dog.name, '%score%': dog.bowlScore}) }}">{{ 'Share'|trans }}</button>
-        </div>
-        <form method="post" action="{{ path('app_share_toggle') }}">
-          <input type="hidden" name="_token" value="{{ csrf_token('share') }}"><input type="hidden" name="stop" value="1">
-          <button class="dash-share__stop" type="submit">{{ 'Stop sharing (the link stops working)'|trans }}</button>
-        </form>
+  {# 1. One next step: the only orange button on the screen. #}
+  {% if nextStep %}
+    {% set p = nextStep.params ?? {} %}
+    <section class="card today-next" aria-labelledby="next-h">
+      <p class="kicker">{{ 'Next step'|trans }}</p>
+      {% if nextStep.kind == 'lesson' %}
+        <h2 id="next-h">{{ 'Lesson %n%: %title%'|trans({'%n%': nextStep.lesson.number, '%title%': nextStep.title}) }}</h2>
+        <p class="muted">{% if nextStep.lesson.lesson.durationMinutes %}{{ '%n% minutes'|trans({'%n%': nextStep.lesson.lesson.durationMinutes}) }} · {% endif %}{{ '%done% of %total% lessons done'|trans({'%done%': done, '%total%': total}) }}</p>
       {% else %}
-        <p>{{ 'Make a card with %dog%’s photo and Bowl Score to share with friends: they can check their own dog’s score.'|trans({'%dog%': dog.name}) }}</p>
-        <form method="post" action="{{ path('app_share_toggle') }}">
-          <input type="hidden" name="_token" value="{{ csrf_token('share') }}">
-          <button class="btn btn-small btn-outline" type="submit">{{ 'Make a share link'|trans }}</button>
-        </form>
+        <h2 id="next-h">{{ nextStep.title|trans(p) }}</h2>
+        {% if nextStep.text %}<p>{{ nextStep.kind == 'checkin' ? nextStep.text : nextStep.text|trans(p) }}</p>{% endif %}
+      {% endif %}
+      {% if nextStep.url starts with '#log-' %}
+        <button class="btn btn-block" type="button" data-log-open="{{ nextStep.url|slice(5) }}">{{ nextStep.cta|trans(p) }}</button>
+      {% else %}
+        <a class="btn btn-block" href="{{ nextStep.url }}">{{ nextStep.cta|trans(p) }}</a>
       {% endif %}
     </section>
   {% endif %}
 
-  {# ---------- Personal ZENOO plan (PlanBuilder): topper, half or full bowl, with a cart link ---------- #}
-  {% if zenooPlan %}
-    {% set zp = zenooPlan %}
-    <section class="card dash-zenoo" aria-labelledby="zenoo-h">
-      <h2 id="zenoo-h">{{ '%dog%’s ZENOO plan'|trans({'%dog%': dog.name}) }}</h2>
-      <p class="dash-zenoo__lead">
-        {% if zp.product.image %}<img src="{{ zp.product.image }}" alt="" width="64" height="64">{% endif %}
-        {{ 'Fresher food with %product%, worked out for %dog%’s %kcal% kcal a day.'|trans({'%product%': '<a href="' ~ zp.product_url ~ '" target="_blank" rel="noopener">' ~ zp.product.title|e ~ '</a>', '%dog%': dog.name, '%kcal%': zp.kcal_per_day})|raw }}
-      </p>
-      <div class="dash-zenoo__options">
-        {% for key, o in zp.options %}
-          <div class="dash-zenoo__option{{ key == zp.recommended ? ' is-recommended' }}">
-            {% if key == zp.recommended %}<span class="dash-zenoo__badge">{{ 'Our pick for %dog%'|trans({'%dog%': dog.name}) }}</span>{% endif %}
-            <h3>{{ {topper: 'As a topper', half: 'Half the bowl', full: 'The whole bowl'}[key]|trans }}</h3>
-            <p class="dash-zenoo__grams">{{ '%g% g a day'|trans({'%g%': o.grams_per_day}) }}</p>
-            <p class="dash-zenoo__cost">{{ 'about €%eur% a day'|trans({'%eur%': o.cost_per_day|number_format(2, decimal_sep(), ' ')}) }}</p>
-            <a class="btn {{ key == zp.recommended ? '' : 'btn-outline' }} btn-small" href="{{ path('app_plan_cart', {option: key}) }}" target="_blank" rel="noopener">
-              {{ '2-week starter: €%eur%'|trans({'%eur%': o.starter_price|number_format(2, decimal_sep(), ' ')}) }}
-            </a>
+  {% if dog %}
+    {# 2. Today's bowl: the plan's key numbers; the full plan is on the dog's tab. #}
+    <section class="card card-mist today-bowl" aria-labelledby="bowl-h">
+      <div class="today-row">
+        <p class="kicker" id="bowl-h">{{ 'Today’s bowl'|trans }}</p>
+        <a href="{{ path('app_dog_tab') }}#plan-h">{{ 'Full plan'|trans }}</a>
+      </div>
+      {% if dog.get('plan_food') %}
+        {# The amounts big; a "keep today's amounts / ask your vet" note (after " — ") small. #}
+        {% set parts = dog.get('plan_food')|split(' — ', 2) %}
+        <p class="today-bowl__food">{{ parts[0] }}</p>
+        {% if parts[1] is defined %}<p class="today-bowl__note">{{ parts[1] }}</p>{% endif %}
+      {% endif %}
+      <p class="muted">{{ [dog.get('plan_meals'), dog.get('kcal_target') ? 'about %kcal% kcal a day'|trans({'%kcal%': dog.get('kcal_target')|round}) : null]|filter(x => x)|join(' · ') }}</p>
+    </section>
+
+    {# 3. The log: last values at a glance, one "Add entry", Undo on the newest entry. #}
+    <section class="card today-log" id="log" aria-labelledby="log-h">
+      <div class="today-row">
+        <h2 id="log-h">{{ '%dog%’s log'|trans({'%dog%': dog.name}) }}</h2>
+        <button class="btn btn-outline btn-small" type="button" data-log-open="weight">+ {{ 'Add entry'|trans }}</button>
+      </div>
+      <div class="today-tiles">
+        {% for type, t in trackers %}
+          {% set last = dog.latestLog(type) %}
+          <div class="today-tile{{ logged == type ? ' is-new' }}">
+            <span class="today-tile__label">{{ t.label }}</span>
+            {% if last %}
+              <strong>{% if type == 'weight' %}{{ last.v|replace({'.': decimal_sep()}) }} kg{% elseif type == 'body' %}{{ bodyNames[last.v]|trans }}{% elseif type == 'stool' %}{{ '%n% of 7'|trans({'%n%': last.v}) }}{% else %}{{ '%n% of 10'|trans({'%n%': last.v}) }}{% endif %}</strong>
+              {% if logged == type %}
+                <form method="post" action="{{ path('app_dog_tracker_undo') }}" class="today-undo">
+                  <input type="hidden" name="_token" value="{{ csrf_token('tracker') }}"><input type="hidden" name="type" value="{{ type }}">
+                  <span>{{ 'Saved just now'|trans }} ·</span> <button type="submit">{{ 'Undo'|trans }}</button>
+                </form>
+              {% else %}
+                <span class="muted">{{ date(last.d)|local_date('day') }}</span>
+              {% endif %}
+            {% else %}
+              <strong>–</strong><span class="muted">{{ 'Not logged yet'|trans }}</span>
+            {% endif %}
           </div>
         {% endfor %}
       </div>
-      {% if zp.starter_code %}<p class="dash-zenoo__code">{{ 'Starter offer: the code %code% is added at checkout.'|trans({'%code%': zp.starter_code}) }}</p>{% endif %}
-      <details class="dash-zenoo__switch">
-        <summary>{{ 'How to switch over (%days% days)'|trans({'%days%': zp.switch_days}) }}</summary>
-        <ol>{% for step in zp.schedule %}<li>{{ step.from == step.to ? 'Day %n%'|trans({'%n%': step.from}) : 'Days %from%–%to%'|trans({'%from%': step.from, '%to%': step.to}) }}: {{ '%new%% new food, %old%% current food'|trans({'%new%': step.new_food_percent, '%old%': step.old_food_percent}) }}</li>{% endfor %}</ol>
-        <p class="small muted">{{ 'For a topper or half bowl, reduce %dog%’s current food by the same share so the calories stay the same.'|trans({'%dog%': dog.name}) }}</p>
-      </details>
-      <p class="small muted">{{ 'An estimate from the pack’s energy value and %dog%’s quiz answers. Questions? Ask the coach.'|trans({'%dog%': dog.name}) }}</p>
     </section>
-  {% elseif dog %}
-    {# No product synced yet: the coach's plan link still lands here, with the shop one tap away. #}
-    <section class="card dash-zenoo" aria-labelledby="zenoo-h">
-      <h2 id="zenoo-h">{{ 'Fresher food for %dog%'|trans({'%dog%': dog.name}) }}</h2>
-      <p class="dash-zenoo__lead">{{ 'ZENOO makes real food for dogs. Your personal plan, with grams and cost a day, appears here once the shop’s products are loaded.'|trans }}</p>
-      <a class="btn btn-outline btn-small" href="{{ shopUrl }}" target="_blank" rel="noopener" data-track="plan_cart">{{ 'Visit the ZENOO shop'|trans }}</a>
-    </section>
-  {% endif %}
 
-  {# ---------- Lessons ---------- #}
-  {% if course %}
-    <section class="dash-section" aria-labelledby="lessons-h">
-      <div class="dash-section__head">
-        <h2 id="lessons-h">{{ dog ? 'Lessons for %dog%'|trans({'%dog%': dog.name}) : 'Your course'|trans }}</h2>
-        <p class="muted">{{ '%done% of %total% lessons done'|trans({'%done%': done, '%total%': total}) }}{% if streak %} · 🔥 {{ '%n%-day streak'|trans({'%n%': streak}) }}{% endif %}</p>
+    {# One sheet for all four logs. Nothing is pre-selected. #}
+    <dialog class="log-sheet" id="log-sheet" aria-labelledby="sheet-h">
+      <div class="today-row">
+        <h2 id="sheet-h">{{ 'Log for %dog%'|trans({'%dog%': dog.name}) }}</h2>
+        <form method="dialog"><button class="log-sheet__close" aria-label="{{ 'Close'|trans }}">×</button></form>
       </div>
-      <div class="dash-bar" aria-hidden="true"><span style="width: {{ total ? (done / total * 100)|round : 0 }}%"></span></div>
-      {% if picks %}
-        <ol class="dash-lessons">
-          {% for p in picks %}
-            <li class="card dash-lesson">
-              <span class="dash-lesson__n">{{ p.number }}</span>
-              <div>
-                <h3><a href="{{ path('app_course_lesson', {slug: course.slug, id: p.lesson.id}) }}">{{ p.lesson.title }}</a></h3>
-                <p class="small">{{ p.reason|trans }}{% if p.lesson.durationMinutes %} · {{ '%n% min'|trans({'%n%': p.lesson.durationMinutes}) }}{% endif %}</p>
-              </div>
-              <a class="btn btn-small" href="{{ path('app_course_lesson', {slug: course.slug, id: p.lesson.id}) }}">{{ 'Start'|trans }}</a>
-            </li>
-          {% endfor %}
-        </ol>
-      {% elseif next %}
-        <a class="card dash-next" href="{{ path('app_course_lesson', {slug: course.slug, id: next.id}) }}"><span class="small muted">{{ 'Up next'|trans }}</span><strong>{{ next.title }}</strong></a>
-      {% endif %}
-      <p><a href="{{ path('app_courses') }}">{{ 'See all lessons'|trans }} →</a></p>
-    </section>
-  {% endif %}
-
-  {# ---------- Coach ---------- #}
-  {% if dog %}
-    {# The dog record: what the coach has learned in the chat, plus what the owner added. Theirs to edit. #}
-    <section class="card dash-knows" aria-labelledby="knows-h">
-      <h2 id="knows-h">{{ 'What the coach knows about %dog%'|trans({'%dog%': dog.name}) }}</h2>
-      <ul>
-        {% if dog.food %}<li><span class="dash-knows__topic">{{ 'Food'|trans }}</span> <span class="dash-knows__text">{{ (dog.food.brand ~ ' ' ~ dog.food.product)|trim }}</span></li>{% endif %}
-        {% if dog.weightUpdate %}<li><span class="dash-knows__topic">{{ dog.weightUpdate.at|date('Y-m-d') }}</span> <span class="dash-knows__text">{{ 'Weight: %kg% kg'|trans({'%kg%': dog.weightUpdate.kg}) }}</span></li>{% endif %}
-        {% for i, n in dog.notes|reverse(true) %}{# newest first; i is the fact's position for removing it #}
-          <li>
-            <span class="dash-knows__topic">{{ n.at|date('Y-m-d') }}</span>
-            <span class="dash-knows__text">{{ n.text }}{% if (n.source ?? 'chat') == 'owner' %} <small>{{ '(you added this)'|trans }}</small>{% endif %}</span>
-            <form method="post" action="{{ path('app_dog_notes') }}" class="dash-knows__remove">
-              <input type="hidden" name="_token" value="{{ csrf_token('dog-notes') }}">
-              <button type="submit" name="remove" value="{{ i }}" title="{{ 'Remove'|trans }}" aria-label="{{ 'Remove'|trans }}">×</button>
-            </form>
-          </li>
-        {% endfor %}
-      </ul>
-      <form method="post" action="{{ path('app_dog_notes') }}" class="dash-knows__add">
-        <input type="hidden" name="_token" value="{{ csrf_token('dog-notes') }}">
-        <label class="visually-hidden" for="dog-note">{{ 'Add something about %dog%'|trans({'%dog%': dog.name}) }}</label>
-        <input id="dog-note" name="text" maxlength="240" required placeholder="{{ 'Add something about %dog%, e.g. “allergic to chicken”'|trans({'%dog%': dog.name}) }}">
-        <button class="btn btn-small" type="submit">{{ 'Add'|trans }}</button>
-      </form>
-      {% if dogs|length > 1 %}
-        <form method="post" action="{{ path('app_dog_remove', {id: dog.id}) }}" class="dash-remove-dog" onsubmit="return confirm(this.dataset.confirm)" data-confirm="{{ 'Remove %dog%, their chat and everything saved about them? This can’t be undone.'|trans({'%dog%': dog.name}) }}">
-          <input type="hidden" name="_token" value="{{ csrf_token('dog-remove' ~ dog.id) }}">
-          <button type="submit">{{ 'Remove %dog% from my account'|trans({'%dog%': dog.name}) }}</button>
+      <p class="muted">{{ 'Today'|trans }}, {{ date()|local_date('long') }}</p>
+      <div class="log-tabs" role="tablist">
+        {% for type, t in trackers %}<button type="button" role="tab" data-log-tab="{{ type }}" aria-selected="false">{{ t.label }}</button>{% endfor %}
+      </div>
+      {% for type, t in trackers %}
+        <form method="post" action="{{ path('app_dog_tracker') }}" class="log-panel" data-log-panel="{{ type }}" hidden>
+          <input type="hidden" name="_token" value="{{ csrf_token('tracker') }}"><input type="hidden" name="type" value="{{ type }}">
+          {% if type == 'weight' %}
+            <label for="log-weight-v">{{ 'What does %dog% weigh today?'|trans({'%dog%': dog.name}) }}</label>
+            <div class="log-weight"><input id="log-weight-v" name="value" inputmode="decimal" required placeholder="{{ dog.latestLog('weight').v ?? '' }}"><span>kg</span></div>
+          {% elseif type == 'body' %}
+            <p class="log-q">{{ 'Which shape is closest to %dog%, seen from above?'|trans({'%dog%': dog.name}) }}</p>
+            <div class="log-shapes">
+              {% for o in [{v: 2, l: 'Too thin', s: [10, 3.5, 7]}, {v: 4, l: 'Thin', s: [11, 6, 8.5]}, {v: 5, l: 'Ideal', s: [12, 8, 10]}, {v: 7, l: 'Heavy', s: [13, 14, 12]}, {v: 8, l: 'Too heavy', s: [14, 18.5, 14.5]}] %}
+                <label class="log-shape"><input type="radio" name="value" value="{{ o.v }}" required>{{ shapes.shape(o.s[0], o.s[1], o.s[2]) }}<span>{{ o.l|trans }}</span></label>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="log-q">{{ type == 'stool' ? 'How was %dog%’s stool today? (1 hard, 2 ideal, 7 watery)'|trans({'%dog%': dog.name}) : 'How much is %dog% scratching? (0 not at all, 10 all the time)'|trans({'%dog%': dog.name}) }}</p>
+            <div class="log-scale">
+              {% for v in (type == 'stool' ? 1..7 : 0..10) %}<label><input type="radio" name="value" value="{{ v }}" required><span>{{ v }}</span></label>{% endfor %}
+            </div>
+          {% endif %}
+          <p class="small muted">{{ t.help }}</p>
+          <button class="btn btn-block" type="submit">{{ 'Save %what%'|trans({'%what%': t.label|lower}) }}</button>
         </form>
-      {% endif %}
-      <p class="dash-knows__hint">{{ 'Tell the coach when something changes, and it’s added here.'|trans }}
-        <a href="{{ path('app_vet_report') }}">{{ 'Report for the vet (print or PDF)'|trans }}</a></p>
-    </section>
+      {% endfor %}
+    </dialog>
   {% endif %}
 
-  <section class="card card-forest dash-coach" aria-labelledby="coach-h">
-    <div>
-      <p class="kicker">{{ 'AI coach'|trans }}</p>
-      <h2 id="coach-h">{{ dog ? 'Ask the ZENOO coach about %dog%'|trans({'%dog%': dog.name}) : 'Ask the ZENOO coach'|trans }}</h2>
-      <p>{{ dog ? 'The coach knows %dog%’s quiz answers and your lessons, so you can skip the basics.'|trans({'%dog%': dog.name}) : 'Questions about feeding, digestion or your dog’s weight? Ask any time.'|trans }}</p>
-    </div>
-    <div class="dash-coach__qs">
-      {% for q in coachQuestions %}
+  {# 4. The coach, within one scroll. #}
+  <section class="card card-forest today-coach" aria-labelledby="coach-h">
+    <p class="kicker" id="coach-h">{{ 'Coach'|trans }}</p>
+    <form action="{{ path('app_chat') }}" method="get" class="today-ask">
+      <label class="visually-hidden" for="today-ask">{{ 'Ask the coach'|trans }}</label>
+      <input id="today-ask" name="ask" required placeholder="{{ dog ? 'Ask about %dog%…'|trans({'%dog%': dog.name}) : 'Ask the coach…'|trans }}">
+      <button type="submit" aria-label="{{ 'Send'|trans }}">↑</button>
+    </form>
+    <div class="today-chips">
+      {% for q in coachQuestions|slice(0, 2) %}
         {% set text = q|trans({'%dog%': dog.name}) %}
         <a class="dash-chip" href="{{ path('app_chat', {ask: text}) }}">{{ text }}</a>
       {% endfor %}
-      <a class="btn btn-small" href="{{ path('app_chat') }}">{{ 'Open the chat'|trans }}</a>
     </div>
-    <a class="dash-coach__photo" href="{{ path('app_chat', {photo: 1}) }}">
-      <span aria-hidden="true">📷</span>
-      <span><strong>{{ 'Something looks off?'|trans }}</strong> {{ 'A rash, an upset tummy, a new food? Show the coach a photo and get first tips and next steps.'|trans }}</span>
-    </a>
   </section>
 </div>
 {% endblock %}

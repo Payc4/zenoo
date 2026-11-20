@@ -1,0 +1,11 @@
+{# The body-shape pictures, as in the quiz (public/quiz/app.js shapeSvg), seen from above. #}
+{% macro shape(cw, ww, hw) %}
+  {%- set L = 30 - cw -%}{%- set R = 30 + cw -%}
+  <svg viewBox="0 0 60 100" aria-hidden="true"><g fill="currentColor">
+    <rect x="{{ 30 - cw - 3.5 }}" y="31" width="5" height="10" rx="2.5"/><rect x="{{ 30 + cw - 1.5 }}" y="31" width="5" height="10" rx="2.5"/>
+    <rect x="{{ 30 - hw - 3.5 }}" y="70" width="5" height="10" rx="2.5"/><rect x="{{ 30 + hw - 1.5 }}" y="70" width="5" height="10" rx="2.5"/>
+    <ellipse cx="30" cy="7" rx="4" ry="5"/><ellipse cx="30" cy="17" rx="8" ry="9"/>
+    <ellipse cx="21.5" cy="18" rx="3.2" ry="6.5" transform="rotate(20 21.5 18)"/><ellipse cx="38.5" cy="18" rx="3.2" ry="6.5" transform="rotate(-20 38.5 18)"/>
+    <path d="M26,27 Q{{ 30 - cw }},28 {{ 30 - cw }},38 Q{{ 30 - cw }},49 {{ 30 - ww }},56 Q{{ 30 - hw }},62 {{ 30 - hw }},72 Q{{ 30 - hw }},84 30,85 Q{{ 30 + hw }},84 {{ 30 + hw }},72 Q{{ 30 + hw }},62 {{ 30 + ww }},56 Q{{ 30 + cw }},49 {{ 30 + cw }},38 Q{{ 30 + cw }},28 34,27 Z"/></g>
+    <path d="M30,84 Q34,91 31,98" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+{% endmacro %}

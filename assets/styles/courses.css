@@ -32,3 +32,11 @@
 .cl-unlock p { margin: 0; color: var(--ink-muted); }
 .cl-lesson.is-locked .cl-lesson__t { opacity: 0.6; }
 @media (max-width: 520px) { .cl-course__top { flex-direction: column; } .cl-course__count { text-align: left; } .cl-course { padding: 1.15rem; } }
+.cl-picks { margin: 0 0 1.5rem; }
+.cl-picks h2 { margin: 0 0 .75rem; }
+.dash-lessons { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 12px; }
+.dash-lesson { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; padding: 16px 20px; }
+.dash-lesson h3 { font-size: 1.05rem; margin: 0 0 4px; text-transform: none; font-family: inherit; font-weight: 700; }
+.dash-lesson h3 a { color: inherit; text-decoration: none; }
+.dash-lesson p { margin: 0; }
+.dash-lesson__n { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: var(--forest); color: #fff; font-weight: 800; font-family: var(--font-display); }

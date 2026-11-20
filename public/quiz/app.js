@@ -381,7 +381,7 @@ ${backOnly()}`,
           <p style="margin:0 0 8px">${fill(Z.text, { product: `<a href="${esc(CFG.zenoo.url)}" target="_blank" rel="noopener">${esc(CFG.zenoo.title)}</a>`, option: Z.options[zp.option], grams: zp.grams, cost: dec(zp.cost.toFixed(2)) })}</p>
           <a class="zq-btn" href="${esc(zp.cartUrl)}" target="_blank" rel="noopener" data-track="plan_cart">${fill(Z.cta, { price: dec(zp.starterPrice.toFixed(2)) })}</a>
           ${CFG.zenoo.starterCode ? `<p class="zq-small" style="margin:8px 0 0">${fill(Z.code, { code: esc(CFG.zenoo.starterCode) })}</p>` : ''}
-          <p class="zq-small" style="margin:8px 0 0">${Z.note}${CFG.user ? ` <a href="/dashboard#zenoo-h">${Z.dashboard}</a>` : ''}</p></div></div>`;
+          <p class="zq-small" style="margin:8px 0 0">${Z.note}${CFG.user ? ` <a href="/dashboard/dog#zenoo-h">${Z.dashboard}</a>` : ''}</p></div></div>`;
       })() : '';
       const payload = klaviyoPayload(r);
       const b = breed(); const y = Math.floor(ageYears()); const m = Math.round((ageYears() - y) * 12);

@@ -296,7 +296,7 @@ class DogProfile
 
     /** Tracker types (roadmap 05) and the values each takes. */
     public const TRACKERS = [
-        'weight' => ['min' => 0.5, 'max' => 110, 'step' => 0.1],   // kg
+        'weight' => ['min' => 0.2, 'max' => 110, 'step' => 0.1],   // kg (puppies from 0.2)
         'body' => ['min' => 1, 'max' => 9, 'step' => 1],           // body condition score, 5 = ideal
         'stool' => ['min' => 1, 'max' => 7, 'step' => 1],          // faecal score, 2 = ideal
         'itch' => ['min' => 0, 'max' => 10, 'step' => 1],          // 0 = none, 10 = constant
@@ -326,10 +326,39 @@ class DogProfile
             return false;
         }
         $day = $at->format('Y-m-d');
+        $replaced = null;
+        foreach ((array) ($this->data['log'] ?? []) as $e) {
+            if (\is_array($e) && $e['t'] === $type && $e['d'] === $day) {
+                $replaced = $e;
+            }
+        }
         $log = array_values(array_filter((array) ($this->data['log'] ?? []), fn ($e) => \is_array($e) && !($e['t'] === $type && $e['d'] === $day)));
-        $log[] = ['d' => $day, 't' => $type, 'v' => $range['step'] < 1 ? round($value, 1) : (int) round($value), 'src' => $source];
+        $entry = ['d' => $day, 't' => $type, 'v' => $range['step'] < 1 ? round($value, $value < 2 ? 2 : 1) : (int) round($value), 'src' => $source];
+        if ($replaced) {
+            $entry['prev'] = ['v' => $replaced['v'], 'src' => $replaced['src'] ?? 'owner']; // for Undo
+        }
+        $log[] = $entry;
         $this->data['log'] = \array_slice($log, -400);
         return true;
+    }
+
+    /** Takes back today's entry of this tracker (Undo), putting back the one it replaced, if any. */
+    public function undoLog(string $type, \DateTimeImmutable $at): bool
+    {
+        $day = $at->format('Y-m-d');
+        $log = (array) ($this->data['log'] ?? []);
+        foreach ($log as $i => $e) {
+            if (\is_array($e) && $e['t'] === $type && $e['d'] === $day && ($e['src'] ?? '') === 'owner') {
+                if (isset($e['prev'])) {
+                    $log[$i] = ['d' => $day, 't' => $type, 'v' => $e['prev']['v'], 'src' => $e['prev']['src']];
+                } else {
+                    unset($log[$i]);
+                }
+                $this->data['log'] = array_values($log);
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Earlier Bowl Scores and today's: [ { at, score } ], oldest first. */

@@ -1,0 +1,181 @@
+{% extends 'base.html.twig' %}
+
+{#
+  The dog's own tab (test report proposal 3): everything occasional about one dog. The score with
+  its history ("Retake the check" lives here), the full plan and the ZENOO plan, trends, then one
+  list of occasional tasks, and "Remove" last, apart from everything else.
+#}
+{% block title %}{{ dog.name }} · ZENOO{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block importmap %}{{ importmap(['app', 'dashboard']) }}{% endblock %}
+
+{% set subLabels = {protein: 'Protein', carbs: 'Carb load', freshness: 'Freshness', body: 'Body shape', activity: 'Activity', signals: 'Bowl signals', routine: 'Portions & routine'} %}
+{% set stages = {puppy: 'Puppy', adult: 'Adult', senior: 'Senior'} %}
+
+{% block body %}
+<section class="dash-head">
+  <div class="wrap dash-head__in">
+    <form class="dash-photo-wrap" method="post" action="{{ path('app_dog_photo') }}" enctype="multipart/form-data" data-photo-form>
+      {% if photo %}<img class="dash-photo" src="{{ photo }}" alt="{{ ownPhoto ? dog.name : '' }}">{% else %}<span class="dash-photo dash-photo--empty" aria-hidden="true">🐾</span>{% endif %}
+      <input type="hidden" name="_token" value="{{ csrf_token('dog-photo') }}">
+      <label class="dash-photo-edit" title="{{ ownPhoto ? 'Change the photo'|trans : 'Add a photo of %dog%'|trans({'%dog%': dog.name}) }}">
+        <span aria-hidden="true">📷</span><span class="visually-hidden">{{ ownPhoto ? 'Change the photo'|trans : 'Add a photo of %dog%'|trans({'%dog%': dog.name}) }}</span>
+        <input type="file" name="photo" accept="image/*" hidden>
+      </label>
+      <noscript><button type="submit" class="btn btn-small">{{ 'Save'|trans }}</button></noscript>
+    </form>
+    <div class="dash-head__text">
+      <h1>{{ dog.name }}</h1>
+      <ul class="dash-facts">
+        {% if dog.get('breed') %}<li>{{ dog.get('breed') == 'mixed' ? 'Mixed breed'|trans : dog.get('breed') }}</li>{% endif %}
+        {% if dog.get('age_years') is not null %}<li>{{ dog.get('age_years')|dog_age }}{% if stages[dog.get('life_stage')] is defined %} · {{ stages[dog.get('life_stage')]|trans }}{% endif %}</li>{% endif %}
+        {% set lastW = dog.latestLog('weight') %}
+        {% if dog.weightUpdate and (not lastW or dog.weightUpdate.at|date('Y-m-d') >= lastW.d) %}<li>{{ dog.weightUpdate.kg|replace({'.': decimal_sep()}) }} kg</li>
+        {% elseif lastW %}<li>{{ lastW.v|replace({'.': decimal_sep()}) }} kg</li>{% elseif dog.get('weight_kg') %}<li>{{ dog.get('weight_kg') }} kg</li>{% endif %}
+      </ul>
+      {% if not ownPhoto %}<p class="small" style="margin:6px 0 0">{{ 'Tap the camera to add a photo of %dog%.'|trans({'%dog%': dog.name}) }}</p>{% endif %}
+    </div>
+  </div>
+</section>
+
+<div class="wrap dog-tab">
+  {# 1. The score with its history. #}
+  {% set history = dog.scoreHistory %}
+  <section class="card dog-score" aria-labelledby="score-h">
+    <p class="kicker" id="score-h">{{ 'Bowl Score'|trans }}</p>
+    <div class="dog-score__row">
+      <div>
+        <div class="dash-score__num"><span>{{ dog.bowlScore }}</span><small>/100</small></div>
+        {% if dog.get('score_title') %}<p class="dog-score__band">{{ dog.get('score_title')|lower|capitalize }}</p>{% endif %}
+      </div>
+      {% if history|length > 1 %}
+        {% set hs = history|slice(-6) %}
+        {% set minS = min(hs|map(h => h.score)) - 5 %}{% set maxS = max(hs|map(h => h.score)) + 5 %}
+        <svg class="dog-score__chart" viewBox="0 0 160 70" role="img" aria-label="{{ history|map(h => h.score)|join(' → ') }}">
+          {% set pts = [] %}
+          {% for h in hs %}{% set x = hs|length > 1 ? 10 + loop.index0 * 140 / (hs|length - 1) : 80 %}{% set y = 55 - (h.score - minS) * 40 / max(1, maxS - minS) %}{% set pts = pts|merge([x ~ ',' ~ y]) %}{% endfor %}
+          <polyline points="{{ pts|join(' ') }}" fill="none" stroke="currentColor" stroke-width="2"/>
+          {% for h in hs %}{% set x = hs|length > 1 ? 10 + loop.index0 * 140 / (hs|length - 1) : 80 %}{% set y = 55 - (h.score - minS) * 40 / max(1, maxS - minS) %}<circle cx="{{ x }}" cy="{{ y }}" r="3.5" fill="currentColor"/><text x="{{ x }}" y="{{ y - 7 }}" text-anchor="middle" font-size="10">{{ h.score }}</text>{% endfor %}
+        </svg>
+      {% endif %}
+    </div>
+    <p class="small muted">{{ 'From the check on %date%'|trans({'%date%': dog.updatedAt|local_date('long')}) }}</p>
+    <div class="btn-row">
+      <a class="btn btn-outline btn-small" href="{{ path('app_quiz', {dog: dog.id}) }}">{{ 'Retake the check'|trans }}</a>
+      <details class="dog-breakdown">
+        <summary>{{ 'See the breakdown'|trans }}</summary>
+        <ul class="dash-bars">
+          {% for s in dog.subScores %}
+            <li class="{{ s.percent < 60 ? 'is-low' }}">
+              <span class="dash-bars__label">{{ subLabels[s.key]|trans }}</span>
+              <span class="dash-bars__track" aria-hidden="true"><span style="width: {{ s.percent }}%"></span></span>
+              <span class="dash-bars__val">{{ s.score }}/{{ s.max }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+        <ol class="dog-fixes">
+          <li>{{ dog.get('fix_1_text') ?: 'Keep doing what you’re doing!'|trans }}</li>
+          {% if dog.get('fix_2_text') %}<li>{{ dog.get('fix_2_text') }}</li>{% endif %}
+          {% if dog.get('fix_3_text') %}<li>{{ dog.get('fix_3_text') }}</li>{% endif %}
+        </ol>
+      </details>
+    </div>
+  </section>
+
+  {# 2. The full plan, and the ZENOO plan (the coach links here: #zenoo-h). #}
+  <section class="card card-mist dash-plan" aria-labelledby="plan-h">
+    <h2 id="plan-h">{{ '%dog%’s daily plan'|trans({'%dog%': dog.name}) }}</h2>
+    <dl>
+      {% if dog.get('kcal_target') %}<div><dt>{{ 'Energy'|trans }}</dt><dd>{{ 'about %kcal% kcal a day'|trans({'%kcal%': dog.get('kcal_target')|round}) }}</dd></div>{% endif %}
+      {% if dog.get('plan_food') %}{% set parts = dog.get('plan_food')|split(' — ', 2) %}<div><dt>{{ 'Food'|trans }}</dt><dd>{{ parts[0] }}{% if parts[1] is defined %}<br><small>{{ parts[1] }}</small>{% endif %}</dd></div>{% endif %}
+      {% if dog.get('plan_meals') %}<div><dt>{{ 'Meals'|trans }}</dt><dd>{{ dog.get('plan_meals') }}</dd></div>{% endif %}
+      {% if dog.get('plan_protein_g') %}<div><dt>{{ 'Protein'|trans }}</dt><dd>{{ dog.get('plan_protein_g') }}</dd></div>{% endif %}
+      {% if dog.get('plan_fat_g') %}<div><dt>{{ 'Fat'|trans }}</dt><dd>{{ dog.get('plan_fat_g') }}</dd></div>{% endif %}
+      {% if dog.get('plan_weight') %}<div><dt>{{ 'Weight'|trans }}</dt><dd>{{ dog.get('plan_weight') }}</dd></div>{% endif %}
+    </dl>
+    <p class="small muted">{{ 'A starting point, not a prescription. Weigh %dog% every 2–3 weeks and adjust by about 10%.'|trans({'%dog%': dog.name}) }}</p>
+  </section>
+
+  {{ include('dashboard/_zenoo.html.twig') }}
+
+  {# 3. Trends instead of four tracker cards: weight gets a chart, the others their last value. #}
+  <section class="card dog-trends" aria-labelledby="trackers-h">
+    <div class="today-row"><h2 id="trackers-h">{{ 'Trends'|trans }}</h2><a href="{{ path('app_dashboard') }}#log">{{ 'Add entry'|trans }}</a></div>
+    {% set weights = dog.log('weight') %}
+    <div class="dog-trend">
+      <div class="today-row"><strong>{{ 'Weight'|trans }}</strong><span>{{ weights ? (weights|last).v|replace({'.': decimal_sep()}) ~ ' kg' : '–' }}</span></div>
+      {{ tracker_chart(weights|slice(-12), 0, 0, 'Weight'|trans) }}
+    </div>
+    {% for type, label in {body: 'Body shape', stool: 'Stool', itch: 'Itching'} %}
+      {% set last = dog.latestLog(type) %}
+      <div class="dog-trend today-row"><span>{{ label|trans }}</span><span class="muted">{% if last %}{{ type == 'body' ? '%n% of 9'|trans({'%n%': last.v}) ~ (last.v == 5 ? ', ' ~ 'ideal'|trans : '') : (type == 'stool' ? '%n% of 7'|trans({'%n%': last.v}) : '%n% of 10'|trans({'%n%': last.v})) }} · {{ date(last.d)|local_date('day') }}{% else %}{{ 'Not logged yet'|trans }}{% endif %}</span></div>
+    {% endfor %}
+  </section>
+
+  {# 4. Occasional tasks, one list. #}
+  <section class="card dog-list">
+    <details id="knows-h">
+      <summary><span>{{ 'What the coach knows'|trans }}</span><span class="muted">{{ '%n% notes'|trans({'%n%': dog.notes|length}) }}</span></summary>
+      <ul class="dash-knows">
+        {% if dog.food %}<li><span class="dash-knows__topic">{{ 'Food'|trans }}</span> <span class="dash-knows__text">{{ (dog.food.brand ~ ' ' ~ dog.food.product)|trim }}</span></li>{% endif %}
+        {% for i, n in dog.notes|reverse(true) %}
+          <li>
+            <span class="dash-knows__topic">{{ date(n.at)|local_date('day') }}</span>
+            <span class="dash-knows__text">{{ n.text }}{% if (n.source ?? 'chat') == 'owner' %} <small>{{ '(you added this)'|trans }}</small>{% endif %}</span>
+            <form method="post" action="{{ path('app_dog_notes') }}" class="dash-knows__remove">
+              <input type="hidden" name="_token" value="{{ csrf_token('dog-notes') }}">
+              <button type="submit" name="remove" value="{{ i }}" title="{{ 'Remove'|trans }}" aria-label="{{ 'Remove'|trans }}">×</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+      <form method="post" action="{{ path('app_dog_notes') }}" class="dash-knows__add">
+        <input type="hidden" name="_token" value="{{ csrf_token('dog-notes') }}">
+        <label class="visually-hidden" for="dog-note">{{ 'Add something about %dog%'|trans({'%dog%': dog.name}) }}</label>
+        <input id="dog-note" name="text" maxlength="240" required placeholder="{{ 'Add something about %dog%, e.g. “allergic to chicken”'|trans({'%dog%': dog.name}) }}">
+        <button class="btn btn-small btn-outline" type="submit">{{ 'Add'|trans }}</button>
+      </form>
+    </details>
+    <a class="dog-list__row" href="{{ path('app_vet_report') }}"><span>{{ 'Report for the vet'|trans }}</span><span class="muted">PDF ›</span></a>
+    <details id="share-h">
+      <summary><span>{{ 'Share %dog%’s score'|trans({'%dog%': dog.name}) }}</span><span class="muted">›</span></summary>
+      {% if dog.shareCode %}
+        {% set shareUrl = url('app_share', {code: dog.shareCode}) %}
+        <p>{{ 'Anyone with this link sees %dog%’s name, photo and Bowl Score, nothing else.'|trans({'%dog%': dog.name}) }}</p>
+        <div class="dash-share__row">
+          <input readonly value="{{ shareUrl }}" aria-label="{{ 'Share link'|trans }}" onclick="this.select()">
+          <button class="btn btn-small btn-outline" type="button" data-share="{{ shareUrl }}" data-share-title="{{ '%dog%’s Bowl Score: %score%/100'|trans({'%dog%': dog.name, '%score%': dog.bowlScore}) }}">{{ 'Share'|trans }}</button>
+        </div>
+        <form method="post" action="{{ path('app_share_toggle') }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('share') }}"><input type="hidden" name="stop" value="1">
+          <button class="dash-share__stop" type="submit">{{ 'Stop sharing (the link stops working)'|trans }}</button>
+        </form>
+      {% else %}
+        <p>{{ 'Make a card with %dog%’s photo and Bowl Score to share with friends: they can check their own dog’s score.'|trans({'%dog%': dog.name}) }}</p>
+        <form method="post" action="{{ path('app_share_toggle') }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('share') }}">
+          <button class="btn btn-small btn-outline" type="submit">{{ 'Make a share link'|trans }}</button>
+        </form>
+      {% endif %}
+    </details>
+    <a class="dog-list__row" href="{{ path('app_quiz') }}?new=1"><span>+ {{ 'Add another dog'|trans }}</span><span class="muted">›</span></a>
+  </section>
+
+  {# 5. Remove: last, apart, red text; the confirmation names what's lost and "Keep" is the main button. #}
+  {% if dogs|length > 1 %}
+    <section class="dog-remove">
+      <button class="link-danger" type="button" data-remove-open>{{ 'Remove %dog%'|trans({'%dog%': dog.name}) }}</button>
+      <p class="small muted">{{ 'Deletes %dog%’s scores, logs, notes, chat and share link.'|trans({'%dog%': dog.name}) }}</p>
+      <dialog class="log-sheet" id="remove-sheet" aria-labelledby="remove-h">
+        <h2 id="remove-h">{{ 'Remove %dog%?'|trans({'%dog%': dog.name}) }}</h2>
+        <p>{{ 'This deletes %dog%’s Bowl Scores, logs, coach notes, chat and share link. It cannot be undone.'|trans({'%dog%': dog.name}) }}</p>
+        <form method="dialog"><button class="btn btn-block">{{ 'Keep %dog%'|trans({'%dog%': dog.name}) }}</button></form>
+        <form method="post" action="{{ path('app_dog_remove', {id: dog.id}) }}" class="dash-remove-dog">
+          <input type="hidden" name="_token" value="{{ csrf_token('dog-remove' ~ dog.id) }}">
+          <button class="btn btn-block btn-danger-outline" type="submit">{{ 'Remove %dog%'|trans({'%dog%': dog.name}) }}</button>
+        </form>
+      </dialog>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

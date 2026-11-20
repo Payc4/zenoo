@@ -14,13 +14,31 @@
     {% block importmap %}{{ importmap('app') }}{% endblock %}
     {{ include('_tracking.html.twig') }}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}{{ app.user and member_dog() ? ' has-tabbar' }}">
     <a class="skip" href="#main">{{ 'Skip to content'|trans }}</a>
 
     {% set route = app.request.attributes.get('_route') %}
     <header class="site-header">
         <div class="wrap">
             <a class="brand" href="{{ app.user ? path('app_dashboard') : path('app_homepage') }}"><img src="/images/logo-white.png" alt="{{ 'ZENOO home'|trans }}" width="94" height="26"></a>
+            {# The dog switcher (proposals 2 and 6): every member page is about one dog. Switching
+               keeps you on the same kind of page (Today, Coach, Learn, the dog's tab). #}
+            {% set myDog = app.user ? member_dog() : null %}
+            {% if myDog %}
+                <details class="dog-switch">
+                    <summary aria-label="{{ 'Switch dog'|trans }}: {{ myDog.name }}">
+                        <span class="dog-switch__paw" aria-hidden="true">🐾</span><span class="dog-switch__name">{{ myDog.name }}</span>
+                        <svg class="lang-switch__chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </summary>
+                    <ul class="dog-switch__menu">
+                        {% for d in member_dogs() %}
+                            <li>{% if d.id == myDog.id %}<span aria-current="true">{{ d.name }} ✓</span>
+                            {% else %}<form method="post" action="{{ path('app_dog_select', {id: d.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('dog-select') }}"><input type="hidden" name="back" value="{{ app.request.pathInfo }}"><button type="submit">{{ d.name }}</button></form>{% endif %}</li>
+                        {% endfor %}
+                        <li><a href="{{ path('app_quiz') }}?new=1{{ route starts with 'app_chat' ? '&then=chat' }}">+ {{ 'Add a dog'|trans }}</a></li>
+                    </ul>
+                </details>
+            {% endif %}
             {% set lang = app.locale %}
             {# Language menu: the current flag opens a list of the four languages (works without JavaScript). #}
             <details class="lang-switch">
@@ -41,11 +59,20 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
             </button>
             <nav class="nav" id="site-nav" aria-label="{{ 'Main'|trans }}">
-                {% if app.user %}<a href="{{ path('app_dashboard') }}" {{ route == 'app_dashboard' ? 'aria-current="page"' }}>{{ 'My dog'|trans }}</a>{% endif %}
-                <a href="{{ path('app_shop') }}" {{ route starts with 'app_shop' or route == 'app_product' ? 'aria-current="page"' }}>{{ 'Shop'|trans }}</a>
-                <a href="{{ path('app_quiz') }}">{{ 'Bowl Score quiz'|trans }}</a>
-                <a href="{{ path('app_courses') }}" {{ route starts with 'app_course' ? 'aria-current="page"' }}>{{ 'Courses'|trans }}</a>
-                <a href="{{ path('app_chat') }}" {{ route starts with 'app_chat' ? 'aria-current="page"' }}>{{ 'Chat'|trans }}</a>
+                {% if myDog %}
+                    {# Members: the same four places as the tab bar on phones. #}
+                    <a class="nav-tab" href="{{ path('app_dashboard') }}" {{ route == 'app_dashboard' ? 'aria-current="page"' }}>{{ 'Today'|trans }}</a>
+                    <a class="nav-tab" href="{{ path('app_chat') }}" {{ route starts with 'app_chat' ? 'aria-current="page"' }}>{{ 'Coach'|trans }}</a>
+                    <a class="nav-tab" href="{{ path('app_courses') }}" {{ route starts with 'app_course' ? 'aria-current="page"' }}>{{ 'Learn'|trans }}</a>
+                    <a class="nav-tab" href="{{ path('app_dog_tab') }}" {{ route == 'app_dog_tab' ? 'aria-current="page"' }}>{{ myDog.name }}</a>
+                    <a href="{{ path('app_shop') }}" {{ route starts with 'app_shop' or route == 'app_product' ? 'aria-current="page"' }}>{{ 'Shop'|trans }}</a>
+                {% else %}
+                    {% if app.user %}<a href="{{ path('app_dashboard') }}" {{ route == 'app_dashboard' ? 'aria-current="page"' }}>{{ 'My dog'|trans }}</a>{% endif %}
+                    <a href="{{ path('app_shop') }}" {{ route starts with 'app_shop' or route == 'app_product' ? 'aria-current="page"' }}>{{ 'Shop'|trans }}</a>
+                    <a href="{{ path('app_quiz') }}">{{ 'Bowl Score quiz'|trans }}</a>
+                    <a href="{{ path('app_courses') }}" {{ route starts with 'app_course' ? 'aria-current="page"' }}>{{ 'Courses'|trans }}</a>
+                    <a href="{{ path('app_chat') }}" {{ route starts with 'app_chat' ? 'aria-current="page"' }}>{{ 'Chat'|trans }}</a>
+                {% endif %}
                 {% if app.user %}
                     {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin') }}">{{ 'Admin'|trans }}</a>{% endif %}
                     <a class="nav-avatar" href="{{ path('app_account') }}" title="{{ 'My account'|trans }}" {{ route starts with 'app_account' ? 'aria-current="page"' }}>
@@ -59,6 +86,16 @@
             </nav>
         </div>
     </header>
+
+    {# The tab bar on phones (proposal 2): four fixed places for a member with a dog. #}
+    {% if myDog and not (route starts with 'admin') %}
+        <nav class="tabbar" aria-label="{{ 'Sections'|trans }}">
+            <a href="{{ path('app_dashboard') }}" {{ route == 'app_dashboard' ? 'aria-current="page"' }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>{{ 'Today'|trans }}</a>
+            <a href="{{ path('app_chat') }}" {{ route starts with 'app_chat' ? 'aria-current="page"' }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>{{ 'Coach'|trans }}</a>
+            <a href="{{ path('app_courses') }}" {{ route starts with 'app_course' ? 'aria-current="page"' }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h7a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H3zM21 5h-7a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>{{ 'Learn'|trans }}</a>
+            <a href="{{ path('app_dog_tab') }}" {{ route == 'app_dog_tab' ? 'aria-current="page"' }}><span aria-hidden="true">🐾</span>{{ myDog.name }}</a>
+        </nav>
+    {% endif %}
 
     <main id="main">
         {% set flashes = app.flashes %}

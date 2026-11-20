@@ -107,7 +107,8 @@ class ChatTest extends AppTestCase
 
         $crawler = $this->client->request('GET', '/chat');
         $this->assertCount(4, $crawler->filter('.chat-msg'));
-        $this->assertSame(['Bella', '+ New chat'], $crawler->filter('.chat-pets a')->each(fn ($a) => trim($a->text())), 'Max has no chat yet');
+        $this->assertSelectorTextContains('.chat-using', 'Using Bella’s profile');
+        $this->assertSelectorExists('.chat-menu a[href="/chat/new"]');
 
         // New chat offers Max (no chat yet), not Bella, plus a new pet through the quiz.
         $crawler = $this->client->request('GET', '/chat/new');
@@ -117,7 +118,7 @@ class ChatTest extends AppTestCase
         // Max's chat is separate and about Max.
         $crawler = $this->client->request('GET', '/chat?pet=' . $max->getId());
         $this->assertCount(0, $crawler->filter('.chat-msg'));
-        $this->assertSelectorTextContains('.chat-pet.is-on', 'Max');
+        $this->assertSelectorTextContains('.chat-using', 'Using Max’s profile');
         $this->em->createQuery('DELETE FROM App\Entity\ChatUsage u')->execute(); // the test limit is 2 a day
         $this->client->request('POST', '/chat/send?pet=' . $max->getId(), [], [], [
             'CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => (string) $crawler->filter('#chat')->attr('data-csrf'),
@@ -129,7 +130,7 @@ class ChatTest extends AppTestCase
         // Both pets now have a chat: New chat only offers a new pet.
         $crawler = $this->client->request('GET', '/chat/new');
         $this->assertCount(0, $crawler->filter('.chat-new__pet'));
-        $this->assertSame(['Bella', 'Max', '+ New chat'], $this->client->request('GET', '/chat')->filter('.chat-pets a')->each(fn ($a) => trim($a->text())));
+        $this->assertSelectorTextContains('.dog-switch summary', 'Max', 'the top-bar switcher shows the chat’s dog');
 
         $this->client->request('GET', '/chat/c/1');
         $this->assertResponseRedirects('/chat', null, 'old chat links go to the chat');

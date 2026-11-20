@@ -25,17 +25,19 @@ final class MoreDogsTest extends AppTestCase
     {
         $this->household();
         $crawler = $this->client->request('GET', '/dashboard');
-        $this->assertSelectorTextContains('h1', 'Max’s dashboard', 'the newest dog is selected');
-        $this->assertSelectorTextContains('.dash-dogs .is-current', 'Max');
-        $this->assertSelectorExists('a.dash-add-dog[href="/quiz/?new=1"]');
+        $this->assertSelectorTextContains('h1', 'Today for Max', 'the newest dog is selected');
+        // The dog switcher in the top bar, with "Add a dog".
+        $this->assertSelectorTextContains('.dog-switch summary', 'Max');
+        $this->assertSelectorExists('.dog-switch a[href="/quiz/?new=1"]');
+        $this->assertSelectorTextContains('.tabbar', 'Max');
 
-        $this->client->submit($crawler->filter('.dash-dogs form')->form());
+        $this->client->submit($crawler->filter('.dog-switch form')->form());
         $this->client->followRedirect();
-        $this->assertSelectorTextContains('h1', 'Bella’s dashboard');
+        $this->assertSelectorTextContains('h1', 'Today for Bella');
 
         // The chat is about the selected dog, and the coach knows about the other one.
         $crawler = $this->client->request('GET', '/chat');
-        $this->assertSelectorTextContains('.chat-pet.is-on', 'Bella');
+        $this->assertSelectorTextContains('.chat-using', 'Bella');
         $csrf = $crawler->filter('#chat')->attr('data-csrf');
         $this->client->request('POST', '/chat/send', [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $csrf], json_encode(['message' => 'How much should she eat?']));
         $profile = end(FakeClaude::$requests)['system'][1]['text'];
@@ -44,12 +46,12 @@ final class MoreDogsTest extends AppTestCase
 
         // Max's chat: opening it from the chat selects Max.
         $crawler = $this->client->request('GET', '/chat');
-        $this->client->click($crawler->filter('.chat-pet--new')->link());
+        $this->client->click($crawler->filter('.chat-menu a[href="/chat/new"]')->link());
         $this->client->click($this->client->getCrawler()->filter('.chat-new__pet')->link());
-        $this->assertSelectorTextContains('.chat-pet.is-on', 'Max');
+        $this->assertSelectorTextContains('.chat-using', 'Max');
         $this->assertSelectorTextContains('.chat-empty h1', 'Max');
         $this->client->request('GET', '/dashboard');
-        $this->assertSelectorTextContains('h1', 'Max’s dashboard');
+        $this->assertSelectorTextContains('h1', 'Today for Max');
     }
 
     public function testRemovingADog(): void
@@ -62,11 +64,13 @@ final class MoreDogsTest extends AppTestCase
             $this->em->persist(new \App\Entity\ChatMessage($chat, 'user', 'About ' . $d->getName()));
         }
         $this->em->flush();
-        $crawler = $this->client->request('GET', '/dashboard'); // Max is selected
+        $crawler = $this->client->request('GET', '/dashboard/dog'); // Max is selected
+        $this->assertSelectorTextContains('#remove-sheet .btn', 'Keep Max');
         $this->client->submit($crawler->filter('form.dash-remove-dog')->form());
         $this->client->followRedirect();
         $this->assertSelectorTextContains('body', 'Max has been removed from your account.');
-        $this->assertSelectorTextContains('h1', 'Bella’s dashboard');
+        $this->assertSelectorTextContains('h1', 'Today for Bella');
+        $this->client->request('GET', '/dashboard/dog');
         $this->assertSelectorNotExists('form.dash-remove-dog', 'the last dog stays');
         $this->em->clear();
         $this->assertCount(1, $this->em->getRepository(DogProfile::class)->findAll());

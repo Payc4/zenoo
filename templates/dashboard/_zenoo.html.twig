@@ -1,0 +1,38 @@
+  {# ---------- Personal ZENOO plan (PlanBuilder): topper, half or full bowl, with a cart link ---------- #}
+  {% if zenooPlan %}
+    {% set zp = zenooPlan %}
+    <section class="card dash-zenoo" aria-labelledby="zenoo-h">
+      <h2 id="zenoo-h">{{ '%dog%’s ZENOO plan'|trans({'%dog%': dog.name}) }}</h2>
+      <p class="dash-zenoo__lead">
+        {% if zp.product.image %}<img src="{{ zp.product.image }}" alt="" width="64" height="64">{% endif %}
+        {{ 'Fresher food with %product%, worked out for %dog%’s %kcal% kcal a day.'|trans({'%product%': '<a href="' ~ zp.product_url ~ '" target="_blank" rel="noopener">' ~ zp.product.title|e ~ '</a>', '%dog%': dog.name, '%kcal%': zp.kcal_per_day})|raw }}
+      </p>
+      <div class="dash-zenoo__options">
+        {% for key, o in zp.options %}
+          <div class="dash-zenoo__option{{ key == zp.recommended ? ' is-recommended' }}">
+            {% if key == zp.recommended %}<span class="dash-zenoo__badge">{{ 'Our pick for %dog%'|trans({'%dog%': dog.name}) }}</span>{% endif %}
+            <h3>{{ {topper: 'As a topper', half: 'Half the bowl', full: 'The whole bowl'}[key]|trans }}</h3>
+            <p class="dash-zenoo__grams">{{ '%g% g a day'|trans({'%g%': o.grams_per_day}) }}</p>
+            <p class="dash-zenoo__cost">{{ 'about €%eur% a day'|trans({'%eur%': o.cost_per_day|number_format(2, decimal_sep(), ' ')}) }}</p>
+            <a class="btn {{ key == zp.recommended ? '' : 'btn-outline' }} btn-small" href="{{ path('app_plan_cart', {option: key}) }}" target="_blank" rel="noopener">
+              {{ '2-week starter: €%eur%'|trans({'%eur%': o.starter_price|number_format(2, decimal_sep(), ' ')}) }}
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+      {% if zp.starter_code %}<p class="dash-zenoo__code">{{ 'Starter offer: the code %code% is added at checkout.'|trans({'%code%': zp.starter_code}) }}</p>{% endif %}
+      <details class="dash-zenoo__switch">
+        <summary>{{ 'How to switch over (%days% days)'|trans({'%days%': zp.switch_days}) }}</summary>
+        <ol>{% for step in zp.schedule %}<li>{{ step.from == step.to ? 'Day %n%'|trans({'%n%': step.from}) : 'Days %from%–%to%'|trans({'%from%': step.from, '%to%': step.to}) }}: {{ '%new%% new food, %old%% current food'|trans({'%new%': step.new_food_percent, '%old%': step.old_food_percent}) }}</li>{% endfor %}</ol>
+        <p class="small muted">{{ 'For a topper or half bowl, reduce %dog%’s current food by the same share so the calories stay the same.'|trans({'%dog%': dog.name}) }}</p>
+      </details>
+      <p class="small muted">{{ 'An estimate from the pack’s energy value and %dog%’s quiz answers. Questions? Ask the coach.'|trans({'%dog%': dog.name}) }}</p>
+    </section>
+  {% elseif dog %}
+    {# No product synced yet: the coach's plan link still lands here, with the shop one tap away. #}
+    <section class="card dash-zenoo" aria-labelledby="zenoo-h">
+      <h2 id="zenoo-h">{{ 'Fresher food for %dog%'|trans({'%dog%': dog.name}) }}</h2>
+      <p class="dash-zenoo__lead">{{ 'ZENOO makes real food for dogs. Your personal plan, with grams and cost a day, appears here once the shop’s products are loaded.'|trans }}</p>
+      <a class="btn btn-outline btn-small" href="{{ shopUrl }}" target="_blank" rel="noopener" data-track="plan_cart">{{ 'Visit the ZENOO shop'|trans }}</a>
+    </section>
+  {% endif %}

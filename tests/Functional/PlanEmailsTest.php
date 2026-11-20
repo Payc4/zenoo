@@ -52,7 +52,7 @@ final class PlanEmailsTest extends AppTestCase
         $this->assertEmailSubjectContains($email, 'Bella');
         $this->assertEmailHtmlBodyContains($email, 'Pasverkite maistą savaitę.');
         $this->assertEmailHtmlBodyContains($email, 'ZENOO RAW Jautiena šunims');
-        $this->assertEmailHtmlBodyContains($email, '/dashboard#zenoo-h');
+        $this->assertEmailHtmlBodyContains($email, '/dashboard/dog#zenoo-h');
 
         $this->assertStringContainsString('Sent 0', $this->series(), 'nothing due on day 0');
         $this->age(3);
@@ -62,7 +62,7 @@ final class PlanEmailsTest extends AppTestCase
         $this->age(14);
         $this->series();
         $messages = $this->getMailerMessages();
-        $this->assertEmailHtmlBodyContains(end($messages), '/dashboard#zenoo-h');
+        $this->assertEmailHtmlBodyContains(end($messages), '/dashboard/dog#zenoo-h');
         $this->assertEmailHtmlBodyContains(end($messages), '/emails/off?');
         $this->em->clear();
         $this->assertSame([0, 3, 14], array_keys($this->em->getRepository(DogProfile::class)->findOneBy([])->getEmailSeries()));

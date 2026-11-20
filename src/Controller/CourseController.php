@@ -28,6 +28,8 @@ final class CourseController extends AbstractController
     public function __construct(
         private readonly CourseRepository $courses,
         private readonly LessonProgressRepository $progressRepo,
+        private readonly \App\Dog\LessonRecommender $recommender,
+        private readonly \App\Repository\DogProfileRepository $dogs,
         private readonly EntityManagerInterface $em,
         private readonly LessonAccess $access,
     ) {}
@@ -66,11 +68,20 @@ final class CourseController extends AbstractController
                 'next' => $this->nextLesson($lessons, $progress),
             ];
         }
+        // "Picked for Max" (moved here from the dashboard): one lesson per concern, with the reason.
+        $dog = $user instanceof User ? $this->dogs->findForUser($user) : null;
+        $picks = [];
+        if ($dog && $list) {
+            $completed = array_map(fn (LessonProgress $p) => $p->isCompleted(), $list[0]['progress']);
+            $picks = $this->recommender->recommend($dog, $list[0]['course'], $completed);
+        }
         $unlock = $this->access->unlockProduct();
         $anyLocked = array_filter($list, fn (array $i) => $i['locked'] !== []);
 
         return $this->render('course/index.html.twig', [
             'items' => $list,
+            'dog' => $dog,
+            'picks' => $picks,
             // The "unlock all lessons" box, shown while this person still has locked lessons.
             'unlock' => $anyLocked ? $unlock : null,
             'unlockCancelled' => $request->query->has('cancelled'),

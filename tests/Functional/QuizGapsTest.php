@@ -11,7 +11,7 @@ final class QuizGapsTest extends AppTestCase
         $this->createDog($user, ['quiz_dog_name' => 'Žaibas']);
         $this->client->loginUser($user);
         $this->client->request('GET', '/dashboard');
-        $this->assertSelectorTextContains('h1', 'Žaibas’ dashboard');
+        $this->assertSelectorTextContains('.today-log h2', 'Žaibas’ log');
         $this->assertStringNotContainsString('Žaibas’s', $this->client->getResponse()->getContent());
 
         // Names without a final s keep ’s, and other languages are untouched.
@@ -19,7 +19,7 @@ final class QuizGapsTest extends AppTestCase
         $user->setActiveDogId($max->getId());
         $this->em->flush();
         $this->client->request('GET', '/dashboard');
-        $this->assertSelectorTextContains('h1', 'Max’s dashboard');
+        $this->assertSelectorTextContains('.today-log h2', 'Max’s log');
     }
 
     public function testPuppyAgesInWeeksAndMonths(): void
@@ -27,7 +27,7 @@ final class QuizGapsTest extends AppTestCase
         $user = $this->createUser();
         $this->createDog($user, ['quiz_dog_name' => 'Pip', 'quiz_age_years' => 0.2, 'quiz_life_stage' => 'puppy']);
         $this->client->loginUser($user);
-        $this->client->request('GET', '/dashboard');
+        $this->client->request('GET', '/dashboard/dog');
         $this->assertSelectorTextContains('.dash-facts', '10 weeks');
         $this->assertStringNotContainsString('0.2 years', $this->client->getResponse()->getContent());
 
