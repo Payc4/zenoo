@@ -33,6 +33,7 @@
 </section>
 
 <div class="wrap today">
+  {% if dog %}{{ include('dashboard/_score_change.html.twig', {back: 'today'}) }}{% endif %}
   {% if not user.hasPassword %}
     <p class="today-notice">{{ 'Choose a password so you can sign in any time.'|trans }} <a href="{{ path('app_account') }}#password">{{ 'Choose a password'|trans }}</a></p>
   {% endif %}

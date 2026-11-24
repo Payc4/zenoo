@@ -250,3 +250,8 @@
   .chat-bar .chat-using { flex-basis: 100%; order: 3; }
 }
 @media (prefers-reduced-motion: reduce) { .chat-side, .chat-side.is-open { transition: none; } }
+
+/* Bowl Score re-scored after a new weight or body shape (under the coach's reply) */
+.chat-note--score { font-weight: 600; color: var(--forest); }
+.chat-note--score.is-up { color: #2f6b2c; }
+.chat-note--score.is-down { color: var(--amber-text, #935a00); }

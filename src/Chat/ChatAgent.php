@@ -62,6 +62,7 @@ class ChatAgent
         #[Autowire('%kernel.project_dir%/config/chatbot/system_prompt.md')] private readonly string $promptFile,
         #[Autowire('%kernel.project_dir%/config/chatbot/intro_questions.yaml')] private readonly string $introFile,
         private readonly ?\Symfony\Component\HttpFoundation\RequestStack $requests = null,
+        private readonly ?\App\Quiz\ScoreRecalculator $rescorer = null,
     ) {
     }
 
@@ -90,7 +91,7 @@ class ChatAgent
 
     /**
      * @param callable(string): void $onText
-     * @return array{text: string, questions: ?array, usage: array{input: int, output: int}, food: ?array, remembered: list<string>, followup: ?array, tools: list<string>, stop_reason: ?string}
+     * @return array{text: string, questions: ?array, usage: array{input: int, output: int}, food: ?array, remembered: list<string>, followup: ?array, tools: list<string>, stop_reason: ?string, score: ?array}
      */
     public function reply(ChatConversation $conversation, callable $onText): array
     {
@@ -101,6 +102,7 @@ class ChatAgent
         $questions = null;
         $food = null;
         $remembered = [];
+        $score = null;      // the Bowl Score worked out again after a new weight or body shape
         $followUp = null;
         $toolsUsed = [];
         $usage = ['input' => 0, 'output' => 0];
@@ -152,8 +154,9 @@ class ChatAgent
                     $saved = true;
                     $results[] = ['type' => 'tool_result', 'tool_use_id' => $use['id'], 'content' => $message];
                 } elseif ($use['name'] === 'update_dog_profile') {
-                    [, $message, $added] = $this->updateProfile($conversation, $use['input']);
+                    [, $message, $added, $rescored] = $this->updateProfile($conversation, $use['input']);
                     $remembered = array_merge($remembered, $added);
+                    $score = $rescored ?? $score;
                     $saved = true;
                     $results[] = ['type' => 'tool_result', 'tool_use_id' => $use['id'], 'content' => $message];
                 } elseif ($use['name'] === 'schedule_followup') {
@@ -182,7 +185,7 @@ class ChatAgent
             $messages[] = ['role' => 'user', 'content' => $results];
         }
 
-        return ['text' => trim($text), 'questions' => $questions, 'usage' => $usage, 'food' => $food, 'remembered' => $remembered, 'followup' => $followUp, 'tools' => $toolsUsed, 'stop_reason' => $stop];
+        return ['text' => trim($text), 'questions' => $questions, 'usage' => $usage, 'food' => $food, 'remembered' => $remembered, 'followup' => $followUp, 'tools' => $toolsUsed, 'stop_reason' => $stop, 'score' => $score];
     }
 
     /** The text up to its last finished sentence (or paragraph), for a reply that hit the token limit. */
@@ -282,7 +285,7 @@ class ChatAgent
         return [
             'name' => 'update_dog_profile',
             'description' => 'Keep the dog\'s profile up to date. Call it whenever the pet parent tells you something new and lasting about their dog '
-                . 'that isn\'t in the profile yet: a new weight, symptoms and how long they have lasted, a vet diagnosis, allergies or intolerances, '
+                . 'that isn\'t in the profile yet: a new weight or body shape (the Bowl Score and daily plan are then worked out again), symptoms and how long they have lasted, a vet diagnosis, allergies or intolerances, '
                 . 'medication or supplements, treats and chews, a change in routine or activity, likes and dislikes. ALWAYS save medical conditions, '
                 . 'including past ones (topic "condition", e.g. "Pancreatitis in 2024"), allergies and intolerances (topic "allergy") and regular medicines (topic "medicine"): '
                 . 'they become rules for every later answer, even after the chat is cleared. One short fact per item, in the language the pet parent writes in, '
@@ -293,6 +296,8 @@ class ChatAgent
                 'type' => 'object',
                 'properties' => [
                     'weight_kg' => ['type' => 'number', 'description' => 'Only if they told you a new current weight.'],
+                    'body_score' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 9, 'description' => 'Only if they told you a body condition score (1–9, 5 = ideal), '
+                        . 'e.g. from their vet or after you walked them through the rib check. Never guess it from the weight alone.'],
                     'facts' => [
                         'type' => 'array',
                         'maxItems' => 5,
@@ -395,30 +400,49 @@ class ChatAgent
         return ['Planned for ' . $item['due'] . '. Now finish your reply (mention briefly that you\'ll check in).', $item];
     }
 
-    /** @return array{bool, string, list<string>} changed?, the tool result for Claude, the facts added */
+    /** @return array{bool, string, list<string>, ?array} changed?, the tool result for Claude, the facts added, the re-score */
     private function updateProfile(ChatConversation $conversation, array $input): array
     {
         $dog = $this->dogOf($conversation);
         if (!$dog) {
-            return [false, 'Not saved: this pet parent has no dog profile yet (they haven\'t taken the Bowl Score quiz). Just carry on.', []];
+            return [false, 'Not saved: this pet parent has no dog profile yet (they haven\'t taken the Bowl Score quiz). Just carry on.', [], null];
         }
         $now = new \DateTimeImmutable();
         $added = [];
+        $why = [];
         $kg = $input['weight_kg'] ?? null;
         if (is_numeric($kg) && (float) $kg > 0.5 && (float) $kg < 110) {
             $dog->setWeightUpdate((float) $kg, $now);
             $added[] = round((float) $kg, 1) . ' kg';
+            $why[] = 'weight';
+        }
+        $bcs = $input['body_score'] ?? null;
+        if (is_numeric($bcs) && (int) $bcs >= 1 && (int) $bcs <= 9 && $dog->addLog('body', (int) $bcs, $now, 'chat')) {
+            $why[] = 'body'; // shown by the score note, not in the "Saved to notes" line
+        }
+        // A new weight or body shape: the Bowl Score and daily plan are worked out again.
+        $score = $why && $this->rescorer ? $this->rescorer->recalculate($dog, implode('+', $why), $now) : null;
+        $tell = '';
+        if ($score) {
+            $diff = $score['to'] - $score['from'];
+            $tell = $score['to'] !== $score['from']
+                ? sprintf(' %s\'s Bowl Score was worked out again with this: %d → %d (%s%d).', $dog->getName(), $score['from'], $score['to'], $diff > 0 ? '+' : '', $diff)
+                : sprintf(' %s\'s Bowl Score stays %d.', $dog->getName(), $score['to']);
+            if ($score['plan_to'] !== $score['plan_from']) {
+                $tell .= sprintf(' The daily plan is now: %s (was: %s).', $score['plan_to'], $score['plan_from']);
+            }
+            $tell .= ' Tell them this in one short, plain sentence in your reply (the app also shows it under your reply).';
         }
         foreach (\array_slice((array) ($input['facts'] ?? []), 0, 5) as $fact) {
             if (\is_array($fact) && $dog->addNote((string) ($fact['topic'] ?? 'other'), (string) ($fact['text'] ?? ''), $now, isset($fact['replaces']) ? (string) $fact['replaces'] : null)) {
                 $added[] = trim((string) $fact['text']);
             }
         }
-        if (!$added) {
-            return [false, 'Nothing new to save (already in the profile). Carry on with your reply.', []];
+        if (!$added && !$why) {
+            return [false, 'Nothing new to save (already in the profile). Carry on with your reply.', [], null];
         }
         $this->em->flush();
-        return [true, 'Saved to ' . $dog->getName() . '\'s profile. Now carry on with your reply.', $added];
+        return [true, 'Saved to ' . $dog->getName() . '\'s profile.' . $tell . ' Now carry on with your reply.', $added, $score];
     }
 
     /** @return array{bool, string, ?array} saved?, the tool result for Claude, the saved food */

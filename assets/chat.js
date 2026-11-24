@@ -271,8 +271,9 @@ if (app) {
         },
         note: (d) => {
           const note = document.createElement('p');
-          note.className = 'chat-note';
-          note.textContent = '✓ ' + d.text;
+          // A re-score ("Luna's Bowl Score: 47 → 52 (+5)") gets an arrow and its own colour.
+          note.className = 'chat-note' + (d.kind === 'score' ? ' chat-note--score' + (d.trend > 0 ? ' is-up' : d.trend < 0 ? ' is-down' : '') : '');
+          note.textContent = (d.kind === 'score' ? (d.trend > 0 ? '▲ ' : d.trend < 0 ? '▼ ' : '• ') : '✓ ') + d.text;
           thread.appendChild(note);
         },
         delta: (d) => { raw += d.text; renderInto(reply.answer, raw); },

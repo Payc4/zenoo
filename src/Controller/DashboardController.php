@@ -43,6 +43,7 @@ final class DashboardController extends AbstractController
         private readonly \App\Tracking\Funnel $funnel,
         private readonly EntityManagerInterface $em,
         #[Autowire('%kernel.project_dir%')] private readonly string $projectDir,
+        private readonly \App\Quiz\ScoreRecalculator $rescorer,
     ) {
     }
 
@@ -298,6 +299,10 @@ final class DashboardController extends AbstractController
             $value = str_replace(',', '.', (string) $request->request->get('value', ''));
             $type = (string) $request->request->get('type');
             if (is_numeric($value) && $dog->addLog($type, (float) $value, new \DateTimeImmutable(), 'owner')) {
+                // A new weight or body shape: the Bowl Score and plan are worked out again (notice on Today).
+                if (\in_array($type, ['weight', 'body'], true)) {
+                    $this->rescorer->recalculate($dog, $type, new \DateTimeImmutable());
+                }
                 $this->em->flush();
                 $this->addFlash('logged', $type); // "Saved just now · Undo" on that tile
             } else {
@@ -315,11 +320,29 @@ final class DashboardController extends AbstractController
         $user = $this->getUser();
         $dog = $this->dogs->findForUser($user);
         if ($dog && $this->isCsrfTokenValid('tracker', (string) $request->request->get('_token'))
-            && $dog->undoLog((string) $request->request->get('type'), new \DateTimeImmutable())) {
+            && $dog->undoLog($type = (string) $request->request->get('type'), new \DateTimeImmutable())) {
+            if (\in_array($type, ['weight', 'body'], true)) {
+                $this->rescorer->recalculate($dog, $type, new \DateTimeImmutable()); // back to the score before
+            }
             $this->em->flush();
             $this->addFlash('success', 'Removed.');
         }
         return $this->redirect($this->generateUrl('app_dashboard') . '#log');
+    }
+
+    /** Closes the "Bowl Score 47 → 52" notice on Today and the dog's tab. */
+    #[Route('/dashboard/score-change/close', name: 'app_score_change_close', methods: ['POST'])]
+    public function closeScoreChange(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $dog = $this->dogs->findForUser($user);
+        if ($dog && $this->isCsrfTokenValid('score-change', (string) $request->request->get('_token'))) {
+            $dog->dismissScoreChange();
+            $this->em->flush();
+        }
+        $back = (string) $request->request->get('back');
+        return $this->redirect($back === 'dog' ? $this->generateUrl('app_dog_tab') : $this->generateUrl('app_dashboard'));
     }
 
     /** The owner adds a fact about their dog, or removes one the coach saved (the dog record is theirs to edit). */

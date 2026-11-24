@@ -430,6 +430,17 @@ class ChatController extends AbstractController
                 if ($result['remembered'] ?? []) {
                     $emit('note', ['text' => $translator->trans('Saved to %dog%’s notes: %facts%', ['%dog%' => $dog?->getName() ?? '', '%facts%' => implode('; ', $result['remembered'])])]);
                 }
+                // A new weight or body shape re-scored the dog: say how the Bowl Score and plan moved.
+                if ($change = $result['score'] ?? null) {
+                    $diff = $change['to'] - $change['from'];
+                    $text = $diff !== 0
+                        ? $translator->trans('%dog%’s Bowl Score: %from% → %to% (%diff%)', ['%dog%' => $dog?->getName() ?? '', '%from%' => $change['from'], '%to%' => $change['to'], '%diff%' => ($diff > 0 ? '+' : '−') . abs($diff)])
+                        : $translator->trans('%dog%’s Bowl Score stays %score%', ['%dog%' => $dog?->getName() ?? '', '%score%' => $change['to']]);
+                    if ($change['plan_to'] !== $change['plan_from']) {
+                        $text .= ' · ' . $translator->trans('Daily food: %plan%', ['%plan%' => $change['plan_to']]);
+                    }
+                    $emit('note', ['text' => $text, 'kind' => 'score', 'trend' => $diff <=> 0]);
+                }
                 if ($corrected !== null) {
                     $emit('note', ['text' => $translator->trans('Corrected to respect %dog%’s notes: %problem%', ['%dog%' => $dog?->getName() ?? '', '%problem%' => $corrected])]);
                 }

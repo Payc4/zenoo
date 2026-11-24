@@ -248,3 +248,19 @@
 .log-panel[hidden] { display: none; }
 .log-tabs button { font-size: 13px; padding: 0 4px; }
 .today-head .wrap { max-width: 720px; }
+
+/* Bowl Score worked out again after a new weight or body shape (dashboard/_score_change.html.twig) */
+.score-change { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 16px; padding: 14px 8px 14px 16px; border-radius: 16px; background: var(--white); border: 1.5px solid var(--line); border-left-width: 6px; }
+.score-change.is-up { border-left-color: #2f6b2c; }
+.score-change.is-down { border-left-color: var(--sun); }
+.score-change__icon { flex: none; font-size: 15px; line-height: 1.6; color: var(--forest); }
+.score-change.is-up .score-change__icon { color: #2f6b2c; }
+.score-change.is-down .score-change__icon { color: var(--amber-text); }
+.score-change__text { flex: 1; min-width: 0; }
+.score-change__text p { margin: 0; font-size: 15px; line-height: 1.45; }
+.score-change__title { font-weight: 700; color: var(--forest); margin-bottom: 2px !important; }
+.score-change__was { color: var(--ink-muted); }
+.score-change form { flex: none; margin: -6px 0 0; }
+.score-change__close { width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--forest); font-size: 26px; line-height: 1; cursor: pointer; }
+.score-change__close:hover { background: var(--mist); }
+.score-change__close:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }

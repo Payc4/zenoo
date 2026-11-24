@@ -40,6 +40,7 @@
 </section>
 
 <div class="wrap dog-tab">
+  {{ include('dashboard/_score_change.html.twig', {back: 'dog'}) }}
   {# 1. The score with its history. #}
   {% set history = dog.scoreHistory %}
   <section class="card dog-score" aria-labelledby="score-h">

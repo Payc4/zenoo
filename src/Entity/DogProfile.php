@@ -101,6 +101,7 @@ class DogProfile
             $this->data['score_history'] = \array_slice($history, -24);
         }
         $kept = array_filter($this->data, fn ($k) => !str_starts_with((string) $k, 'quiz_'), ARRAY_FILTER_USE_KEY);
+        unset($kept['score_change'], $kept['score_at']); // a new quiz result has its own banner
         $this->data = $data + $kept;
         $today = new \DateTimeImmutable();
         if (is_numeric($data['quiz_weight_kg'] ?? null)) {
@@ -365,8 +366,66 @@ class DogProfile
     public function getScoreHistory(): array
     {
         $history = (array) ($this->data['score_history'] ?? []);
-        $history[] = ['at' => ($this->updatedAt ?? $this->createdAt)->format('Y-m-d'), 'score' => $this->bowlScore];
+        $history[] = ['at' => $this->scoreDate(), 'score' => $this->bowlScore];
         return $history;
+    }
+
+    /** When the current score was worked out: the quiz, or a re-score after a new weight or body shape. */
+    private function scoreDate(): string
+    {
+        return \is_string($this->data['score_at'] ?? null) ? $this->data['score_at'] : ($this->updatedAt ?? $this->createdAt)->format('Y-m-d');
+    }
+
+    /**
+     * Applies a re-score (App\Quiz\ScoreRecalculator): the new quiz_* fields and score, the old score
+     * into the history, and the notice on Today and the dog's tab ("Bowl Score 47 → 52"), which adds
+     * up changes until the owner closes it and goes away if they cancel out (an undone log).
+     *
+     * @return ?array{from: int, to: int, plan_from: string, plan_to: string} what changed just now, or null
+     */
+    public function rescore(array $fields, int $score, string $why, \DateTimeImmutable $at): ?array
+    {
+        $first = fn (string $plan) => explode(' — ', $plan, 2)[0];
+        $oldScore = $this->bowlScore;
+        $oldPlan = $first((string) ($this->data['quiz_plan_food'] ?? ''));
+        $newPlan = $first((string) ($fields['quiz_plan_food'] ?? $this->data['quiz_plan_food'] ?? ''));
+        if ($score !== $oldScore) {
+            $history = (array) ($this->data['score_history'] ?? []);
+            $history[] = ['at' => $this->scoreDate(), 'score' => $oldScore];
+            $this->data['score_history'] = \array_slice($history, -24);
+            $this->data['score_at'] = $at->format('Y-m-d');
+        }
+        foreach ($fields as $k => $v) {
+            $this->data[$k] = $v;
+        }
+        $this->bowlScore = max(0, min(100, $score));
+        if ($score === $oldScore && $newPlan === $oldPlan) {
+            return null;
+        }
+        $notice = $this->getScoreChange();
+        $from = $notice['from'] ?? $oldScore;
+        $planFrom = $notice['plan_from'] ?? $oldPlan;
+        if ($from === $score && $planFrom === $newPlan) {
+            unset($this->data['score_change']);
+        } else {
+            $this->data['score_change'] = [
+                'from' => $from, 'to' => $score, 'plan_from' => $planFrom, 'plan_to' => $newPlan,
+                'why' => array_values(array_unique([...($notice['why'] ?? []), $why])), 'at' => $at->format('Y-m-d'),
+            ];
+        }
+        return ['from' => $oldScore, 'to' => $score, 'plan_from' => $oldPlan, 'plan_to' => $newPlan];
+    }
+
+    /** The re-score notice the owner hasn't closed yet: { from, to, plan_from, plan_to, why: [weight|body], at }. */
+    public function getScoreChange(): ?array
+    {
+        return \is_array($this->data['score_change'] ?? null) ? $this->data['score_change'] : null;
+    }
+
+    public function dismissScoreChange(): static
+    {
+        unset($this->data['score_change']);
+        return $this;
     }
 
     /** Days since the Bowl Score was last taken. */

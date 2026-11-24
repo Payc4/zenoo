@@ -14,6 +14,62 @@
    "activity": "Add a 15–20 minute sniff walk or a game of fetch to the daily routine.",
    "routine": "Follow the gram amounts in {poss} daily plan and keep an eye on body shape.",
    "signals": "Change one thing at a time and keep a quick note of what you see over 3–4 weeks."
+  },
+  "variants": {
+   "protein": {
+    "fix": "Look for a named meat as the first ingredient and a higher protein number on the label."
+   },
+   "carbs": {
+    "fix": "Swap part of the bowl for a fresher, meat-rich food to bring the starch down."
+   },
+   "freshness": {
+    "fix": "Try adding something fresher to the bowl, even as a topper, and see how {name} responds."
+   },
+   "body": {
+    "fix": "Aim for about {kcal} kcal a day and check body shape every 2 weeks.",
+    "fixPuppy": "Weigh {name} every week and check the ribs and waist. Ask your vet if the gain stalls or speeds up.",
+    "fixKeep": "Keep today’s amounts for now, and check body shape every 2 weeks."
+   },
+   "activity": {
+    "fix": "Add a 15–20 minute sniff walk or a game of fetch to the daily routine."
+   },
+   "routine": {
+    "fixOver": "Weigh the food for a week and follow the gram amounts in {poss} daily plan.",
+    "fixUnder": "Follow the gram amounts in {poss} daily plan and keep an eye on body shape.",
+    "fixUnknown": "Weigh {poss} food for a few days. It’s the easiest way to get portions right.",
+    "fixVet": "Keep today’s amounts and check them with your vet before changing them.",
+    "fixMeals": "Split the day’s food into two set meals, morning and evening.",
+    "fixPuppyMeals": "Split the day’s food into three or four smaller meals.",
+    "fixTreats": "Keep treats small, and count them as part of the day’s food."
+   },
+   "signals": {
+    "fix": "Change one thing at a time and keep a quick note of what you see over 3–4 weeks."
+   }
+  },
+  "keepGoing": "Keep doing what you’re doing!",
+  "decimalSep": ".",
+  "foods": {
+   "dry": "Dry food",
+   "wet": "Wet food",
+   "fresh": "Fresh-cooked food",
+   "raw": "Raw food",
+   "freezedried": "Freeze-dried or air-dried",
+   "home": "Home-cooked"
+  },
+  "plan": {
+   "emailFood": "{food}: about {grams} g a day",
+   "emailFoodJoin": " · ",
+   "gramsText": "About {grams} g a day of the food you entered",
+   "emailNoAmount": "Weigh a normal day’s food for a week, then match it to the energy target.",
+   "keep": {
+    "heavy": "Keep today’s amounts and don’t increase them while {name} is above ideal shape. Weigh every 2 weeks; if the weight doesn’t drop, cut the food by about 10%.",
+    "thin": "Keep today’s amounts and don’t cut them while {name} is below ideal shape. Weigh every 2 weeks; if there’s no gain, add about 10%.",
+    "vet": "Our estimate (about {target} kcal a day) is far from what {name} eats now (about {intake} kcal). Keep today’s amounts and check them with your vet before changing them."
+   },
+   "keepWeight": "Keep {name} around {kg} kg",
+   "aimWeight": "Aim for about {kg} kg, slowly",
+   "puppyGrowth": "Still growing: weigh weekly and expect steady gain, towards about {adult} kg as an adult.",
+   "gramsRange": "{min}–{max} g a day"
   }
  },
  "lt": {
@@ -31,6 +87,62 @@
    "activity": "Į dienos rutiną įtraukite 15–20 min. uostinėjimo pasivaikščiojimą arba žaidimą su kamuoliuku.",
    "routine": "Laikykitės gramų, nurodytų dienos plane, ir stebėkite kūno formą.",
    "signals": "Keiskite po vieną dalyką ir 3–4 savaites trumpai užsirašinėkite, ką pastebite."
+  },
+  "variants": {
+   "protein": {
+    "fix": "Ieškokite maisto, kurio pirmoji sudedamoji dalis – konkrečiai įvardyta mėsa, o baltymų procentas etiketėje didesnis."
+   },
+   "carbs": {
+    "fix": "Dalį dubenėlio pakeiskite šviežesniu, mėsos turtingu maistu – taip sumažinsite krakmolo."
+   },
+   "freshness": {
+    "fix": "Pabandykite į dubenėlį įdėti ko nors šviežesnio, kad ir kaip priedą, ir stebėkite, kaip {name} reaguoja."
+   },
+   "body": {
+    "fix": "Siekite apie {kcal} kcal per dieną ir kūno formą tikrinkite kas 2 savaites.",
+    "fixPuppy": "Sverkite šuniuką kas savaitę ir apčiuopkite šonkaulius bei liemenį. Jei svoris nustoja didėti ar auga per greitai, pasitarkite su veterinaru.",
+    "fixKeep": "Kol kas palikite dabartinius kiekius ir kas 2 savaites patikrinkite kūno formą."
+   },
+   "activity": {
+    "fix": "Į dienos rutiną įtraukite 15–20 min. uostinėjimo pasivaikščiojimą arba žaidimą su kamuoliuku."
+   },
+   "routine": {
+    "fixOver": "Savaitę sverkite maistą ir laikykitės gramų, nurodytų dienos plane.",
+    "fixUnder": "Laikykitės gramų, nurodytų dienos plane, ir stebėkite kūno formą.",
+    "fixUnknown": "Kelias dienas sverkite maistą, kurį ėda {name}. Tai lengviausias būdas nustatyti tinkamas porcijas.",
+    "fixVet": "Palikite dabartinius kiekius ir prieš juos keisdami pasitarkite su veterinaru.",
+    "fixMeals": "Dienos maistą padalykite į du valgius – rytą ir vakare, kasdien tuo pačiu metu.",
+    "fixPuppyMeals": "Dienos maistą padalykite į tris ar keturis mažesnius valgius.",
+    "fixTreats": "Skanėstus duokite mažus ir įskaičiuokite juos į dienos maisto kiekį."
+   },
+   "signals": {
+    "fix": "Keiskite po vieną dalyką ir 3–4 savaites trumpai užsirašinėkite, ką pastebite."
+   }
+  },
+  "keepGoing": "Tęskite taip, kaip darote!",
+  "decimalSep": ",",
+  "foods": {
+   "dry": "Sausas maistas",
+   "wet": "Drėgnas maistas",
+   "fresh": "Šviežiai gamintas maistas",
+   "raw": "Žalias maistas",
+   "freezedried": "Liofilizuotas ar ore džiovintas maistas",
+   "home": "Namuose gamintas maistas"
+  },
+  "plan": {
+   "emailFood": "{food}: apie {grams} g per dieną",
+   "emailFoodJoin": " · ",
+   "gramsText": "Apie {grams} g per dieną jūsų nurodyto maisto",
+   "emailNoAmount": "Savaitę sverkite įprastos dienos maistą, tada suderinkite jį su energijos tikslu.",
+   "keep": {
+    "heavy": "Palikite dabartinius kiekius ir nedidinkite jų, kol {name} sveria daugiau nei idealiai. Sverkite kas 2 savaites; jei svoris nemažėja, sumažinkite maisto apie 10 %.",
+    "thin": "Palikite dabartinius kiekius ir nemažinkite jų, kol {name} sveria mažiau nei idealiai. Sverkite kas 2 savaites; jei svoris nedidėja, pridėkite apie 10 %.",
+    "vet": "Mūsų įvertis (apie {target} kcal per dieną) labai skiriasi nuo to, kiek {name} ėda dabar (apie {intake} kcal). Palikite dabartinius kiekius ir prieš juos keisdami pasitarkite su veterinaru."
+   },
+   "keepWeight": "Palaikykite apie {kg} kg svorį",
+   "aimWeight": "Siekite apie {kg} kg, pamažu",
+   "puppyGrowth": "Dar auga: sverkite kas savaitę, svoris turėtų tolygiai didėti iki maždaug {adult} kg suaugus.",
+   "gramsRange": "{min}–{max} g per dieną"
   }
  },
  "uk": {
@@ -48,6 +160,62 @@
    "activity": "Додайте до щоденного розпорядку 15–20-хвилинну прогулянку, під час якої собака може вдосталь нюхати, або гру в апорт.",
    "routine": "Дотримуйтеся кількості грамів зі щоденного плану й стежте за статурою.",
    "signals": "Змінюйте щось одне за раз і протягом 3–4 тижнів коротко занотовуйте, що помічаєте."
+  },
+  "variants": {
+   "protein": {
+    "fix": "Шукайте корм, у якому першим інгредієнтом указано конкретне м’ясо, а відсоток білка на етикетці вищий."
+   },
+   "carbs": {
+    "fix": "Замініть частину миски свіжішим кормом, багатим на м’ясо, щоб зменшити кількість крохмалю."
+   },
+   "freshness": {
+    "fix": "Спробуйте додати в миску щось свіжіше, хоча б як топер (добавку зверху), і подивіться, як на це відреагує {name}."
+   },
+   "body": {
+    "fix": "Орієнтуйтеся приблизно на {kcal} ккал на день і перевіряйте статуру кожні 2 тижні.",
+    "fixPuppy": "Зважуйте цуценя щотижня й перевіряйте ребра та талію. Якщо приріст зупиняється або надто швидкий, порадьтеся з ветеринаром.",
+    "fixKeep": "Поки що залиште нинішні порції та перевіряйте статуру кожні 2 тижні."
+   },
+   "activity": {
+    "fix": "Додайте до щоденного розпорядку 15–20-хвилинну прогулянку, під час якої собака може вдосталь нюхати, або гру в апорт."
+   },
+   "routine": {
+    "fixOver": "Зважуйте корм протягом тижня й дотримуйтеся кількості грамів зі щоденного плану.",
+    "fixUnder": "Дотримуйтеся кількості грамів зі щоденного плану й стежте за статурою.",
+    "fixUnknown": "Кілька днів зважуйте корм, який їсть {name}. Це найпростіший спосіб правильно визначити порції.",
+    "fixVet": "Залиште нинішні порції та порадьтеся з ветеринаром, перш ніж їх змінювати.",
+    "fixMeals": "Розділіть добову порцію на два прийоми їжі у визначений час: вранці та ввечері.",
+    "fixPuppyMeals": "Розділіть добову порцію на три-чотири менші прийоми їжі.",
+    "fixTreats": "Давайте маленькі ласощі й враховуйте їх у добовій кількості корму."
+   },
+   "signals": {
+    "fix": "Змінюйте щось одне за раз і протягом 3–4 тижнів коротко занотовуйте, що помічаєте."
+   }
+  },
+  "keepGoing": "Так тримати!",
+  "decimalSep": ",",
+  "foods": {
+   "dry": "Сухий корм",
+   "wet": "Вологий корм",
+   "fresh": "Свіжоприготований корм",
+   "raw": "Сирий корм",
+   "freezedried": "Сублімований або висушений повітрям корм",
+   "home": "Домашня їжа"
+  },
+  "plan": {
+   "emailFood": "{food}: близько {grams} г на день",
+   "emailFoodJoin": " · ",
+   "gramsText": "Близько {grams} г на день корму, який ви вказали",
+   "emailNoAmount": "Протягом тижня зважуйте звичайну денну порцію корму, а потім звірте її з цільовим показником енергії.",
+   "keep": {
+    "heavy": "Залиште нинішні порції й не збільшуйте їх, поки {name} важить більше за ідеал. Зважуйте кожні 2 тижні; якщо вага не знижується, зменште корм приблизно на 10 %.",
+    "thin": "Залиште нинішні порції й не зменшуйте їх, поки {name} важить менше за ідеал. Зважуйте кожні 2 тижні; якщо вага не зростає, додайте приблизно 10 %.",
+    "vet": "Наша оцінка (близько {target} ккал на день) сильно відрізняється від того, скільки {name} їсть зараз (близько {intake} ккал). Залиште нинішні порції та порадьтеся з ветеринаром, перш ніж їх змінювати."
+   },
+   "keepWeight": "Підтримуйте вагу близько {kg} кг",
+   "aimWeight": "Поступово досягніть ваги близько {kg} кг",
+   "puppyGrowth": "Ще росте: зважуйте щотижня, вага має рівномірно зростати приблизно до {adult} кг у дорослому віці.",
+   "gramsRange": "{min}–{max} г на день"
   }
  },
  "pl": {
@@ -65,6 +233,62 @@
    "activity": "Dodaj do codziennego planu 15–20-minutowy spacer z węszeniem albo zabawę w aportowanie.",
    "routine": "Trzymaj się ilości w gramach z planu dnia i obserwuj sylwetkę psa.",
    "signals": "Zmieniaj jedną rzecz naraz i przez 3–4 tygodnie krótko notuj, co zauważasz."
+  },
+  "variants": {
+   "protein": {
+    "fix": "Szukaj karmy, w której pierwszym składnikiem jest konkretnie nazwane mięso, a zawartość białka na etykiecie jest wyższa."
+   },
+   "carbs": {
+    "fix": "Zastąp część miski świeższą karmą bogatą w mięso, żeby zmniejszyć ilość skrobi."
+   },
+   "freshness": {
+    "fix": "Spróbuj dodać coś świeższego, choćby jako dodatek do miski, i zobacz, jak zareaguje {name}."
+   },
+   "body": {
+    "fix": "Celuj w około {kcal} kcal dziennie i sprawdzaj sylwetkę co 2 tygodnie.",
+    "fixPuppy": "Waż szczeniaka co tydzień i sprawdzaj żebra oraz talię. Jeśli przyrost staje albo jest za szybki, skonsultuj się z weterynarzem.",
+    "fixKeep": "Na razie zostaw obecne porcje i co 2 tygodnie sprawdzaj sylwetkę."
+   },
+   "activity": {
+    "fix": "Dodaj do codziennego planu 15–20-minutowy spacer z węszeniem albo zabawę w aportowanie."
+   },
+   "routine": {
+    "fixOver": "Przez tydzień waż karmę i trzymaj się ilości w gramach z planu dnia.",
+    "fixUnder": "Trzymaj się ilości w gramach z planu dnia i obserwuj sylwetkę psa.",
+    "fixUnknown": "Przez kilka dni waż karmę, którą je {name}. To najprostszy sposób na dobre porcje.",
+    "fixVet": "Zostaw obecne porcje i skonsultuj je z weterynarzem, zanim je zmienisz.",
+    "fixMeals": "Podziel dzienną porcję na dwa posiłki o stałych porach, rano i wieczorem.",
+    "fixPuppyMeals": "Podziel dzienną porcję na trzy lub cztery mniejsze posiłki.",
+    "fixTreats": "Dawaj małe przysmaki i wliczaj je do dziennej porcji jedzenia."
+   },
+   "signals": {
+    "fix": "Zmieniaj jedną rzecz naraz i przez 3–4 tygodnie krótko notuj, co zauważasz."
+   }
+  },
+  "keepGoing": "Tak trzymaj!",
+  "decimalSep": ",",
+  "foods": {
+   "dry": "Sucha karma",
+   "wet": "Mokra karma",
+   "fresh": "Świeżo gotowana karma",
+   "raw": "Surowa karma",
+   "freezedried": "Karma liofilizowana lub suszona powietrzem",
+   "home": "Domowa karma"
+  },
+  "plan": {
+   "emailFood": "{food}: około {grams} g dziennie",
+   "emailFoodJoin": " · ",
+   "gramsText": "Około {grams} g dziennie podanej przez ciebie karmy",
+   "emailNoAmount": "Przez tydzień waż karmę z typowego dnia, a potem dopasuj jej ilość do docelowej energii.",
+   "keep": {
+    "heavy": "Zostaw obecne porcje i nie zwiększaj ich, dopóki {name} ma wagę powyżej idealnej. Waż co 2 tygodnie; jeśli waga nie spada, zmniejsz karmę o około 10%.",
+    "thin": "Zostaw obecne porcje i nie zmniejszaj ich, dopóki {name} ma wagę poniżej idealnej. Waż co 2 tygodnie; jeśli waga nie rośnie, dodaj około 10%.",
+    "vet": "Nasz szacunek (około {target} kcal dziennie) bardzo różni się od tego, ile {name} je teraz (około {intake} kcal). Zostaw obecne porcje i skonsultuj je z weterynarzem, zanim je zmienisz."
+   },
+   "keepWeight": "Utrzymuj wagę około {kg} kg",
+   "aimWeight": "Dąż powoli do około {kg} kg",
+   "puppyGrowth": "Wciąż rośnie: waż co tydzień, waga powinna równomiernie rosnąć do około {adult} kg w dorosłości.",
+   "gramsRange": "{min}–{max} g dziennie"
   }
  }
 }

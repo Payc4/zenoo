@@ -3,7 +3,7 @@
 namespace App\Twig;
 
 use App\Entity\DogProfile;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use App\Quiz\QuizTexts;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Extension\AbstractExtension;
@@ -19,11 +19,9 @@ use Twig\TwigFunction;
  */
 final class QuizTextExtension extends AbstractExtension
 {
-    private ?array $codes = null;
-
     public function __construct(
         private readonly TranslatorInterface $translator,
-        #[Autowire('%kernel.project_dir%/config/quiz_codes.json')] private readonly string $file,
+        private readonly QuizTexts $texts,
     ) {
     }
 
@@ -39,13 +37,16 @@ final class QuizTextExtension extends AbstractExtension
         if ($dog->getLocale() === $locale || ($stored === '' && $field !== 'score_title')) {
             return $stored;
         }
-        $this->codes ??= json_decode((string) @file_get_contents($this->file), true) ?: [];
-        $c = $this->codes[$locale] ?? null;
+        $c = $this->texts->codes($locale);
         if ($c === null) {
             return $stored;
         }
         if ($field === 'score_title') {
             return $c['bands'][$dog->band()] ?? $stored;
+        }
+        // A re-scored dog keeps which variant each line is ("routine.fixVet"): use the same one.
+        if (preg_match('/^fix_(\d)_text$/', $field, $m) && ($code = ((array) $dog->get('fix_codes', []))[(int) $m[1] - 1] ?? null)) {
+            return $this->texts->fixText((string) $code, $dog->getName(), $locale, ['kcal' => (string) round((float) $dog->get('kcal_target'))]) ?? $stored;
         }
         if (preg_match('/^fix_(\d)_text$/', $field, $m) && ($key = $dog->get('top_fix_' . $m[1])) && isset($c['fixes'][$key])) {
             $name = $dog->getName();
