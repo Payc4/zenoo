@@ -222,6 +222,7 @@
 .chat-side__newlist { display: grid; gap: 2px; padding: 6px; border: 1.5px solid var(--line); border-radius: 16px; }
 .chat-side__label { margin: 4px 8px 2px; font-size: 13px; font-weight: 700; color: var(--ink-muted); }
 .chat-side__list { list-style: none; margin: 0; padding: 4px 8px 16px; overflow-y: auto; flex: 1; min-height: 0; display: grid; align-content: start; gap: 2px; }
+.chat-side__list > li { min-width: 0; } /* long previews end in … instead of widening the list */
 .chat-side__item { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 56px; padding: 8px 10px; border-radius: 14px; color: var(--forest); text-decoration: none; }
 .chat-side__item:hover { background: var(--cream); }
 .chat-side__item.is-on { background: var(--mist); }
