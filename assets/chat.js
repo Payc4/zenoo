@@ -307,9 +307,20 @@ if (app) {
       if (frame) cancelAnimationFrame(frame);
       reply.el.classList.add('is-error');
       reply.answer.textContent = e.message || t('error', 'Something went wrong. Please try again.');
-      // Give the text and files back so they can be sent again.
-      if (!input.value && !input.disabled) { input.value = text; resize(); }
-      if (files.length && !pendingFiles.length) { pendingFiles = files; renderPending(); }
+      // The message stays on screen, marked as not sent, with one tap to send it again.
+      mine.classList.add('is-unsent');
+      if (text && !files.length && !input.disabled) {
+        const again = document.createElement('button');
+        again.type = 'button';
+        again.className = 'btn btn-small chat-retry';
+        again.textContent = t('tryAgain', 'Try again');
+        again.addEventListener('click', () => { if (busy) return; mine.remove(); reply.el.remove(); send(text); });
+        reply.answer.append(' ', again);
+      } else {
+        // Give the files back so they can be sent again.
+        if (!input.value && !input.disabled) { input.value = text; resize(); }
+        if (files.length && !pendingFiles.length) { pendingFiles = files; renderPending(); }
+      }
     } finally {
       reply.el.classList.remove('is-pending');
       busy = false;

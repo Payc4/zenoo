@@ -4,6 +4,7 @@
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
 
 {% block body %}
+<div data-hj-suppress>{# personal details: hidden from Hotjar recordings #}
 <section class="account-head">
     <div class="wrap">
         {{ include('account/_avatar.html.twig', {user: user}) }}
@@ -154,5 +155,6 @@
             {% endif %}
         </section>
     </div>
+</div>
 </div>
 {% endblock %}

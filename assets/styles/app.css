@@ -84,7 +84,7 @@ h3 { font-size: 17px; line-height: 1.25; }
 /* EN / LT selector, top right (before the menu button on phones) */
 .nav { order: 1; }
 .lang-switch { order: 2; flex: none; position: relative; margin-left: 12px; }
-.lang-switch summary { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px 7px 9px; border-radius: 999px; background: rgba(255,255,255,.12); color: var(--white); cursor: pointer; list-style: none; transition: background .15s; }
+.lang-switch summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; min-width: 44px; padding: 0 10px 0 9px; border-radius: 999px; background: rgba(255,255,255,.12); color: var(--white); cursor: pointer; list-style: none; transition: background .15s; }
 .lang-switch summary::-webkit-details-marker { display: none; }
 .lang-switch summary:hover, .lang-switch summary:focus-visible, .lang-switch[open] summary { background: rgba(255,255,255,.22); }
 .lang-switch__chevron { width: 12px; height: 12px; transition: transform .15s; }
@@ -95,7 +95,7 @@ h3 { font-size: 17px; line-height: 1.25; }
 .lang-switch__menu a:hover, .lang-switch__menu a:focus-visible { background: var(--cream); }
 .lang-switch__menu a[aria-current] { background: var(--cream); font-weight: 800; }
 .lang-switch__menu a[aria-current]::after { content: "✓"; margin-left: auto; color: var(--sun); }
-.nav-toggle { order: 3; display: none; margin-left: auto; background: none; border: 0; color: var(--white); padding: 8px; cursor: pointer; }
+.nav-toggle { order: 3; display: none; margin-left: auto; background: none; border: 0; color: var(--white); padding: 8px; min-width: 44px; min-height: 44px; cursor: pointer; }
 .nav-toggle svg { width: 28px; height: 28px; }
 /* Four languages make the menu longer (Ukrainian and Lithuanian words are long): tighten it a little
    in those languages and on mid-size screens, and switch to the menu button below 1100px. */
@@ -372,3 +372,9 @@ input[aria-invalid="true"], .has-error input { border-color: var(--danger); }
 .switch[aria-checked="true"]::after { left: 34px; }
 .switch:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; border-radius: 999px; }
 .switch__state { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* What's new (templates/patch_notes.html.twig) */
+.patch-notes { max-width: 760px; padding-top: 32px; padding-bottom: 48px; }
+.patch-notes__release { margin-top: 20px; }
+.patch-notes__release h2 { margin: 2px 0 10px; }
+.patch-notes__release ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; line-height: 1.5; }

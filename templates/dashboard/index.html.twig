@@ -65,13 +65,13 @@
         <p class="kicker" id="bowl-h">{{ 'Today’s bowl'|trans }}</p>
         <a href="{{ path('app_dog_tab') }}#plan-h">{{ 'Full plan'|trans }}</a>
       </div>
-      {% if dog.get('plan_food') %}
+      {% if dog_text(dog, 'plan_food') %}
         {# The amounts big; a "keep today's amounts / ask your vet" note (after " — ") small. #}
-        {% set parts = dog.get('plan_food')|split(' — ', 2) %}
+        {% set parts = dog_text(dog, 'plan_food')|split(' — ', 2) %}
         <p class="today-bowl__food">{{ parts[0] }}</p>
         {% if parts[1] is defined %}<p class="today-bowl__note">{{ parts[1] }}</p>{% endif %}
       {% endif %}
-      <p class="muted">{{ [dog.get('plan_meals'), dog.get('kcal_target') ? 'about %kcal% kcal a day'|trans({'%kcal%': dog.get('kcal_target')|round}) : null]|filter(x => x)|join(' · ') }}</p>
+      <p class="muted">{{ [dog_text(dog, 'plan_meals'), include('dashboard/_kcal.html.twig')|trim]|filter(x => x)|join(' · ') }}</p>
     </section>
 
     {# 3. The log: last values at a glance, one "Add entry", Undo on the newest entry. #}

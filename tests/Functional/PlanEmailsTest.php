@@ -76,12 +76,12 @@ final class PlanEmailsTest extends AppTestCase
         $this->assertStringContainsString('Sent 0', $this->series());
     }
 
-    public function testEnglishGetsNoSiteEmailsByDefault(): void
+    public function testEnglishGetsThePlanEmailToo(): void
     {
+        // Test report: the result page said the plan was sent, but English got only the confirmation.
         $this->confirmLead('en', true);
-        $this->assertEmailCount(0);
-        $this->age(3);
-        $this->assertStringContainsString('Sent 0', $this->series());
+        $this->assertEmailCount(1);
+        $this->assertEmailSubjectContains($this->getMailerMessage(), 'Bowl Score and plan');
     }
 
     public function testUnsubscribing(): void

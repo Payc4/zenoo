@@ -32,6 +32,7 @@ for (const l of ['en', 'lt', 'uk', 'pl']) {
     plan: {
       emailFood: P.emailFood, emailFoodJoin: P.emailFoodJoin, gramsText: P.gramsText, emailNoAmount: P.emailNoAmount,
       keep: P.keep, keepWeight: P.keepWeight, aimWeight: P.aimWeight, puppyGrowth: P.puppyGrowth, gramsRange: P.gramsRange,
+      mealsPuppy: P.mealsPuppy, mealsAdult: P.mealsAdult, treatsCounted: P.treatsCounted,
     },
   };
 }

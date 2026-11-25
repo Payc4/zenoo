@@ -170,6 +170,13 @@ fi
 # from its public products.json. Without a sync the plan is switched off everywhere
 # (test report N7), so the catalogue is refreshed on every boot as well as by the
 # scheduled task. A store that can't be reached is reported, not fatal.
+# Every dog's Bowl Score and plan under the current rules; old results are rebuilt first. Dogs
+# whose score or plan changes get a notice on Today. Set RESCORE_DOGS=false to skip.
+if [ "${RESCORE_DOGS:-true}" = "true" ]; then
+    php bin/console app:dogs:rescore --no-interaction \
+        || echo "WARNING: re-scoring dogs failed — run 'php bin/console app:dogs:rescore' by hand." >&2
+fi
+
 if [ "${SYNC_CATALOGUE:-true}" = "true" ]; then
     php bin/console app:catalogue:sync --no-interaction \
         || echo "WARNING: catalogue sync failed — the ZENOO plan stays off until 'php bin/console app:catalogue:sync' works." >&2

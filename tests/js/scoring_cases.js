@@ -14,8 +14,9 @@ for (let i = 0; i < count; i++) {
   const foodMain = pick(foods);
   const label = rnd() < 0.3;
   const t = S.CONFIG.typical[foodMain];
+  const raw = label ? { p: 18 + rnd() * 20, f: 8 + rnd() * 14, fi: 1 + rnd() * 4, a: 4 + rnd() * 5, m: pick([8, 10, 70, 78]) } : null;
   const diet = label
-    ? (() => { const d = S.fromLabel({ p: 18 + rnd() * 20, f: 8 + rnd() * 14, fi: 1 + rnd() * 4, a: 4 + rnd() * 5, m: pick([8, 10, 70, 78]) }); return { pDm: d.pDm, fDm: d.fDm, cDm: d.cDm, kcalPer100g: d.kcalPer100g, fromLabel: true }; })()
+    ? (() => { const d = S.fromLabel(raw); return { pDm: d.pDm, fDm: d.fDm, cDm: d.cDm, kcalPer100g: d.kcalPer100g, fromLabel: true }; })()
     : { pDm: t.p, fDm: t.f, cDm: t.c, kcalPer100g: null, fromLabel: false };
   const stage = pick(['puppy', 'adult', 'adult', 'senior']);
   const weightKg = Math.round((stage === 'puppy' ? 0.5 + rnd() * 25 : 2 + rnd() * 60) * 10) / 10;
@@ -28,6 +29,6 @@ for (let i = 0; i < count; i++) {
     feeds: foods.map((type) => ({ type, grams: rnd() < 0.1 ? null : Math.round(10 + rnd() * 600) })),
     meals: pick(['1', '2', '3', 'free']), treats: pick(['none', 'few', 'several', 'lots']),
   };
-  out.push({ a, r: S.evaluate(a) });
+  out.push({ a, r: S.evaluate(a), label: raw, sport: [S.activityLevel(a.level > 4 ? 4 : a.level, 'walks'), S.activityLevel(a.level > 4 ? 4 : a.level, 'sport')] });
 }
 process.stdout.write(JSON.stringify(out));

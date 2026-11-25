@@ -70,7 +70,9 @@ class HomeController extends AbstractController
         if ($user instanceof User && ($id = (int) $request->query->get('dog')) > 0) {
             foreach ($dogs->findAllForUser($user) as $d) {
                 if ($d->getId() === $id) {
-                    $retake = ['id' => $d->getId(), 'name' => $d->getName(), 'answers' => $d->getQuizAnswers()];
+                    // A dog saved before the answers were kept: start from what its result saved.
+                    $answers = $d->getQuizAnswers();
+                    $retake = ['id' => $d->getId(), 'name' => $d->getName(), 'answers' => isset($answers['name']) ? $answers : \App\Quiz\ScoreInputs::retakeAnswers($d)];
                 }
             }
         }

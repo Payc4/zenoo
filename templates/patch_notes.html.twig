@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{# What's new (App\Controller\PatchNotesController): written in English for the team, testers and
+   the client; edit config/patch_notes.yaml to add a release. #}
+{% block title %}What’s new · ZENOO{% endblock %}
+
+{% block body %}
+<div class="wrap patch-notes" lang="en">
+  <h1>What’s new</h1>
+  <p class="muted">What changed in the ZENOO app, newest first.</p>
+  {% for r in releases %}
+    <section class="card patch-notes__release" aria-labelledby="release-{{ loop.index }}">
+      <p class="kicker"><time datetime="{{ r.date }}">{{ date(r.date)|date('j F Y') }}</time></p>
+      <h2 id="release-{{ loop.index }}">{{ r.title }}</h2>
+      <ul>
+        {% for item in r.items ?? [] %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    </section>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -149,7 +149,8 @@ class ChatAgent
                     $questions ??= Questions::normalise($use['input']['questions'] ?? null, 4);
                     $results[] = ['type' => 'tool_result', 'tool_use_id' => $use['id'], 'content' => 'The question cards are shown to the pet parent.'];
                 } elseif ($use['name'] === 'save_food') {
-                    [, $message, $savedFood] = $this->saveFood($conversation, $use['input']);
+                    [, $message, $savedFood, $rescored] = $this->saveFood($conversation, $use['input']);
+                    $score = $rescored ?? $score;
                     $food = $savedFood ?? $food;
                     $saved = true;
                     $results[] = ['type' => 'tool_result', 'tool_use_id' => $use['id'], 'content' => $message];
@@ -263,7 +264,7 @@ class ChatAgent
     {
         return [
             'name' => 'save_food',
-            'description' => 'Save the food this dog eats to the dog\'s profile, so it is remembered in every later chat. '
+            'description' => 'Save the food this dog eats to the dog\'s profile, so it is remembered in every later chat (the Bowl Score and plan are then worked out again). '
                 . 'Use it once you know the brand (and ideally the product): when a label photo is clearly readable, or when the pet parent confirms or names the food. '
                 . 'If you are not sure you read it right, ask first. After saving, carry on with your reply.',
             'input_schema' => [
@@ -273,6 +274,15 @@ class ChatAgent
                     'product' => ['type' => 'string', 'description' => 'Product or recipe name, e.g. "Six Fish", or "" if unknown'],
                     'format' => ['type' => 'string', 'enum' => ['dry', 'wet', 'raw', 'freeze-dried', 'fresh', 'home-cooked', 'mixed', 'other']],
                     'notes' => ['type' => 'string', 'description' => 'Short facts from the label worth remembering: protein, fat, fibre, ash, moisture %, first ingredients, complete or complementary. "" if none.'],
+                    'analysis' => [
+                        'type' => 'object',
+                        'description' => 'Only if you can read the guaranteed analysis on the label: % as fed. Used to work the Bowl Score out again.',
+                        'properties' => [
+                            'protein' => ['type' => 'number'], 'fat' => ['type' => 'number'], 'fibre' => ['type' => 'number'],
+                            'ash' => ['type' => 'number'], 'moisture' => ['type' => 'number'],
+                        ],
+                        'required' => ['protein', 'fat'],
+                    ],
                 ],
                 'required' => ['brand', 'format'],
             ],
@@ -285,7 +295,8 @@ class ChatAgent
         return [
             'name' => 'update_dog_profile',
             'description' => 'Keep the dog\'s profile up to date. Call it whenever the pet parent tells you something new and lasting about their dog '
-                . 'that isn\'t in the profile yet: a new weight or body shape (the Bowl Score and daily plan are then worked out again), symptoms and how long they have lasted, a vet diagnosis, allergies or intolerances, '
+                . 'that isn\'t in the profile yet: a new weight or body shape, what is in the bowl and how much, meals, treats, activity, appetite, symptoms coming or going '
+                . '(for these the Bowl Score and daily plan are worked out again, so fill the matching fields, not only a fact), symptoms and how long they have lasted, a vet diagnosis, allergies or intolerances, '
                 . 'medication or supplements, treats and chews, a change in routine or activity, likes and dislikes. ALWAYS save medical conditions, '
                 . 'including past ones (topic "condition", e.g. "Pancreatitis in 2024"), allergies and intolerances (topic "allergy") and regular medicines (topic "medicine"): '
                 . 'they become rules for every later answer, even after the chat is cleared. One short fact per item, in the language the pet parent writes in, '
@@ -298,6 +309,31 @@ class ChatAgent
                     'weight_kg' => ['type' => 'number', 'description' => 'Only if they told you a new current weight.'],
                     'body_score' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 9, 'description' => 'Only if they told you a body condition score (1–9, 5 = ideal), '
                         . 'e.g. from their vet or after you walked them through the rib check. Never guess it from the weight alone.'],
+                    'daily_food' => [
+                        'type' => 'array', 'maxItems' => 4,
+                        'description' => 'Only if they told you what is in the bowl now or how much: every food the dog eats in a day, with grams a day (null if unknown). Replaces the old list.',
+                        'items' => ['type' => 'object', 'properties' => [
+                            'type' => ['type' => 'string', 'enum' => ['dry', 'wet', 'fresh', 'raw', 'freezedried', 'home']],
+                            'grams' => ['type' => ['number', 'null']],
+                        ], 'required' => ['type']],
+                    ],
+                    'meals' => ['type' => 'string', 'enum' => ['1', '2', '3', 'free'], 'description' => 'Only if meals a day changed: "1", "2", "3" (or more), "free" (food always in the bowl).'],
+                    'treats' => ['type' => 'string', 'enum' => ['none', 'few', 'several', 'lots'], 'description' => 'Only if treats changed: none (hardly ever), few (a few small a day), several (several treats or chews a day), lots (lots, plus bites from plates).'],
+                    'activity' => [
+                        'type' => 'object',
+                        'description' => 'Only if their daily activity changed.',
+                        'properties' => [
+                            'minutes' => ['type' => 'integer', 'enum' => [1, 2, 3, 4], 'description' => '1: under 30 min a day, 2: 30–60 min, 3: 1–2 hours, 4: more than 2 hours'],
+                            'dog_sport' => ['type' => 'boolean', 'description' => 'Agility, canicross, working dog and the like'],
+                        ],
+                        'required' => ['minutes'],
+                    ],
+                    'appetite' => ['type' => 'string', 'enum' => ['eats', 'slow', 'picky', 'verypicky'], 'description' => 'Only if appetite changed.'],
+                    'symptoms_now' => [
+                        'type' => 'array', 'items' => ['type' => 'string', 'enum' => ['itching', 'tears', 'coat', 'stools', 'gas', 'energy', 'breath']],
+                        'description' => 'Only if symptoms came or went: the full list the dog has NOW (replaces the old one; [] when all are gone). '
+                            . 'itching, tears (tear stains), coat (dull coat), stools (loose stools), gas, energy (low energy), breath (bad breath).',
+                    ],
                     'facts' => [
                         'type' => 'array',
                         'maxItems' => 5,
@@ -420,19 +456,36 @@ class ChatAgent
         if (is_numeric($bcs) && (int) $bcs >= 1 && (int) $bcs <= 9 && $dog->addLog('body', (int) $bcs, $now, 'chat')) {
             $why[] = 'body'; // shown by the score note, not in the "Saved to notes" line
         }
-        // A new weight or body shape: the Bowl Score and daily plan are worked out again.
-        $score = $why && $this->rescorer ? $this->rescorer->recalculate($dog, implode('+', $why), $now) : null;
-        $tell = '';
-        if ($score) {
-            $diff = $score['to'] - $score['from'];
-            $tell = $score['to'] !== $score['from']
-                ? sprintf(' %s\'s Bowl Score was worked out again with this: %d → %d (%s%d).', $dog->getName(), $score['from'], $score['to'], $diff > 0 ? '+' : '', $diff)
-                : sprintf(' %s\'s Bowl Score stays %d.', $dog->getName(), $score['to']);
-            if ($score['plan_to'] !== $score['plan_from']) {
-                $tell .= sprintf(' The daily plan is now: %s (was: %s).', $score['plan_to'], $score['plan_from']);
+        // What the Bowl Score uses, kept over the quiz's answers until the next quiz.
+        $foods = ['dry', 'wet', 'fresh', 'raw', 'freezedried', 'home'];
+        if (\is_array($input['daily_food'] ?? null) && $input['daily_food']) {
+            $feeds = [];
+            foreach (\array_slice($input['daily_food'], 0, 4) as $f) {
+                if (\is_array($f) && \in_array($f['type'] ?? null, $foods, true) && !\in_array($f['type'], array_column($feeds, 'type'), true)) {
+                    $g = $f['grams'] ?? null;
+                    $feeds[] = ['type' => $f['type'], 'grams' => is_numeric($g) && $g > 0 && $g < 5000 ? round((float) $g) : null];
+                }
             }
-            $tell .= ' Tell them this in one short, plain sentence in your reply (the app also shows it under your reply).';
+            if ($feeds && $dog->setProgress('feeds', $feeds, $now)) {
+                $why[] = 'amount';
+            }
         }
+        foreach (['meals' => ['1', '2', '3', 'free'], 'treats' => ['none', 'few', 'several', 'lots'], 'appetite' => ['eats', 'slow', 'picky', 'verypicky']] as $key => $allowed) {
+            if (\in_array($input[$key] ?? null, $allowed, true) && $dog->setProgress($key, $input[$key], $now)) {
+                $why[] = $key;
+            }
+        }
+        $minutes = $input['activity']['minutes'] ?? null;
+        if (\in_array($minutes, [1, 2, 3, 4], true) && $dog->setProgress('level', \App\Quiz\Scoring::activityLevel($minutes, (bool) ($input['activity']['dog_sport'] ?? false)), $now)) {
+            $why[] = 'activity';
+        }
+        if (\is_array($input['symptoms_now'] ?? null)) {
+            $signs = array_values(array_intersect(['itching', 'tears', 'coat', 'stools', 'gas', 'energy', 'breath'], $input['symptoms_now']));
+            if ($dog->setProgress('signs', $signs, $now)) {
+                $why[] = 'symptoms';
+            }
+        }
+        [$score, $tell] = $this->rescore($dog, $why, $now);
         foreach (\array_slice((array) ($input['facts'] ?? []), 0, 5) as $fact) {
             if (\is_array($fact) && $dog->addNote((string) ($fact['topic'] ?? 'other'), (string) ($fact['text'] ?? ''), $now, isset($fact['replaces']) ? (string) $fact['replaces'] : null)) {
                 $added[] = trim((string) $fact['text']);
@@ -451,14 +504,55 @@ class ChatAgent
         $dog = $this->dogOf($conversation);
         $brand = trim((string) ($input['brand'] ?? ''));
         if (!$dog) {
-            return [false, 'Not saved: this pet parent has no dog profile yet (they haven\'t taken the Bowl Score quiz). Just carry on.', null];
+            return [false, 'Not saved: this pet parent has no dog profile yet (they haven\'t taken the Bowl Score quiz). Just carry on.', null, null];
         }
         if ($brand === '') {
-            return [false, 'Not saved: the brand is missing.', null];
+            return [false, 'Not saved: the brand is missing.', null, null];
         }
-        $dog->setFood($brand, (string) ($input['product'] ?? ''), (string) ($input['format'] ?? ''), (string) ($input['notes'] ?? ''), 'chat', new \DateTimeImmutable());
+        $now = new \DateTimeImmutable();
+        $dog->setFood($brand, (string) ($input['product'] ?? ''), (string) ($input['format'] ?? ''), (string) ($input['notes'] ?? ''), 'chat', $now);
+        // The main food for the Bowl Score: its type, and the label's analysis if it was read.
+        $type = ['dry' => 'dry', 'wet' => 'wet', 'raw' => 'raw', 'freeze-dried' => 'freezedried', 'fresh' => 'fresh', 'home-cooked' => 'home'][$input['format'] ?? ''] ?? null;
+        $why = [];
+        if ($type) {
+            $a = \is_array($input['analysis'] ?? null) ? $input['analysis'] : [];
+            $pct = fn (string $k, float $default) => is_numeric($a[$k] ?? null) && $a[$k] >= 0 && $a[$k] <= 90 ? (float) $a[$k] : $default;
+            $t = \App\Quiz\Scoring::TYPICAL[$type];
+            if (is_numeric($a['protein'] ?? null) && is_numeric($a['fat'] ?? null)) {
+                $l = \App\Quiz\Scoring::fromLabel($pct('protein', 0), $pct('fat', 0), $pct('fibre', 3), $pct('ash', 7), $pct('moisture', $type === 'dry' ? 9 : 75));
+                $diet = ['pDm' => $l['pDm'], 'fDm' => $l['fDm'], 'cDm' => $l['cDm'], 'kcalPer100g' => $l['kcalPer100g'], 'fromLabel' => true];
+            } else {
+                $diet = ['pDm' => $t['p'], 'fDm' => $t['f'], 'cDm' => $t['c'], 'kcalPer100g' => null, 'fromLabel' => false];
+            }
+            if ($dog->setProgress('food', ['type' => $type, 'diet' => $diet, 'brand' => mb_substr($brand, 0, 80)], $now)) {
+                $why[] = 'food';
+            }
+        }
+        [$score, $tell] = $this->rescore($dog, $why, $now);
         $this->em->flush();
-        return [true, 'Saved to ' . $dog->getName() . '\'s profile. Now carry on with your reply.', $dog->getFood()];
+        return [true, 'Saved to ' . $dog->getName() . '\'s profile.' . $tell . ' Now carry on with your reply.', $dog->getFood(), $score];
+    }
+
+    /**
+     * Works the Bowl Score and plan out again after these changes (ScoreRecalculator), and what to
+     * tell Claude about it so it can say so in one sentence.
+     *
+     * @return array{?array, string} the change (for the chat's note), the text for the tool result
+     */
+    private function rescore(DogProfile $dog, array $why, \DateTimeImmutable $now): array
+    {
+        $score = $why && $this->rescorer ? $this->rescorer->recalculate($dog, implode('+', $why), $now) : null;
+        if (!$score) {
+            return [null, ''];
+        }
+        $diff = $score['to'] - $score['from'];
+        $tell = $diff !== 0
+            ? sprintf(' %s\'s Bowl Score was worked out again with this: %d → %d (%s%d).', $dog->getName(), $score['from'], $score['to'], $diff > 0 ? '+' : '', $diff)
+            : sprintf(' %s\'s Bowl Score stays %d.', $dog->getName(), $score['to']);
+        if ($score['plan_to'] !== $score['plan_from']) {
+            $tell .= sprintf(' The daily plan is now: %s (was: %s).', $score['plan_to'], $score['plan_from']);
+        }
+        return [$score, $tell . ' Tell them this in one short, plain sentence in your reply (the app also shows it under your reply).'];
     }
 
     /** The whole system prompt as one text (for display and tests). */

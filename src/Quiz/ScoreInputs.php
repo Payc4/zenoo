@@ -18,6 +18,75 @@ final class ScoreInputs
         return \is_array($answers['_inputs'] ?? null) ? self::clean($answers['_inputs']) : null;
     }
 
+    /**
+     * The inputs of a dog saved before they were kept, rebuilt from the fields its quiz saved
+     * (klaviyoPayload() in public/quiz/app.js). Estimates: a breed's energy from the activity it
+     * was recommended; what each food in the bowl weighs from the energy the dog was eating (split
+     * evenly between foods, at typical kcal); typical values for a label read in the quiz.
+     */
+    public static function rebuild(DogProfile $dog): ?array
+    {
+        $g = fn (string $k) => $dog->get($k);
+        $stage = $g('life_stage');
+        $recommended = (int) $g('recommended_activity_band');
+        $types = array_values(array_filter((array) $g('food_types'), fn ($t) => isset(Scoring::TYPICAL[$t])));
+        $main = isset(Scoring::TYPICAL[$g('food_main')]) ? $g('food_main') : ($types[0] ?? null);
+        if (!$main || !$recommended || !$g('weight_kg') || !$g('bcs')) {
+            return null;
+        }
+        $types = $types ?: [$main];
+        $treats = isset(Scoring::TREAT_SHARE[$g('treats') ?? '']) ? $g('treats') : 'none';
+        $foodKcal = is_numeric($g('intake_kcal')) && is_numeric($g('kcal_calculated'))
+            ? (float) $g('intake_kcal') - (float) $g('kcal_calculated') * Scoring::TREAT_SHARE[$treats] : null;
+        $feeds = array_map(fn ($t) => ['type' => $t, 'grams' => $foodKcal !== null && $foodKcal > 0
+            ? Scoring::jsRound(($foodKcal / \count($types)) * 100 / Scoring::TYPICAL[$t]['kcal100'] / 5) * 5 : null], $types);
+        $t = Scoring::TYPICAL[$main];
+        return self::clean([
+            'diet' => ['pDm' => $g('protein_dm') ?? $t['p'], 'fDm' => $t['f'], 'cDm' => $g('carbs_dm') ?? $t['c'], 'kcalPer100g' => null, 'fromLabel' => (bool) $g('label_given')],
+            'foodMain' => $main, 'foodTypes' => $types, 'bcs' => $g('bcs'),
+            'breedEnergy' => $stage === 'adult' ? $recommended : min(5, $recommended + 1),
+            'level' => $g('activity_band'), 'stage' => $stage, 'appetite' => $g('appetite'), 'signs' => (array) $g('signs'),
+            'weightKg' => $g('weight_kg'), 'neutered' => (bool) $g('neutered'), 'ageYears' => $g('age_years'),
+            'adultKg' => $g('adult_weight_kg'), 'feeds' => $feeds, 'meals' => $g('meals_per_day'), 'treats' => $treats,
+        ]);
+    }
+
+    /** The quiz's own answers (app.js's "a") for a dog saved before they were kept, so a retake starts filled in. */
+    public static function retakeAnswers(DogProfile $dog): array
+    {
+        $g = fn (string $k) => $dog->get($k);
+        $in = self::fromDog($dog) ?? self::rebuild($dog);
+        $a = ['name' => $dog->getName(), 'signs' => (array) ($g('signs') ?? []), 'label' => [], 'labelSkipped' => true, 'amounts' => []];
+        if (preg_match('~breed-([a-z0-9-]+)\.jpg~', (string) $g('breed_photo_url'), $m)) {
+            $a['breedId'] = $m[1];
+        }
+        if (is_numeric($g('age_years')) && $g('age_years') >= 1) {
+            $a['ageY'] = (string) (int) round((float) $g('age_years'));
+        }
+        if (\in_array($g('sex'), ['male', 'female'], true)) {
+            $a['sex'] = $g('sex');
+        }
+        if ($g('neutered') !== null) {
+            $a['neutered'] = $g('neutered') ? 'yes' : 'no';
+        }
+        foreach (['weight' => 'weight_kg', 'bcs' => 'bcs', 'foodMain' => 'food_main', 'meals' => 'meals_per_day', 'treats' => 'treats', 'appetite' => 'appetite'] as $key => $field) {
+            if ($g($field) !== null) {
+                $a[$key] = $key === 'weight' ? (string) $g($field) : $g($field);
+            }
+        }
+        if (is_numeric($g('activity_band'))) {
+            $a['actBand'] = min(4, (int) $g('activity_band'));
+            $a['actType'] = (int) $g('activity_band') > 4 ? 'sport' : 'walks';
+        }
+        $a['foods'] = array_values(array_filter((array) ($g('food_types') ?? [$g('food_main')])));
+        foreach ($in['feeds'] ?? [] as $f) {
+            if ($f['grams'] !== null) {
+                $a['amounts'][$f['type']] = ['v' => (string) $f['grams'], 'u' => 'g', 'ns' => false];
+            }
+        }
+        return $a;
+    }
+
     public static function clean(array $in): ?array
     {
         $types = array_keys(Scoring::TYPICAL);

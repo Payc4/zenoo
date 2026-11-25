@@ -1,0 +1,8 @@
+{#- The day's energy. With treats counted in, the food's own share comes first, so a kept amount
+    ("about 150 g a day") matches it: "about 560 kcal a day from food, 820 with treats". -#}
+{%- set plan = dog.get('plan') -%}
+{%- if plan is iterable and plan.food_kcal and (plan.treats ?? 'none') != 'none' and plan.food_kcal < plan.kcal -%}
+  {{ 'about %food% kcal a day from food, %all% with treats'|trans({'%food%': plan.food_kcal, '%all%': plan.kcal}) }}
+{%- elseif dog.get('kcal_target') -%}
+  {{ 'about %kcal% kcal a day'|trans({'%kcal%': dog.get('kcal_target')|round}) }}
+{%- endif -%}

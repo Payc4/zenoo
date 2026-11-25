@@ -18,8 +18,12 @@ use App\Entity\DogProfile;
  *    weight. Puppies keep their logged shape: they are meant to gain.
  *  - Age: the quiz's, plus the time since.
  *
- * Dogs whose quiz was taken before the inputs were saved can't be re-scored (null) until the
- * next quiz. The texts are written again in the quiz's language (QuizTexts).
+ *  - What the owner told the coach since (food, amounts, meals, treats, activity, symptoms,
+ *    appetite: DogProfile::getProgress()), over the quiz's answers.
+ *
+ * Dogs saved before the inputs were kept get them rebuilt from their saved result (ScoreInputs::
+ * rebuild()). The texts are written again in the quiz's language, and the plan saved as data so
+ * it can be shown in any language (QuizTexts).
  */
 final class ScoreRecalculator
 {
@@ -47,9 +51,55 @@ final class ScoreRecalculator
         foreach ($r['subs'] as $key => $sub) {
             $fields['quiz_sub_' . $key] = $sub['score'];
         }
+        // The profile shows (and the coach reads) today's answers, not only the quiz's.
+        $fields += [
+            'quiz_food_main' => $in['foodMain'], 'quiz_food_types' => $in['foodTypes'], 'quiz_label_given' => $in['diet']['fromLabel'],
+            'quiz_protein_dm' => (int) Scoring::jsRound($in['diet']['pDm']), 'quiz_carbs_dm' => (int) Scoring::jsRound($in['diet']['cDm']),
+            'quiz_meals_per_day' => $in['meals'], 'quiz_treats' => $in['treats'], 'quiz_appetite' => $in['appetite'],
+            'quiz_signs' => $in['signs'], 'quiz_top_sign' => $in['signs'][0] ?? null, 'quiz_activity_band' => $in['level'],
+        ];
         $fields += $this->texts->write($dog->getName(), $r, $in, $dog->getLocale());
         $change = $dog->rescore($fields, $r['total'], $why, $now);
         return $change === null ? null : $change + ['kg' => Scoring::roundKg($in['weightKg']), 'bcs' => $in['bcs']];
+    }
+
+    /**
+     * What the owner told the coach since the quiz (DogProfile::getProgress()), over the quiz's answers.
+     * A new main food without amounts takes the old main food's place in the bowl, amount unknown.
+     */
+    public static function withProgress(array $in, array $progress): ?array
+    {
+        $v = fn (string $k) => $progress[$k]['v'] ?? null;
+        foreach (['level', 'meals', 'treats', 'appetite', 'signs'] as $k) {
+            if ($v($k) !== null) {
+                $in[$k] = $v($k);
+            }
+        }
+        $oldMain = $in['foodMain'];
+        if (\is_array($food = $v('food'))) {
+            $in['foodMain'] = $food['type'];
+            $in['diet'] = $food['diet'];
+        }
+        $feedsFirst = \is_array($v('feeds')) && \is_array($v('food')) && strcmp($progress['feeds']['d'], $progress['food']['d']) < 0;
+        if (\is_array($v('feeds'))) {
+            $in['feeds'] = $v('feeds');
+        }
+        $types = array_column($in['feeds'], 'type');
+        if (!\in_array($in['foodMain'], $types, true)) {
+            $i = array_search($oldMain, $types, true);
+            if ($i !== false && (!$v('feeds') || $feedsFirst)) {
+                $in['feeds'][$i] = ['type' => $in['foodMain'], 'grams' => null];
+            } elseif ($in['feeds']) {
+                $in['foodMain'] = $in['feeds'][0]['type']; // the bowl they described last wins
+                if ($in['foodMain'] !== (\is_array($food) ? $food['type'] : $oldMain)) { // no label for this one: typical values
+                    $in['diet'] = ['pDm' => Scoring::TYPICAL[$in['foodMain']]['p'], 'fDm' => Scoring::TYPICAL[$in['foodMain']]['f'], 'cDm' => Scoring::TYPICAL[$in['foodMain']]['c'], 'kcalPer100g' => null, 'fromLabel' => false];
+                }
+            } else {
+                $in['feeds'] = [['type' => $in['foodMain'], 'grams' => null]];
+            }
+        }
+        $in['foodTypes'] = array_values(array_unique(array_column($in['feeds'], 'type')));
+        return ScoreInputs::clean($in);
     }
 
     /** The quiz's inputs with today's weight, body shape and age (see the class comment). */
@@ -82,6 +132,10 @@ final class ScoreRecalculator
                 }
             }
             $in['weightKg'] = (float) $w['v'];
+        }
+        $in = self::withProgress($in, $dog->getProgress());
+        if ($in === null) {
+            return null;
         }
         $at = $dog->get('completed_at');
         $taken = \is_string($at) && strtotime($at) ? new \DateTimeImmutable($at) : $dog->getUpdatedAt();

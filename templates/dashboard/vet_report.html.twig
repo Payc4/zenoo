@@ -35,7 +35,7 @@
     <tr><th>{{ 'Body shape'|trans }}</th><td>{{ '%n% of 9'|trans({'%n%': facts.bcs}) }}{% if energy and energy.ideal_weight_kg %} · {{ 'ideal weight about %kg% kg'|trans({'%kg%': energy.ideal_weight_kg}) }}{% endif %}</td></tr>
     <tr><th>{{ 'Current food'|trans }}</th><td>{% if dog.food %}{{ (dog.food.brand ~ ' ' ~ dog.food.product)|trim }}{% if foods[dog.food.format] is defined %} ({{ foods[dog.food.format]|trans|lower }}){% endif %}{% elseif foods[dog.get('food_main')] is defined %}{{ foods[dog.get('food_main')]|trans }}{% else %}—{% endif %}</td></tr>
     {% if dog.get('intake_kcal') %}<tr><th>{{ 'Eats now'|trans }}</th><td>{{ 'about %kcal% kcal a day'|trans({'%kcal%': dog.get('intake_kcal')|round}) }}</td></tr>{% endif %}
-    {% if energy %}<tr><th>{{ 'Plan'|trans }}</th><td>{{ 'about %kcal% kcal a day'|trans({'%kcal%': energy.kcal_per_day}) }}{% if dog.get('plan_food') %}<br>{{ dog.get('plan_food') }}{% endif %}{% if dog.get('plan_meals') %}<br>{{ dog.get('plan_meals') }}{% endif %}</td></tr>{% endif %}
+    {% if energy %}<tr><th>{{ 'Plan'|trans }}</th><td>{{ 'about %kcal% kcal a day'|trans({'%kcal%': energy.kcal_per_day}) }}{% if dog_text(dog, 'plan_food') %}<br>{{ dog_text(dog, 'plan_food') }}{% endif %}{% if dog_text(dog, 'plan_meals') %}<br>{{ dog_text(dog, 'plan_meals') }}{% endif %}</td></tr>{% endif %}
   </table>
 
   <h2>{{ 'Bowl Score: %score%/100'|trans({'%score%': dog.bowlScore}) }}</h2>

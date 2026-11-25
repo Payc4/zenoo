@@ -191,7 +191,7 @@
 
 /* Calmer header (proposal 6) */
 .chat-using { margin: 0; flex: 1; min-width: 0; font-size: 14px; color: var(--ink-muted); }
-.chat-using a { color: var(--forest); }
+.chat-using a { color: var(--forest); display: inline-block; padding: 12px 6px; margin: -12px -6px; } /* a 44 px tap area that keeps the line's height */
 .chat-menu { position: relative; flex: none; }
 .chat-menu summary { list-style: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font-size: 22px; cursor: pointer; color: var(--forest); }
 .chat-menu summary::-webkit-details-marker { display: none; }
@@ -255,3 +255,7 @@
 .chat-note--score { font-weight: 600; color: var(--forest); }
 .chat-note--score.is-up { color: #2f6b2c; }
 .chat-note--score.is-down { color: var(--amber-text, #935a00); }
+
+/* A message whose reply failed: it stays, marked, with "Try again" (chat.js) */
+.chat-msg.is-unsent { opacity: .7; }
+.chat-retry { margin-top: 8px; min-height: 44px; }

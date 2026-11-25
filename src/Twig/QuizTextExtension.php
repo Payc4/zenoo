@@ -27,7 +27,11 @@ final class QuizTextExtension extends AbstractExtension
 
     public function getFunctions(): array
     {
-        return [new TwigFunction('dog_text', $this->text(...))];
+        return [
+            new TwigFunction('dog_text', $this->text(...)),
+            // A dog saved too early to be re-scored: a retake brings it up to date.
+            new TwigFunction('dog_needs_recheck', fn (DogProfile $dog) => $dog->getBowlScore() > 0 && \App\Quiz\ScoreInputs::fromDog($dog) === null),
+        ];
     }
 
     public function text(DogProfile $dog, string $field): string
@@ -40,6 +44,10 @@ final class QuizTextExtension extends AbstractExtension
         $c = $this->texts->codes($locale);
         if ($c === null) {
             return $stored;
+        }
+        // The plan lines, written from the plan's data in the page's language.
+        if (str_starts_with($field, 'plan_') && \is_array($plan = $dog->get('plan'))) {
+            return (string) ($this->texts->plan($plan, $dog->getName(), $locale)[$field] ?? $stored);
         }
         if ($field === 'score_title') {
             return $c['bands'][$dog->band()] ?? $stored;

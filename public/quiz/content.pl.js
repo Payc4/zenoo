@@ -290,7 +290,7 @@ window.ZQ_CONTENT = {
       moistureNote: 'Nie podano wilgotności? Sucha karma ma jej zwykle około 8–10%.',
       submit: 'POKAŻ',
       // One free AI read of a label photo (only shown when the site has the AI configured)
-      scan: { button: '📷 NIECH AI PRZECZYTA ETYKIETĘ', note: 'Zrób zdjęcie „składników analitycznych” albo wgraj zrzut ekranu. Jedna darmowa próba; zdjęcie nie jest zapisywane.', reading: 'Czytamy etykietę…', filled: 'Gotowe! Wpisaliśmy wartości poniżej. Sprawdź, czy zgadzają się z opakowaniem.', unreadable: 'Nie udało się odczytać wszystkich wartości. Wpisz je poniżej.', error: 'Coś poszło nie tak. Wpisz wartości samodzielnie.', or: 'albo wpisz je sam(a)' },
+      scan: { button: '📷 NIECH AI PRZECZYTA ETYKIETĘ', note: 'Zrób zdjęcie „składników analitycznych” albo wgraj zrzut ekranu. Jedna darmowa próba; zdjęcie nie jest zapisywane.', reading: 'Czytamy etykietę…', filled: 'Gotowe! Wpisaliśmy wartości powyżej. Sprawdź, czy zgadzają się z opakowaniem.', unreadable: 'Nie udało się odczytać wszystkich wartości. Wpisz je powyżej.', error: 'Coś poszło nie tak. Wpisz wartości samodzielnie.', or: 'albo wpisz je sam(a)' },
     },
     slideBowl: {
       tag: 'CO JEST W MISCE',
@@ -307,9 +307,9 @@ window.ZQ_CONTENT = {
     gate: {
       tag: 'PLAN JEST GOTOWY: {NAME}',
       title: 'GDZIE GO WYSŁAĆ?',
-      lead: 'Wyślemy ci e-mailem Wynik miski i plan dnia twojego psa ({name}), a do tego <b>darmowy poradnik żywienia ZENOO</b>.',
+      lead: 'Wyślemy ci e-mailem Wynik miski i plan dnia twojego psa ({name}).',
       firstName: 'Twoje imię', email: 'Twój e-mail', submit: 'WYŚLIJ MÓJ PLAN',
-      consent: 'Wyślemy Ci plan dla Twojego psa ({name}) i darmowy poradnik żywienia.',
+      consent: 'Wyślemy Ci plan dla Twojego psa ({name}).',
       marketing: 'Wysyłajcie mi też porady żywieniowe i oferty ZENOO (opcjonalnie).',
       unsubscribe: 'Możesz zrezygnować w każdej chwili.', privacy: 'Polityka prywatności',
     },
@@ -353,8 +353,9 @@ window.ZQ_CONTENT = {
       scoreTitle: 'WYNIK MISKI: {NAME}',
       firstTitle: 'OD CZEGO BYŚMY ZACZĘLI', keepGoing: 'Tak trzymaj!',
       breakdown: 'SZCZEGÓŁY WYNIKU',
-      inboxTitle: 'SPRAWDŹ SKRZYNKĘ',
-      inboxText: 'Plan twojego psa ({name}) i darmowy poradnik żywienia wysłaliśmy na adres {email}.',
+      inboxTitle: 'JESZCZE JEDEN KROK: POTWIERDŹ E-MAIL',
+      inboxText: 'Wysłaliśmy link na adres {email}. Kliknij go, aby zapisać wynik ({name}) i dostać plan e-mailem.',
+      openEmail: 'Otwórz pocztę', more: 'Pełny plan i szczegóły wyniku',
       share: 'UDOSTĘPNIJ TEST', linkCopied: 'SKOPIOWANO LINK', shareTitle: 'Czy twój pies je prawidłowo?',
       restart: 'Zacznij od nowa',
       demoSent: 'Prototyp: dane wysłane do Klaviyo', demoUnsent: 'Prototyp: dane, które trafiłyby do Klaviyo',

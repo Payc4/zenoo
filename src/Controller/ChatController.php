@@ -389,12 +389,28 @@ class ChatController extends AbstractController
             }
 
             try {
-                $result = $agent->reply($conversation, static fn (string $delta) => $emit('delta', ['text' => $delta]));
-                $reply = $result['text'];
-                if ($reply === '' && !$result['questions']) {
-                    // Treated like a failed call below: nothing is saved and the message doesn't count.
-                    throw new \RuntimeException('Empty reply from Claude (stop_reason: ' . ($result['stop_reason'] ?? 'none') . ')');
+                // A failed or empty reply before anything was shown is tried once more, quietly
+                // (test report: a first message got no reply and worked on retry).
+                $streamed = false;
+                for ($attempt = 1; ; $attempt++) {
+                    try {
+                        $result = $agent->reply($conversation, static function (string $delta) use ($emit, &$streamed) {
+                            $streamed = true;
+                            $emit('delta', ['text' => $delta]);
+                        });
+                        if ($result['text'] === '' && !$result['questions']) {
+                            // Treated like a failed call: nothing is saved and the message doesn't count.
+                            throw new \RuntimeException('Empty reply from Claude (stop_reason: ' . ($result['stop_reason'] ?? 'none') . ')');
+                        }
+                        break;
+                    } catch (\Throwable $e) {
+                        if ($attempt >= 2 || $streamed) {
+                            throw $e;
+                        }
+                        $logger->warning('Chat reply failed, trying once more', ['exception' => $e]);
+                    }
                 }
+                $reply = $result['text'];
                 // The safety net for the dog's rules (allergies, conditions, medicines): a reply that
                 // goes against them is replaced with the corrected one, and that's said (F6).
                 $corrected = null;

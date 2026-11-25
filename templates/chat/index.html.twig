@@ -29,6 +29,7 @@
         limitAll: 'You’ve used all %limit% messages for today. You can chat again after %time%.'|trans({'%limit%': limit, '%time%': resetLabel|trans}),
         error: 'Something went wrong. Please try again.'|trans,
         noReply: 'No reply came back. Please try again.'|trans,
+        tryAgain: 'Try again'|trans,
         answerQuestions: 'Answer the questions'|trans,
         askAnything: 'Ask anything about feeding your dog or using ZENOO.'|trans,
         prevQ: 'Previous question'|trans,
@@ -69,7 +70,7 @@
                     {% for n in newDogs %}
                         <a class="chat-side__item" href="{{ path('app_chat', {pet: n.dog.id}) }}">
                             {{ ui.avatar(n.dog, n.photo) }}
-                            <span class="chat-side__text"><strong>{{ n.dog.name }}</strong><span class="chat-side__preview">{{ 'No chat yet'|trans }}</span></span>
+                            <span class="chat-side__text"><strong>{{ dog_label(n.dog) }}</strong><span class="chat-side__preview">{{ 'No chat yet'|trans }}</span></span>
                         </a>
                     {% endfor %}
                 {% endif %}
@@ -79,13 +80,13 @@
                 </a>
             </div>
         </details>
-        <ul class="chat-side__list">
+        <ul class="chat-side__list" data-hj-suppress>
             {% for c in sideChats %}
                 {% set on = c.dog.id == dog.id %}
                 <li><a class="chat-side__item{{ on ? ' is-on' }}" href="{{ path('app_chat', {pet: c.dog.id}) }}"{{ on ? ' aria-current="page"' }}>
                     {{ ui.avatar(c.dog, c.photo) }}
                     <span class="chat-side__text">
-                        <strong>{{ '%dog%’s coach'|trans({'%dog%': c.dog.name}) }}</strong>
+                        <strong>{{ '%dog%’s coach'|trans({'%dog%': dog_label(c.dog)}) }}</strong>
                         <span class="chat-side__preview">{% if c.last %}{{ c.last.mine ? 'You: %text%'|trans({'%text%': c.last.text}) : c.last.text }}{% else %}{{ 'New chat'|trans }}{% endif %}</span>
                     </span>
                 </a></li>
@@ -131,7 +132,7 @@
         {% endif %}
 
         <div class="chat-scroll" id="chat-scroll">
-            <div class="chat-thread" id="chat-thread">
+            <div class="chat-thread" id="chat-thread" data-hj-suppress>
                 {% if messages|length == 0 %}
                     <div class="chat-empty" id="chat-empty">
                         <img src="/apple-touch-icon.png" alt="" width="56" height="56">

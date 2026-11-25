@@ -69,7 +69,10 @@
    "keepWeight": "Keep {name} around {kg} kg",
    "aimWeight": "Aim for about {kg} kg, slowly",
    "puppyGrowth": "Still growing: weigh weekly and expect steady gain, towards about {adult} kg as an adult.",
-   "gramsRange": "{min}–{max} g a day"
+   "gramsRange": "{min}–{max} g a day",
+   "mealsPuppy": "3–4 small meals a day",
+   "mealsAdult": "2 set meals a day",
+   "treatsCounted": ", treats counted in"
   }
  },
  "lt": {
@@ -142,7 +145,10 @@
    "keepWeight": "Palaikykite apie {kg} kg svorį",
    "aimWeight": "Siekite apie {kg} kg, pamažu",
    "puppyGrowth": "Dar auga: sverkite kas savaitę, svoris turėtų tolygiai didėti iki maždaug {adult} kg suaugus.",
-   "gramsRange": "{min}–{max} g per dieną"
+   "gramsRange": "{min}–{max} g per dieną",
+   "mealsPuppy": "3–4 nedideli valgiai per dieną",
+   "mealsAdult": "2 valgiai per dieną nustatytu laiku",
+   "treatsCounted": ", įskaitant skanėstus"
   }
  },
  "uk": {
@@ -215,7 +221,10 @@
    "keepWeight": "Підтримуйте вагу близько {kg} кг",
    "aimWeight": "Поступово досягніть ваги близько {kg} кг",
    "puppyGrowth": "Ще росте: зважуйте щотижня, вага має рівномірно зростати приблизно до {adult} кг у дорослому віці.",
-   "gramsRange": "{min}–{max} г на день"
+   "gramsRange": "{min}–{max} г на день",
+   "mealsPuppy": "3–4 невеликі прийоми їжі на день",
+   "mealsAdult": "2 прийоми їжі на день у визначений час",
+   "treatsCounted": ", з урахуванням ласощів"
   }
  },
  "pl": {
@@ -288,7 +297,10 @@
    "keepWeight": "Utrzymuj wagę około {kg} kg",
    "aimWeight": "Dąż powoli do około {kg} kg",
    "puppyGrowth": "Wciąż rośnie: waż co tydzień, waga powinna równomiernie rosnąć do około {adult} kg w dorosłości.",
-   "gramsRange": "{min}–{max} g dziennie"
+   "gramsRange": "{min}–{max} g dziennie",
+   "mealsPuppy": "3–4 małe posiłki dziennie",
+   "mealsAdult": "2 posiłki dziennie o stałych porach",
+   "treatsCounted": ", wliczając przysmaki"
   }
  }
 }

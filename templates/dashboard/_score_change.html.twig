@@ -1,9 +1,20 @@
 {# The Bowl Score was worked out again after a new weight or body shape (App\Quiz\ScoreRecalculator).
    Shown on Today and the dog's tab until the owner closes it. back: where closing returns to. #}
+{% if dog_needs_recheck(dog) %}
+  <div class="score-change" role="status">
+    <span class="score-change__icon" aria-hidden="true">•</span>
+    <div class="score-change__text">
+      <p class="score-change__title">{{ 'Re-check %dog% to update the score and plan'|trans({'%dog%': dog.name}) }}</p>
+      <p>{{ 'This result was saved before ZENOO’s latest rules. A quick re-check, with the answers filled in, brings it up to date.'|trans }} <a href="{{ path('app_quiz', {dog: dog.id}) }}">{{ 'Re-check now'|trans }}</a></p>
+    </div>
+  </div>
+{% endif %}
 {% set c = dog.scoreChange %}
 {% if c %}
   {% set diff = c.to - c.from %}
-  {% set why = c.why|join('+') %}
+  {% set why = c.why|join('+')|split('+') %}
+  {% set labels = {food: 'food', amount: 'daily amount', meals: 'meals', treats: 'treats', activity: 'activity', symptoms: 'symptoms', appetite: 'appetite', weight: 'weight', body: 'body shape'} %}
+  {% set seen = [] %}{% for w in why %}{% if labels[w] is defined and w not in seen %}{% set seen = seen|merge([w]) %}{% endif %}{% endfor %}
   <div class="score-change{{ diff > 0 ? ' is-up' : (diff < 0 ? ' is-down' : '') }}" role="status">
     <span class="score-change__icon" aria-hidden="true">{{ diff > 0 ? '▲' : (diff < 0 ? '▼' : '•') }}</span>
     <div class="score-change__text">
@@ -15,9 +26,13 @@
         {% endif %}
       </p>
       <p>
-        {% if 'weight' in why and 'body' in why %}{{ 'Worked out again after %dog%’s new weight and body shape.'|trans({'%dog%': dog.name}) }}
-        {% elseif 'body' in why %}{{ 'Worked out again after %dog%’s new body shape.'|trans({'%dog%': dog.name}) }}
-        {% else %}{{ 'Worked out again after %dog%’s new weight.'|trans({'%dog%': dog.name}) }}{% endif %}
+        {% if not seen %}{{ 'Worked out again with ZENOO’s updated rules.'|trans }}
+        {% elseif seen|filter(w => w not in ['weight', 'body']) is empty %}
+          {% if 'weight' in seen and 'body' in seen %}{{ 'Worked out again after %dog%’s new weight and body shape.'|trans({'%dog%': dog.name}) }}
+          {% elseif 'body' in seen %}{{ 'Worked out again after %dog%’s new body shape.'|trans({'%dog%': dog.name}) }}
+          {% else %}{{ 'Worked out again after %dog%’s new weight.'|trans({'%dog%': dog.name}) }}{% endif %}
+        {% else %}{{ 'Worked out again with what’s new: %list%.'|trans({'%list%': seen|map(w => labels[w]|trans)|join(', ')}) }}
+        {% endif %}
         {% if c.plan_to and c.plan_to != c.plan_from %}
           {{ 'Daily food: %plan%'|trans({'%plan%': c.plan_to}) }}{% if c.plan_from %} <span class="score-change__was">({{ 'was: %plan%'|trans({'%plan%': c.plan_from}) }})</span>{% endif %}
         {% endif %}

@@ -19,8 +19,20 @@ final class ScoringParityTest extends TestCase
         $cases = json_decode(implode('', $out), true, 512, JSON_THROW_ON_ERROR);
         $this->assertCount(4000, $cases);
         $diffs = [];
-        foreach ($cases as $i => ['a' => $a, 'r' => $js]) {
+        foreach ($cases as $i => ['a' => $a, 'r' => $js, 'label' => $label, 'sport' => $sport]) {
             $php = Scoring::evaluate($a);
+            if ($label) {
+                $d = Scoring::fromLabel($label['p'], $label['f'], $label['fi'], $label['a'], $label['m']);
+                foreach (['pDm', 'cDm', 'kcalPer100g'] as $k) {
+                    if (abs($d[$k] - $a['diet'][$k]) > 1e-9) {
+                        $diffs[] = "#$i fromLabel.$k";
+                    }
+                }
+            }
+            $band = min(4, $a['level']);
+            if ([Scoring::activityLevel($band, false), Scoring::activityLevel($band, true)] !== $sport) {
+                $diffs[] = "#$i activityLevel";
+            }
             foreach (['total', 'band', 'capped', 'kcal', 'targetKcal', 'keep', 'vetCheck', 'idealKg', 'adultKg', 'intakeKcal', 'ratio', 'grams', 'topFixes'] as $k) {
                 if (json_encode($js[$k]) !== json_encode($php[$k]) && !(is_numeric($js[$k]) && is_numeric($php[$k]) && abs($js[$k] - $php[$k]) < 1e-9)) {
                     $diffs[] = "#$i $k: js " . json_encode($js[$k]) . ' php ' . json_encode($php[$k]);

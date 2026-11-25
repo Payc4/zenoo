@@ -287,7 +287,7 @@ window.ZQ_CONTENT = {
       moistureNote: 'No moisture listed? Dry food is usually around 8–10%.',
       submit: 'SHOW ME',
       // One free AI read of a label photo (only shown when the site has the AI configured)
-      scan: { button: '📷 LET OUR AI READ THE LABEL', note: 'Snap the “analytical constituents” panel or upload a screenshot. One free try; the photo isn’t stored.', reading: 'Reading the label…', filled: 'Done! We filled the numbers in below. Check they match the bag.', unreadable: 'We couldn’t read all the numbers. Please type them in below.', error: 'Something went wrong. Please type the numbers in.', or: 'or type it in yourself' },
+      scan: { button: '📷 LET OUR AI READ THE LABEL', note: 'Snap the “analytical constituents” panel or upload a screenshot. One free try; the photo isn’t stored.', reading: 'Reading the label…', filled: 'Done! We filled the numbers in above. Check they match the bag.', unreadable: 'We couldn’t read all the numbers. Please type them in above.', error: 'Something went wrong. Please type the numbers in.', or: 'or type it in yourself' },
     },
     slideBowl: {
       tag: 'WHAT’S IN THE BOWL',
@@ -305,10 +305,10 @@ window.ZQ_CONTENT = {
     gate: {
       tag: '{POSS} PLAN IS READY',
       title: 'WHERE SHOULD WE SEND IT?',
-      lead: 'We’ll email you {poss} Bowl Score and daily plan, plus our <b>free ZENOO feeding guide</b>.',
+      lead: 'We’ll email you {poss} Bowl Score and daily plan.',
       firstName: 'Your first name', email: 'Your email', submit: 'SEND MY PLAN',
       // consent is also stored on the Klaviyo profile as consent_text_shown
-      consent: 'We’ll email you {poss} plan and the free feeding guide.',
+      consent: 'We’ll email you {poss} plan.',
       marketing: 'Also send me feeding tips and offers from ZENOO (optional).',
       unsubscribe: 'Unsubscribe anytime.', privacy: 'Privacy policy',
     },
@@ -355,8 +355,9 @@ window.ZQ_CONTENT = {
       scoreTitle: '{POSS} BOWL SCORE',
       firstTitle: 'WHAT WE’D DO FIRST', keepGoing: 'Keep doing what you’re doing!',
       breakdown: 'THE BREAKDOWN',
-      inboxTitle: 'CHECK YOUR INBOX',
-      inboxText: 'We’ve sent {poss} plan and your free feeding guide to {email}.',
+      inboxTitle: 'ONE MORE STEP: CONFIRM YOUR EMAIL',
+      inboxText: 'We’ve sent a link to {email}. Click it to save {poss} result and get the plan by email.',
+      openEmail: 'Open my email', more: 'See the full plan and score breakdown',
       share: 'SHARE THE CHECK', linkCopied: 'LINK COPIED', shareTitle: 'Is your dog eating properly?',
       restart: 'Start again',
       demoSent: 'Prototype: data sent to Klaviyo', demoUnsent: 'Prototype: data that would go to Klaviyo',

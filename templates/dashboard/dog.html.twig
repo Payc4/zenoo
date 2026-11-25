@@ -88,12 +88,12 @@
   <section class="card card-mist dash-plan" aria-labelledby="plan-h">
     <h2 id="plan-h">{{ '%dog%’s daily plan'|trans({'%dog%': dog.name}) }}</h2>
     <dl>
-      {% if dog.get('kcal_target') %}<div><dt>{{ 'Energy'|trans }}</dt><dd>{{ 'about %kcal% kcal a day'|trans({'%kcal%': dog.get('kcal_target')|round}) }}</dd></div>{% endif %}
-      {% if dog.get('plan_food') %}{% set parts = dog.get('plan_food')|split(' — ', 2) %}<div><dt>{{ 'Food'|trans }}</dt><dd>{{ parts[0] }}{% if parts[1] is defined %}<br><small>{{ parts[1] }}</small>{% endif %}</dd></div>{% endif %}
-      {% if dog.get('plan_meals') %}<div><dt>{{ 'Meals'|trans }}</dt><dd>{{ dog.get('plan_meals') }}</dd></div>{% endif %}
-      {% if dog.get('plan_protein_g') %}<div><dt>{{ 'Protein'|trans }}</dt><dd>{{ dog.get('plan_protein_g') }}</dd></div>{% endif %}
-      {% if dog.get('plan_fat_g') %}<div><dt>{{ 'Fat'|trans }}</dt><dd>{{ dog.get('plan_fat_g') }}</dd></div>{% endif %}
-      {% if dog.get('plan_weight') %}<div><dt>{{ 'Weight'|trans }}</dt><dd>{{ dog.get('plan_weight') }}</dd></div>{% endif %}
+      {% if dog.get('kcal_target') %}<div><dt>{{ 'Energy'|trans }}</dt><dd>{{ include('dashboard/_kcal.html.twig') }}</dd></div>{% endif %}
+      {% if dog_text(dog, 'plan_food') %}{% set parts = dog_text(dog, 'plan_food')|split(' — ', 2) %}<div><dt>{{ 'Food'|trans }}</dt><dd>{{ parts[0] }}{% if parts[1] is defined %}<br><small>{{ parts[1] }}</small>{% endif %}</dd></div>{% endif %}
+      {% if dog_text(dog, 'plan_meals') %}<div><dt>{{ 'Meals'|trans }}</dt><dd>{{ dog_text(dog, 'plan_meals') }}</dd></div>{% endif %}
+      {% if dog_text(dog, 'plan_protein_g') %}<div><dt>{{ 'Protein'|trans }}</dt><dd>{{ dog_text(dog, 'plan_protein_g') }}</dd></div>{% endif %}
+      {% if dog_text(dog, 'plan_fat_g') %}<div><dt>{{ 'Fat'|trans }}</dt><dd>{{ dog_text(dog, 'plan_fat_g') }}</dd></div>{% endif %}
+      {% if dog_text(dog, 'plan_weight') %}<div><dt>{{ 'Weight'|trans }}</dt><dd>{{ dog_text(dog, 'plan_weight') }}</dd></div>{% endif %}
     </dl>
     <p class="small muted">{{ 'A starting point, not a prescription. Weigh %dog% every 2–3 weeks and adjust by about 10%.'|trans({'%dog%': dog.name}) }}</p>
   </section>
@@ -118,7 +118,7 @@
   <section class="card dog-list">
     <details id="knows-h">
       <summary><span>{{ 'What the coach knows'|trans }}</span><span class="muted">{{ '%n% notes'|trans({'%n%': dog.notes|length}) }}</span></summary>
-      <ul class="dash-knows">
+      <ul class="dash-knows" data-hj-suppress>
         {% if dog.food %}<li><span class="dash-knows__topic">{{ 'Food'|trans }}</span> <span class="dash-knows__text">{{ (dog.food.brand ~ ' ' ~ dog.food.product)|trim }}</span></li>{% endif %}
         {% for i, n in dog.notes|reverse(true) %}
           <li>

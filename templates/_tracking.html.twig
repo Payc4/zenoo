@@ -1,4 +1,4 @@
-{# In every page's <head>: measurement (src/Tracking: the cookie banner, GA4 / Meta pixel only after consent) and the installable app. #}
+{# In every page's <head>: measurement (src/Tracking: the cookie banner, GA4 / Meta pixel / Hotjar only after consent) and the installable app. #}
 {% set tc = tracking_config() %}
 <script>
   window.ZN_TRACKING = {{ (tc|merge({
@@ -11,6 +11,8 @@
       necessary: 'Only necessary'|trans,
       choose: 'Choose'|trans,
       analytics: 'Analytics (Google Analytics)'|trans,
+      analyticsHotjar: 'Analytics (Hotjar: how pages are used)'|trans,
+      analyticsBoth: 'Analytics (Google Analytics, Hotjar)'|trans,
       marketing: 'Advertising (Meta)'|trans,
       save: 'Save my choice'|trans,
       privacy: 'Privacy policy'|trans,

@@ -293,7 +293,7 @@ ${backOnly()}`,
         <p class="zq-small">${T.moistureNote}</p>
         <div class="zq-nav"><button class="zq-back" data-action="back">${U.back}</button><button class="zq-btn" data-action="next">${T.submit}</button></div>
         <div style="margin-top:22px">${scanBox()}</div>
-        <button class="zq-btn outline block" data-action="skipLabel">${T.skip}</button>
+        <button class="zq-btn outline block" data-action="skipLabel" style="margin-top:18px">${T.skip}</button>
         <p class="zq-small" style="text-align:center;margin:8px 0 0">${tx(T.skipNote)}</p>`;
     },
 
@@ -403,26 +403,40 @@ ${backOnly()}`,
           <div class="zq-score-num">${r.total}<small>/100</small></div><h1>${bandC.title}</h1></div>
           ${CFG.accountSubmitUrl ? `<div class="zq-sent zq-account" id="zq-account">${accountBox()}</div>` : ''}`;
       }
-      // The first screen: the score, three things to do, and one main action fixed at the bottom.
-      const main = zp
-        ? `<a class="zq-btn block" href="${esc(zp.cartUrl)}" target="_blank" rel="noopener" data-track="plan_cart">${fill(U.result.zenoo.cta, { price: dec(zp.starterPrice.toFixed(2)) })}</a>`
-        : `<button class="zq-btn block" data-action="share">${T.share}</button>`;
+      // The first screen (test report: shorter result): the score, then the one real next step,
+      // confirming the email, then three things to do. The full plan and breakdown fold away.
+      // The fixed button opens their webmail when we know it; else the ZENOO starter, if any.
+      const domain = String(a.email || '').split('@')[1]?.toLowerCase() || '';
+      const webmail = { 'gmail.com': 'https://mail.google.com/mail/u/0/#search/ZENOO', 'googlemail.com': 'https://mail.google.com/',
+        'outlook.com': 'https://outlook.live.com/mail/', 'hotmail.com': 'https://outlook.live.com/mail/', 'live.com': 'https://outlook.live.com/mail/',
+        'yahoo.com': 'https://mail.yahoo.com/', 'icloud.com': 'https://www.icloud.com/mail', 'me.com': 'https://www.icloud.com/mail',
+        'gmx.com': 'https://www.gmx.com/', 'gmx.net': 'https://www.gmx.net/', 'wp.pl': 'https://poczta.wp.pl/', 'o2.pl': 'https://poczta.o2.pl/',
+        'onet.pl': 'https://poczta.onet.pl/', 'interia.pl': 'https://poczta.interia.pl/', 'ukr.net': 'https://mail.ukr.net/', 'inbox.lt': 'https://www.inbox.lt/',
+        'one.lt': 'https://www.one.lt/' }[domain];
+      const main = webmail
+        ? `<a class="zq-btn block" href="${esc(webmail)}" target="_blank" rel="noopener" data-track="open_email">${T.openEmail}</a>`
+        : zp ? `<a class="zq-btn block" href="${esc(zp.cartUrl)}" target="_blank" rel="noopener" data-track="plan_cart">${fill(U.result.zenoo.cta, { price: dec(zp.starterPrice.toFixed(2)) })}</a>` : '';
       return `
         <div class="zq-scorecard"><div class="zq-small">${tx(T.scoreTitle)}</div>
           <div class="zq-score-num">${r.total}<small>/100</small></div>
-          <h1>${bandC.title}</h1><p>${fill(bandC.text, vars)}</p>
+          <h1>${bandC.title}</h1>
           ${r.capped ? `<p class="zq-small zq-capped">${tx(T.capped[r.capped], { max: r.total })}</p>` : ''}</div>
+        ${CFG.accountSubmitUrl
+          // One confirm card: the site sends the link that saves the result and the plan email follows.
+          ? `<div class="zq-sent zq-account zq-confirm" id="zq-account">${accountBox()}</div>`
+          : `<div class="zq-sent zq-confirm" id="zq-inbox"><h3>${T.inboxTitle}</h3>
+          <p style="margin:0">${tx(T.inboxText, { email: `<b>${esc(a.email)}</b>` })}</p></div>`}
         <div class="zq-card zq-todo"><h3>${T.firstTitle}</h3><ol style="margin:0;padding-left:20px">${first || `<li>${T.keepGoing}</li>`}</ol></div>
-        <div class="zq-sent" id="zq-inbox"><h3 style="font-family:var(--font-display);margin:0 0 6px">${T.inboxTitle}</h3>
-          <p style="margin:0">${tx(T.inboxText, { email: `<b>${esc(a.email)}</b>` })}</p></div>
-        ${CFG.accountSubmitUrl ? `<div class="zq-sent zq-account" id="zq-account">${accountBox()}</div>` : ''}
-        ${plan}
-        ${zenooCard}
         ${vets.map((v) => `<div class="zq-vet">${v}</div>`).join('')}
-        <h2 style="margin-top:20px">${T.breakdown}</h2>${cards.join('')}
-        ${profile}
-        <p class="zq-quiet">${zp ? `<button class="zq-back" data-action="share">${T.share}</button> · ` : ''}<button class="zq-back" data-action="edit">${U.editAnswers}</button> · <button class="zq-back" data-action="restart">${T.restart}</button></p>
-        <div class="zq-fixed">${main}</div>
+        ${zenooCard}
+        <details class="zq-more"><summary>${T.more}</summary>
+          <p>${fill(bandC.text, vars)}</p>
+          ${plan}
+          <h2 style="margin-top:20px">${T.breakdown}</h2>${cards.join('')}
+          ${profile}
+        </details>
+        <p class="zq-quiet"><button class="zq-back" data-action="share">${T.share}</button> · <button class="zq-back" data-action="edit">${U.editAnswers}</button> · <button class="zq-back" data-action="restart">${T.restart}</button></p>
+        ${main ? `<div class="zq-fixed">${main}</div>` : ''}
         ${CFG.debug ? `<details class="zq-demo"><summary>${CFG.sendToKlaviyo ? T.demoSent : T.demoUnsent}</summary><pre>${esc(JSON.stringify(payload, null, 2))}</pre></details>` : ''}`;
     },
   };
@@ -577,10 +591,11 @@ ${backOnly()}`,
         ${r.brand ? `<p><b>${esc([r.brand, r.product].filter(Boolean).join(' – '))}</b></p>` : ''}
         <p>${r.readable ? T.filled : T.unreadable}</p>${r.take ? `<p class="zq-small">${esc(r.take)}</p>` : ''}</div>` : '';
     const canTry = (a.labelScanTriesLeft ?? 1) > 0 && !(r && r.readable);
-    const btn = canTry ? `<button type="button" class="zq-btn block" data-action="scanLabel" ${scan.state === 'reading' ? 'disabled' : ''}>${scan.state === 'reading' ? T.reading : T.button}</button>
+    // Secondary (outline): "Show me" is the step's one orange button (test report: two orange buttons).
+    const btn = canTry ? `<button type="button" class="zq-btn outline block" data-action="scanLabel" ${scan.state === 'reading' ? 'disabled' : ''}>${scan.state === 'reading' ? T.reading : T.button}</button>
         <p class="zq-small" style="text-align:center;margin:6px 0 0">${T.note}</p>
         <input type="file" id="zq-scanfile" accept="image/*" hidden>` : '';
-    return `<div class="zq-scan" id="zq-scan">${btn}${out}${found}</div>${canTry || found ? `<p class="zq-or">${T.or}</p>` : ''}`;
+    return `<div class="zq-scan" id="zq-scan">${btn}${out}${found}</div>`; // typing comes first now: no "or type it in" line
   }
   function refreshScan() {
     if (active()[step].id !== 'label') return;
@@ -762,7 +777,8 @@ ${backOnly()}`,
         <div class="zq-choose"><button class="zq-btn" data-action="chooseUpdate">${fill(T.chooseUpdate, { name: n })}</button><button class="zq-btn forest" data-action="chooseNew">${fill(T.chooseNew, { name: n })}</button></div>`;
     }
     const btn = account.state === 'saved' ? `<p style="margin:10px 0 0"><a class="zq-btn" href="${esc(account.dashboard)}">${T.open}</a></p>` : '';
-    return `<h3 style="font-family:var(--font-display);margin:0 0 6px">${account.state === 'saved' ? T.savedTitle : T.title}</h3><p style="margin:0">${msg}</p>${btn}`;
+    const title = account.state === 'saved' ? T.savedTitle : (account.state === 'sent' || account.state === 'sending') && !CFG.user ? U.result.inboxTitle : T.title;
+    return `<h3 style="font-family:var(--font-display);margin:0 0 6px">${title}</h3><p style="margin:0">${msg}</p>${btn}`;
   }
   function setAccount(next) {
     account = { ...account, ...next };

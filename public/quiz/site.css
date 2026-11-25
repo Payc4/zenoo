@@ -57,3 +57,13 @@ h2 { font-size: 20px; }
 .zq-quiet .zq-back { display: inline-flex; align-items: center; }
 .zq-todo ol li { margin-bottom: 6px; }
 .zq-capped { margin: 8px 0 0; color: var(--mist, #dde5dc); }
+
+/* Result: confirming the email is the next step, so it stands out (test report: shorter result). */
+.zq-confirm { border: 2px solid var(--sun, #f7a223); }
+.zq-confirm h3 { font-family: var(--font-display); margin: 0 0 6px; font-size: 19px; }
+.zq-more { margin: 16px 0; }
+.zq-more > summary { display: flex; align-items: center; min-height: 48px; padding: 0 18px; border-radius: 999px; border: 1.5px solid rgba(68, 89, 66, .25); background: #fff; font-weight: 700; cursor: pointer; list-style: none; }
+.zq-more > summary::-webkit-details-marker { display: none; }
+.zq-more > summary::after { content: "▾"; margin-left: auto; }
+.zq-more[open] > summary::after { content: "▴"; }
+.zq-more > summary:focus-visible { outline: 3px solid var(--sun, #f7a223); outline-offset: 2px; }

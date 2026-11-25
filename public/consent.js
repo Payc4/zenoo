@@ -1,6 +1,8 @@
 // ZENOO cookie banner and measurement (see src/Tracking). Nothing optional loads before consent.
 // window.znTrack(step) counts a funnel step (POST /t for browser steps) and, with consent, sends it
-// to GA4 and the Meta pixel. The choice lives in the zn_consent cookie for 180 days.
+// to GA4 and the Meta pixel. Hotjar (heatmaps, recordings) loads with analytics consent; elements
+// marked data-hj-suppress (chat, the coach's notes, account details) are hidden from it.
+// The choice lives in the zn_consent cookie for 180 days.
 (function () {
   const T = window.ZN_TRACKING || {};
   if (!T.text) return;
@@ -8,7 +10,7 @@
   const read = () => (document.cookie.match(/(?:^|; )zn_consent=([^;]*)/) || [])[1];
   const allows = (cat) => (read() || '').split(',').includes(cat);
   const queue = [];
-  let gaLoaded = false; let pixelLoaded = false;
+  let gaLoaded = false; let pixelLoaded = false; let hotjarLoaded = false;
 
   function loadGa() {
     if (gaLoaded || !T.ga4 || !allows('analytics')) return;
@@ -34,8 +36,18 @@
     const meta = (T.pixelEvents || {})[step];
     if (pixelLoaded && window.fbq && meta) window.fbq('track', meta, params || {});
   }
+  function loadHotjar() {
+    if (hotjarLoaded || !T.hotjar || !allows('analytics')) return;
+    hotjarLoaded = true;
+    (function (h, o, t, j, a, r) {
+      h.hj = h.hj || function () { (h.hj.q = h.hj.q || []).push(arguments); };
+      h._hjSettings = { hjid: T.hotjar, hjsv: 6 };
+      a = o.getElementsByTagName('head')[0]; r = o.createElement('script'); r.async = 1;
+      r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv; a.appendChild(r);
+    })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=');
+  }
   function start() {
-    loadGa(); loadPixel();
+    loadGa(); loadPixel(); loadHotjar();
     queue.splice(0).forEach(([s, p]) => send(s, p));
   }
 
@@ -61,7 +73,7 @@
     el.id = 'zn-consent'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', t.title);
     el.innerHTML = '<p><strong>' + t.title + '</strong> ' + t.body + ' <a href="' + T.privacyUrl + '">' + t.privacy + '</a></p>'
       + '<div class="zn-consent__choose" hidden>'
-      + (T.ga4 ? '<label><input type="checkbox" data-cat="analytics"> ' + t.analytics + '</label>' : '')
+      + (T.ga4 || T.hotjar ? '<label><input type="checkbox" data-cat="analytics"> ' + (T.hotjar ? (T.ga4 ? t.analyticsBoth : t.analyticsHotjar) : t.analytics) + '</label>' : '')
       + (T.pixel ? '<label><input type="checkbox" data-cat="marketing"> ' + t.marketing + '</label>' : '')
       + '<button type="button" data-act="save">' + t.save + '</button></div>'
       + '<div class="zn-consent__buttons"><button type="button" data-act="all" class="is-main">' + t.all + '</button>'
@@ -82,7 +94,7 @@
     document.body.appendChild(el);
   }
   // Ask only when there is something optional to ask about.
-  if ((T.ga4 || T.pixel) && read() === undefined) {
+  if ((T.ga4 || T.pixel || T.hotjar) && read() === undefined) {
     if (document.body) banner(); else document.addEventListener('DOMContentLoaded', banner);
   } else {
     start();

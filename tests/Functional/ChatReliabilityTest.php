@@ -95,10 +95,19 @@ final class ChatReliabilityTest extends AppTestCase
         $this->assertCount(2, FakeClaude::$requests);
     }
 
-    public function testTwoEmptyRepliesDontCountOrGetSaved(): void
+    public function testAOneOffEmptyReplyIsTriedAgainQuietly(): void
     {
         $this->userWithDog();
-        FakeClaude::$script = [['text' => ''], ['text' => '']];
+        FakeClaude::$script = [['text' => ''], ['text' => ''], ['text' => 'Weigh her food for a week.']];
+        $body = $this->send('What should I do first?');
+        $this->assertStringNotContainsString('event: error', $body);
+        $this->assertSame('Weigh her food for a week.', $this->messages()[1]->getContent());
+    }
+
+    public function testEmptyRepliesThatKeepComingDontCountOrGetSaved(): void
+    {
+        $this->userWithDog();
+        FakeClaude::$script = [['text' => ''], ['text' => ''], ['text' => ''], ['text' => '']];
         $body = $this->send('What should I do first?');
         $this->assertStringContainsString('event: error', $body);
         $this->assertStringContainsString('"remaining":2', $body);

@@ -36,6 +36,24 @@ final class Scoring
         return floor($x + 0.5);
     }
 
+    /** A label's guaranteed analysis (as fed, %) to dry-matter shares and kcal per 100 g (modified Atwater). */
+    public static function fromLabel(float $p, float $f, float $fi, float $a, float $m): array
+    {
+        $carbsAsFed = max(0, 100 - $p - $f - $fi - $a - $m);
+        $dm = 100 - $m;
+        $toDm = fn (float $x) => $dm > 0 ? ($x / $dm) * 100 : 0;
+        return [
+            'carbsAsFed' => $carbsAsFed, 'pDm' => $toDm($p), 'fDm' => $toDm($f), 'cDm' => $toDm($carbsAsFed), 'fiDm' => $toDm($fi),
+            'kcalPer100g' => 3.5 * $p + 8.5 * $f + 3.5 * $carbsAsFed,
+        ];
+    }
+
+    /** Minutes a day (band 1–4), one more for dog sports. */
+    public static function activityLevel(int $minutesBand, bool $sport): int
+    {
+        return min(5, $minutesBand + ($sport ? 1 : 0));
+    }
+
     public static function idealWeight(float $kg, int $bcs): float
     {
         return $kg * (100 / (100 + 10 * ($bcs - 5)));

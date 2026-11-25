@@ -26,14 +26,14 @@
             {% set myDog = app.user ? member_dog() : null %}
             {% if myDog %}
                 <details class="dog-switch">
-                    <summary aria-label="{{ 'Switch dog'|trans }}: {{ myDog.name }}">
-                        <span class="dog-switch__paw" aria-hidden="true">🐾</span><span class="dog-switch__name">{{ myDog.name }}</span>
+                    <summary aria-label="{{ 'Switch dog'|trans }}: {{ dog_label(myDog) }}">
+                        <span class="dog-switch__paw" aria-hidden="true">🐾</span><span class="dog-switch__name">{{ dog_label(myDog) }}</span>
                         <svg class="lang-switch__chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </summary>
                     <ul class="dog-switch__menu">
                         {% for d in member_dogs() %}
-                            <li>{% if d.id == myDog.id %}<span aria-current="true">{{ d.name }} ✓</span>
-                            {% else %}<form method="post" action="{{ path('app_dog_select', {id: d.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('dog-select') }}"><input type="hidden" name="back" value="{{ app.request.pathInfo }}"><button type="submit">{{ d.name }}</button></form>{% endif %}</li>
+                            <li>{% if d.id == myDog.id %}<span aria-current="true">{{ dog_label(d) }} ✓</span>
+                            {% else %}<form method="post" action="{{ path('app_dog_select', {id: d.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('dog-select') }}"><input type="hidden" name="back" value="{{ app.request.pathInfo }}"><button type="submit">{{ dog_label(d) }}</button></form>{% endif %}</li>
                         {% endfor %}
                         <li><a href="{{ path('app_quiz') }}?new=1{{ route starts with 'app_chat' ? '&then=chat' }}">+ {{ 'Add a dog'|trans }}</a></li>
                     </ul>
@@ -124,7 +124,8 @@
                 <a href="{{ path('app_quiz') }}">{{ 'Bowl Score quiz'|trans }}</a>
                 <a href="{{ path('app_method') }}">{{ 'How the Bowl Score works'|trans }}</a>
                 <a href="{{ path('app_privacy_policy') }}">{{ 'Privacy policy'|trans }}</a>
-                {% if tracking_config().ga4 or tracking_config().pixel %}<a href="#" data-cookie-settings>{{ 'Cookie settings'|trans }}</a>{% endif %}
+                <a href="{{ path('app_whats_new') }}">{{ 'What’s new'|trans }}</a>
+                {% if tracking_config().ga4 or tracking_config().pixel or tracking_config().hotjar %}<a href="#" data-cookie-settings>{{ 'Cookie settings'|trans }}</a>{% endif %}
                 <a href="https://myzenoo.com">myzenoo.com</a>
             </nav>
         </div>

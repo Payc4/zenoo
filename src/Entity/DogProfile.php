@@ -101,7 +101,7 @@ class DogProfile
             $this->data['score_history'] = \array_slice($history, -24);
         }
         $kept = array_filter($this->data, fn ($k) => !str_starts_with((string) $k, 'quiz_'), ARRAY_FILTER_USE_KEY);
-        unset($kept['score_change'], $kept['score_at']); // a new quiz result has its own banner
+        unset($kept['score_change'], $kept['score_at'], $kept['progress']); // a new quiz result starts afresh
         $this->data = $data + $kept;
         $today = new \DateTimeImmutable();
         if (is_numeric($data['quiz_weight_kg'] ?? null)) {
@@ -129,6 +129,13 @@ class DogProfile
             $this->data['answers'] = $answers;
             $this->updatedAt = new \DateTimeImmutable();
         }
+        return $this;
+    }
+
+    /** Scoring inputs rebuilt for a dog saved before they were kept (ScoreInputs::rebuild()); not a new quiz. */
+    public function setScoreInputs(array $inputs): static
+    {
+        $this->data['answers'] = ['_inputs' => $inputs] + (\is_array($this->data['answers'] ?? null) ? $this->data['answers'] : []);
         return $this;
     }
 
@@ -186,6 +193,19 @@ class DogProfile
      * Add a fact, or replace the one it updates (same topic and the old text given in $replaces).
      * Returns false for an empty or duplicate fact.
      */
+    /** Two notes say the same thing: the same words (punctuation and case aside), or one's words all in the other. */
+    public static function sameFact(string $a, string $b): bool
+    {
+        $words = fn (string $s) => array_values(array_unique(array_filter(preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower($s)), fn ($w) => mb_strlen($w) > 1)));
+        [$x, $y] = [$words($a), $words($b)];
+        if (!$x || !$y) {
+            return false;
+        }
+        $common = \count(array_intersect($x, $y));
+        $smaller = min(\count($x), \count($y));
+        return $common === $smaller && $smaller >= 2 || $common / \count(array_unique([...$x, ...$y])) >= 0.75;
+    }
+
     public function addNote(string $topic, string $text, \DateTimeImmutable $at, ?string $replaces = null, string $source = 'chat'): bool
     {
         $text = mb_substr(trim(strip_tags($text)), 0, 240);
@@ -195,9 +215,17 @@ class DogProfile
         }
         $notes = $this->getNotes();
         $norm = fn (string $s) => mb_strtolower(trim(preg_replace('/\s+/u', ' ', $s)));
-        foreach ($notes as $n) {
-            if ($norm($n['text']) === $norm($text)) {
-                return false;
+        // The same fact in other words (the safety check and the coach can both save it): keep one,
+        // the more detailed (test report: a fact saved twice).
+        foreach ($notes as $i => $n) {
+            if (self::sameFact($n['text'], $text)) {
+                if (mb_strlen($text) <= mb_strlen($n['text'])) {
+                    return false;
+                }
+                $notes[$i]['text'] = $text;
+                $notes[$i]['at'] = $at->format('Y-m-d');
+                $this->data['notes'] = $notes;
+                return true;
             }
         }
         if ($replaces !== null && trim($replaces) !== '') {
@@ -414,6 +442,26 @@ class DogProfile
             ];
         }
         return ['from' => $oldScore, 'to' => $score, 'plan_from' => $oldPlan, 'plan_to' => $newPlan];
+    }
+
+    /**
+     * What the owner told the coach since the quiz that the Bowl Score uses, newest values only:
+     * { level, meals, treats, appetite, signs, feeds, food: { v, d } }. Applied over the quiz's
+     * answers when the dog is re-scored (App\Quiz\ScoreRecalculator); cleared by a retake.
+     */
+    public function getProgress(): array
+    {
+        return \is_array($this->data['progress'] ?? null) ? $this->data['progress'] : [];
+    }
+
+    /** Returns false when it's what the profile already has. */
+    public function setProgress(string $key, mixed $value, \DateTimeImmutable $at): bool
+    {
+        if (($this->data['progress'][$key]['v'] ?? null) === $value) {
+            return false;
+        }
+        $this->data['progress'][$key] = ['v' => $value, 'd' => $at->format('Y-m-d')];
+        return true;
     }
 
     /** The re-score notice the owner hasn't closed yet: { from, to, plan_from, plan_to, why: [weight|body], at }. */

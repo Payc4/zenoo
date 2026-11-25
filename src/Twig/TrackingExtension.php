@@ -15,6 +15,7 @@ final class TrackingExtension extends AbstractExtension
         private readonly RequestStack $requests,
         #[Autowire('%env(default::TRACKING_GA4_ID)%')] private readonly ?string $ga4,
         #[Autowire('%env(default::TRACKING_META_PIXEL_ID)%')] private readonly ?string $pixel,
+        #[Autowire('%env(default::TRACKING_HOTJAR_ID)%')] private readonly ?string $hotjar = null,
     ) {
     }
 
@@ -25,7 +26,9 @@ final class TrackingExtension extends AbstractExtension
 
     public function config(): array
     {
-        return ['ga4' => $this->ga4 ?: null, 'pixel' => $this->pixel ?: null, 'pixelEvents' => Funnel::PIXEL_EVENTS];
+        // Hotjar (heatmaps, recordings) counts as analytics: it loads only once that is allowed.
+        $hotjar = preg_match('/^\d{4,12}$/', (string) $this->hotjar) ? (int) $this->hotjar : null;
+        return ['ga4' => $this->ga4 ?: null, 'pixel' => $this->pixel ?: null, 'hotjar' => $hotjar, 'pixelEvents' => Funnel::PIXEL_EVENTS];
     }
 
     /** @return list<string> */

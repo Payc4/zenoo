@@ -289,7 +289,7 @@ window.ZQ_CONTENT = {
       moistureNote: 'Drėgmė nenurodyta? Sausame maiste jos paprastai būna apie 8–10 %.',
       submit: 'PARODYKITE',
       // One free AI read of a label photo (only shown when the site has the AI configured)
-      scan: { button: '📷 TEGUL DI PERSKAITO ETIKETĘ', note: 'Nufotografuokite „analitines sudedamąsias dalis“ arba įkelkite ekrano nuotrauką. Vienas nemokamas bandymas; nuotrauka nesaugoma.', reading: 'Skaitome etiketę…', filled: 'Atlikta! Skaičius įrašėme žemiau. Patikrinkite, ar jie sutampa su pakuote.', unreadable: 'Nepavyko perskaityti visų skaičių. Įrašykite juos žemiau.', error: 'Kažkas nepavyko. Įrašykite skaičius patys.', or: 'arba įrašykite patys' },
+      scan: { button: '📷 TEGUL DI PERSKAITO ETIKETĘ', note: 'Nufotografuokite „analitines sudedamąsias dalis“ arba įkelkite ekrano nuotrauką. Vienas nemokamas bandymas; nuotrauka nesaugoma.', reading: 'Skaitome etiketę…', filled: 'Atlikta! Skaičius įrašėme aukščiau. Patikrinkite, ar jie sutampa su pakuote.', unreadable: 'Nepavyko perskaityti visų skaičių. Įrašykite juos aukščiau.', error: 'Kažkas nepavyko. Įrašykite skaičius patys.', or: 'arba įrašykite patys' },
     },
     slideBowl: {
       tag: 'KAS YRA DUBENĖLYJE',
@@ -306,9 +306,9 @@ window.ZQ_CONTENT = {
     gate: {
       tag: 'PLANAS PARUOŠTAS: {NAME}',
       title: 'KUR JĮ ATSIŲSTI?',
-      lead: 'El. paštu atsiųsime jūsų šuns ({name}) Dubenėlio balą ir dienos planą, o kartu – <b>nemokamą ZENOO šėrimo gidą</b>.',
+      lead: 'El. paštu atsiųsime jūsų šuns ({name}) Dubenėlio balą ir dienos planą.',
       firstName: 'Jūsų vardas', email: 'Jūsų el. paštas', submit: 'SIŲSTI MANO PLANĄ',
-      consent: 'Atsiųsime jūsų šuns ({name}) planą ir nemokamą šėrimo gidą.',
+      consent: 'Atsiųsime jūsų šuns ({name}) planą.',
       marketing: 'Taip pat siųskite man ZENOO šėrimo patarimus ir pasiūlymus (nebūtina).',
       unsubscribe: 'Atsisakyti galite bet kada.', privacy: 'Privatumo politika',
     },
@@ -352,8 +352,9 @@ window.ZQ_CONTENT = {
       scoreTitle: 'DUBENĖLIO BALAS: {NAME}',
       firstTitle: 'KĄ DARYTUME PIRMIAUSIA', keepGoing: 'Tęskite taip, kaip darote!',
       breakdown: 'BALAS IŠSAMIAU',
-      inboxTitle: 'PATIKRINKITE EL. PAŠTĄ',
-      inboxText: 'Jūsų šuns ({name}) planą ir nemokamą šėrimo gidą išsiuntėme adresu {email}.',
+      inboxTitle: 'LIKO VIENAS ŽINGSNIS: PATVIRTINKITE EL. PAŠTĄ',
+      inboxText: 'Išsiuntėme nuorodą adresu {email}. Paspauskite ją, kad išsaugotumėte rezultatą ({name}) ir gautumėte planą el. paštu.',
+      openEmail: 'Atidaryti el. paštą', more: 'Visas planas ir balo išskaidymas',
       share: 'DALINTIS TESTU', linkCopied: 'NUORODA NUKOPIJUOTA', shareTitle: 'Ar jūsų šuo maitinasi tinkamai?',
       restart: 'Pradėti iš naujo',
       demoSent: 'Prototipas: duomenys, išsiųsti į Klaviyo', demoUnsent: 'Prototipas: duomenys, kurie būtų išsiųsti į Klaviyo',
