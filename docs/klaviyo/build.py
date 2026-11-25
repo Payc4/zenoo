@@ -86,8 +86,8 @@ def email(title, note, content, band='', after='', unsubscribe=''):
 {band_rows}<tr><td class="zx-pad" style="padding:20px 20px 40px;">
 {p('{{ event.copy_regards }}', True)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;"><tr><td style="border-top:1px solid #dde5dc;padding-top:10px;">
-<p style="margin:0;{FONT}font-size:20px;line-height:26px;font-weight:800;color:#445942;">{{{{ event.copy_team }}}}</p>
-<p style="margin:2px 0 0;{FONT}font-size:12px;line-height:18px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5f6e5e;">{{{{ event.copy_tagline }}}}</p>
+<p style="margin:0;{FONT}font-size:20px;line-height:26px;font-weight:800;color:#445942;">Agota</p>
+<p style="margin:2px 0 0;{FONT}font-size:14px;line-height:20px;color:#5f6e5e;">{{{{ event.copy_signer_role }}}}</p>
 </td></tr></table>
 </td></tr>
 <tr><td class="zx-pad" bgcolor="#445942" style="background:#445942;padding:40px 20px 20px;{FONT}color:#ffffff;">

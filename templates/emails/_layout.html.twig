@@ -1,5 +1,5 @@
 {# Shared email layout, after the "ZENOO Email Template" design: green bar with the white logo, white
-   600 px body, optional full-width cream band, a text signature and the green footer. Tables and inline
+   600 px body, optional full-width cream band, Agota's text signature and the green footer. Tables and inline
    styles only, so it renders in Gmail, Outlook and Apple Mail. Blocks: content (top), band (cream,
    full width), after (below the band), unsubscribe (a line in the footer). #}
 {% import 'emails/_ui.html.twig' as ui %}
@@ -45,8 +45,8 @@ a{color:#445942;}
     <tr><td class="zx-pad" style="padding:20px 20px 40px;">
       {{ ui.p('Warm regards,'|trans, true) }}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;"><tr><td style="border-top:1px solid #dde5dc;padding-top:10px;">
-        <p style="margin:0;{{ font }}font-size:20px;line-height:26px;font-weight:800;color:#445942;">{{ 'ZENOO team'|trans }}</p>
-        <p style="margin:2px 0 0;{{ font }}font-size:12px;line-height:18px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5f6e5e;">{{ 'REAL FOOD. HEALTHY PET.'|trans }}</p>
+        <p style="margin:0;{{ font }}font-size:20px;line-height:26px;font-weight:800;color:#445942;">Agota</p>
+        <p style="margin:2px 0 0;{{ font }}font-size:14px;line-height:20px;color:#5f6e5e;">{{ 'ZENOO founder and dog nutrition specialist'|trans }}</p>
       </td></tr></table>
     </td></tr>
     {# Footer #}

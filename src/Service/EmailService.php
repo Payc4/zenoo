@@ -311,6 +311,7 @@ class EmailService
             'link_hint' => 'Button not working? Copy this link:',
             'regards' => 'Warm regards,',
             'team' => 'ZENOO team',
+            'signer_role' => 'ZENOO founder and dog nutrition specialist',
             'tagline' => 'REAL FOOD. HEALTHY PET.',
             'footer' => 'You’re getting this email because of your ZENOO account at',
             'nav_dog' => 'My dog',
