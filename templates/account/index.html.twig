@@ -62,9 +62,11 @@
                 {{ include('account/_avatar.html.twig', {user: user}) }}
                 <form method="post" action="{{ path('app_account_photo') }}" enctype="multipart/form-data">
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token('account-photo') }}">
-                    <label class="visually-hidden" for="photo">{{ 'Profile photo'|trans }}</label>
-                    <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" data-enable="photo-save">
-                    <button class="btn btn-small btn-forest" id="photo-save" type="submit">{{ 'Upload photo'|trans }}</button>
+                    {# Picking a photo uploads it straight away; without JavaScript the Upload button does it. #}
+                    <label class="btn btn-small btn-forest file-pick">{{ 'Add a photo'|trans }}
+                        <input class="visually-hidden" type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" data-autosubmit aria-label="{{ 'Profile photo'|trans }}">
+                    </label>
+                    <noscript><button class="btn btn-small btn-outline" type="submit">{{ 'Upload photo'|trans }}</button></noscript>
                     {% if user.profileImage %}<button class="link-btn small" type="submit" name="remove" value="1">{{ 'Remove photo'|trans }}</button>{% endif %}
                 </form>
             </div>

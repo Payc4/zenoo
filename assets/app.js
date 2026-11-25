@@ -66,6 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Picking a file sends its form (the account photo)
+  document.querySelectorAll('input[type=file][data-autosubmit]').forEach((input) => {
+    input.addEventListener('change', () => { if (input.files.length) input.form.requestSubmit(); });
+  });
+
   // Show the chosen photo's file name and enable its upload button
   document.querySelectorAll('input[type=file][data-enable]').forEach((input) => {
     input.addEventListener('change', () => {

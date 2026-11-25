@@ -435,7 +435,7 @@ ${backOnly()}`,
           <h2 style="margin-top:20px">${T.breakdown}</h2>${cards.join('')}
           ${profile}
         </details>
-        <p class="zq-quiet"><button class="zq-back" data-action="share">${T.share}</button> · <button class="zq-back" data-action="edit">${U.editAnswers}</button> · <button class="zq-back" data-action="restart">${T.restart}</button></p>
+        <p class="zq-quiet zq-links"><button class="zq-back" data-action="share">${T.share}</button><button class="zq-back" data-action="edit">${U.editAnswers}</button><button class="zq-back" data-action="restart">${T.restart}</button></p>
         ${main ? `<div class="zq-fixed">${main}</div>` : ''}
         ${CFG.debug ? `<details class="zq-demo"><summary>${CFG.sendToKlaviyo ? T.demoSent : T.demoUnsent}</summary><pre>${esc(JSON.stringify(payload, null, 2))}</pre></details>` : ''}`;
     },

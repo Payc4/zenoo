@@ -378,3 +378,7 @@ input[aria-invalid="true"], .has-error input { border-color: var(--danger); }
 .patch-notes__release { margin-top: 20px; }
 .patch-notes__release h2 { margin: 2px 0 10px; }
 .patch-notes__release ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; line-height: 1.5; }
+
+/* A file input shown as a button (account photo) */
+.file-pick { cursor: pointer; }
+.file-pick:focus-within { outline: 3px solid var(--amber, #f7a223); outline-offset: 2px; }

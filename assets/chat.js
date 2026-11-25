@@ -275,6 +275,9 @@ if (app) {
           note.className = 'chat-note' + (d.kind === 'score' ? ' chat-note--score' + (d.trend > 0 ? ' is-up' : d.trend < 0 ? ' is-down' : '') : '');
           note.textContent = (d.kind === 'score' ? (d.trend > 0 ? '▲ ' : d.trend < 0 ? '▼ ' : '• ') : '✓ ') + d.text;
           thread.appendChild(note);
+          // The profile line above the chat ("Using Luna's profile: …, 27 kg") follows what was just saved.
+          const using = document.querySelector('.chat-using [data-using]');
+          if (d.using && using) using.textContent = d.using;
         },
         delta: (d) => { raw += d.text; renderInto(reply.answer, raw); },
         // The reply went against the dog's notes (an allergy, say) and was corrected.
@@ -290,6 +293,14 @@ if (app) {
         },
       });
       if (!raw.trim() && !cards) throw new Error(t('noReply', 'No reply came back. Please try again.'));
+      // This dog's chat moves to the top of the list, with the latest reply as its preview.
+      const item = document.querySelector('.chat-side__item.is-on');
+      const preview = item && item.querySelector('.chat-side__preview');
+      if (preview) {
+        preview.textContent = (reply.answer.textContent || text).replace(/\s+/g, ' ').trim().slice(0, 120);
+        const li = item.closest('li');
+        if (li && li.parentElement && li.parentElement.firstElementChild !== li) li.parentElement.prepend(li);
+      }
       if (cards) {
         if (frame) cancelAnimationFrame(frame);
         reply.answer.innerHTML = (raw.trim() ? render(raw) : '<p>I have a few quick questions for you.</p>') + askedList(cards);

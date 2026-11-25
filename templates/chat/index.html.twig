@@ -103,7 +103,7 @@
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
                 <span>{{ '%dog%’s coach'|trans({'%dog%': dog.name}) }}</span>
             </button>
-            <p class="chat-using">{{ 'Using %dog%’s profile: %facts%.'|trans({'%dog%': dog.name, '%facts%': usingFacts}) }} <a href="{{ path('app_dog_tab') }}#knows-h">{{ 'Edit'|trans }}</a></p>
+            <p class="chat-using">{{ 'Using %dog%’s profile: %facts%.'|trans({'%dog%': dog.name|e, '%facts%': '<span data-using>' ~ usingFacts|e ~ '</span>'})|raw }} <a href="{{ path('app_dog_tab') }}#knows-h">{{ 'Edit'|trans }}</a></p>
             {% if not unlimited %}
                 <span class="chat-quota" id="chat-quota" {{ remaining >= 10 ? 'hidden' }} title="{{ 'Resets at %time%'|trans({'%time%': resetLabel|trans}) }}">{{ '<strong id="chat-remaining">%remaining%</strong> of %limit% messages left today'|trans({'%remaining%': remaining, '%limit%': limit})|raw }}</span>
             {% endif %}

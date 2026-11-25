@@ -121,15 +121,8 @@ class ChatController extends AbstractController
         usort($sideChats, fn (array $a, array $b) => [$when($b), $b['last']['id'] ?? 0] <=> [$when($a), $a['last']['id'] ?? 0]);
         $newDogs = array_values(array_filter($allDogs, fn (DogProfile $d) => $d !== $dog && !\in_array($d->getId(), $withChat, true)));
 
-        // "Using Max's profile: Beagle, 15.2 kg, allergic to chicken."
-        $facts = array_filter([
-            $dog->get('breed') === 'mixed' ? $this->translator->trans('Mixed breed') : $dog->get('breed'),
-            ($w = $dog->latestLog('weight')['v'] ?? $dog->get('weight_kg')) ? str_replace('.', \App\Locale::decimalSeparator($request->getLocale()), (string) $w) . ' kg' : null,
-            ...\array_slice(\App\Chat\ReplyGuard::rules($dog), 0, 2),
-        ]);
-
         return $this->render('chat/index.html.twig', [
-            'usingFacts' => implode(', ', $facts),
+            'usingFacts' => $this->usingFacts($dog, $request->getLocale()),
             'dog' => $dog,
             'sideChats' => $sideChats,
             'newDogs' => array_map(fn (DogProfile $d) => ['dog' => $d, 'photo' => $this->dogPhotos->displayUrl($d)], $newDogs),
@@ -374,7 +367,7 @@ class ChatController extends AbstractController
                 }
                 if ($saved) {
                     $this->em->flush();
-                    $emit('note', ['text' => $translator->trans('Saved to %dog%’s notes: %facts%', ['%dog%' => $dog->getName(), '%facts%' => implode('; ', $saved)])]);
+                    $emit('note', ['text' => $translator->trans('Saved to %dog%’s notes: %facts%', ['%dog%' => $dog->getName(), '%facts%' => implode('; ', $saved)]), 'using' => $this->usingFacts($dog, $locale)]);
                 }
             }
             if ($flag = $triage['flag']) {
@@ -444,7 +437,7 @@ class ChatController extends AbstractController
                     $emit('note', ['text' => $translator->trans('The coach will check in on %date%.', ['%date%' => $dates->format(new \DateTimeImmutable($result['followup']['due']), 'day', $locale)])]);
                 }
                 if ($result['remembered'] ?? []) {
-                    $emit('note', ['text' => $translator->trans('Saved to %dog%’s notes: %facts%', ['%dog%' => $dog?->getName() ?? '', '%facts%' => implode('; ', $result['remembered'])])]);
+                    $emit('note', ['text' => $translator->trans('Saved to %dog%’s notes: %facts%', ['%dog%' => $dog?->getName() ?? '', '%facts%' => implode('; ', $result['remembered'])])] + ($dog ? ['using' => $this->usingFacts($dog, $locale)] : []));
                 }
                 // A new weight or body shape re-scored the dog: say how the Bowl Score and plan moved.
                 if ($change = $result['score'] ?? null) {
@@ -455,7 +448,7 @@ class ChatController extends AbstractController
                     if ($change['plan_to'] !== $change['plan_from']) {
                         $text .= ' · ' . $translator->trans('Daily food: %plan%', ['%plan%' => $change['plan_to']]);
                     }
-                    $emit('note', ['text' => $text, 'kind' => 'score', 'trend' => $diff <=> 0]);
+                    $emit('note', ['text' => $text, 'kind' => 'score', 'trend' => $diff <=> 0] + ($dog ? ['using' => $this->usingFacts($dog, $locale)] : []));
                 }
                 if ($corrected !== null) {
                     $emit('note', ['text' => $translator->trans('Corrected to respect %dog%’s notes: %problem%', ['%dog%' => $dog?->getName() ?? '', '%problem%' => $corrected])]);
@@ -608,5 +601,15 @@ class ChatController extends AbstractController
         }
 
         return $this->translator->trans('Something went wrong while answering. Please try again in a moment.');
+    }
+
+    /** "Using Max's profile: Beagle, 15.2 kg, allergic to chicken." (the facts part) */
+    private function usingFacts(DogProfile $dog, string $locale): string
+    {
+        return implode(', ', array_filter([
+            $dog->get('breed') === 'mixed' ? $this->translator->trans('Mixed breed', [], null, $locale) : $dog->get('breed'),
+            ($w = $dog->latestLog('weight')['v'] ?? $dog->get('weight_kg')) ? str_replace('.', \App\Locale::decimalSeparator($locale), (string) $w) . ' kg' : null,
+            ...\array_slice(\App\Chat\ReplyGuard::rules($dog), 0, 2),
+        ]));
     }
 }

@@ -55,6 +55,8 @@ h2 { font-size: 20px; }
 .zq-fixed .zq-btn { max-width: 520px; margin: 0 auto; display: flex; align-items: center; justify-content: center; text-decoration: none; }
 .zq-quiet { text-align: center; margin: 20px 0; color: var(--ink-muted); }
 .zq-quiet .zq-back { display: inline-flex; align-items: center; }
+/* Result links: spaced apart, so a wrapped row never leaves a stray separator. */
+.zq-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 22px; }
 .zq-todo ol li { margin-bottom: 6px; }
 .zq-capped { margin: 8px 0 0; color: var(--mist, #dde5dc); }
 
