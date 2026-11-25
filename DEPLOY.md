@@ -104,9 +104,12 @@ it reaches people who aren't subscribed to marketing), **Smart Sending off**, no
 also has `subject` (already translated), `first_name`, `locale` (`en`, `lt`, `uk`, `pl`) and
 `site_url`, plus the **whole text of the email, already translated**, as `copy_*` properties
 (`copy_heading`, `copy_intro`, `copy_button`, `copy_note`, …). So one template per flow works in
-every language, with no conditional splits: paste the matching file from `docs/klaviyo/` into an
-HTML block (`quiz.html`, `welcome.html`, `reset.html`, `login.html`, `changed.html`, `order.html`),
-and set the subject line to `{{ event.subject }}`.
+every language, with no conditional splits. Each file in `docs/klaviyo/` is a whole email in the
+"ZENOO Email Template" style (green header, white body, green footer, the same look as the site's own
+emails): in Klaviyo, create a template with the **HTML editor**, paste the matching file (`quiz.html`,
+`welcome.html`, `reset.html`, `login.html`, `changed.html`, `order.html`, `followup.html`, `plan.html`,
+`series.html`) and set the subject line to `{{ event.subject }}`. The files are built by
+`python3 docs/klaviyo/build.py`; change that script, not the HTML.
 
 | Metric (flow trigger) | When | Properties for the email (`{{ event.name }}`) |
 |---|---|---|

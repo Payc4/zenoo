@@ -135,7 +135,8 @@ final class QuizAccountTest extends AppTestCase
         $email = $this->getMailerMessage();
         $this->assertEmailHeaderSame($email, 'To', 'maria@example.com');
         $this->assertEmailHeaderSame($email, 'Subject', 'Confirm your email to see Bella’s dashboard');
-        $this->assertEmailHtmlBodyContains($email, 'Bella’s Bowl Score: 52/100');
+        $this->assertEmailHtmlBodyContains($email, '52/100');
+        $this->assertEmailHtmlBodyContains($email, 'Bella · Bowl Score');
         $url = $this->confirmUrl();
 
         $saved = $this->em->getRepository(QuizSubmission::class)->findOneBy([]);

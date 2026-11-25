@@ -173,6 +173,7 @@ class EmailService
             'off_url' => $offUrl,
         ] + $this->copy($locale, [
             'heading' => ['How is %dog% doing?', ['%dog%' => $dogName]],
+            'coach' => 'Coach',
             'greeting' => $user->getFirstName() ? ['Hi %name%,', ['%name%' => $user->getFirstName()]] : 'Hi,',
             'intro' => 'Your ZENOO coach wanted to check in:',
             'button' => 'Answer in the chat',
@@ -195,6 +196,7 @@ class EmailService
             'bowl_score' => $plan['score'],
             'fix_1' => $plan['fixes'][0] ?? '',
             'fix_2' => $plan['fixes'][1] ?? '',
+            'fix_3' => $plan['fixes'][2] ?? '',
             'plan_food' => $plan['food'] ?? '',
             'plan_meals' => $plan['meals'] ?? '',
             'kcal' => $plan['kcal'] ?? null,
@@ -210,6 +212,9 @@ class EmailService
             'fixes_title' => 'What we’d do first',
             'plan_title' => 'The daily plan',
             'zenoo_title' => 'Fresher food with ZENOO',
+            'zenoo_link' => ['See %dog%’s ZENOO plan', ['%dog%' => $dog]],
+            'kcal' => !empty($plan['kcal']) ? ['about %kcal% kcal a day', ['%kcal%' => $plan['kcal']]] : '',
+            'bowl_score' => 'Bowl Score',
             'zenoo_text' => $zenoo ? ['%product% %option%: about %grams% g a day (around €%cost% a day).', ['%product%' => $zenoo['product'], '%option%' => $this->translator->trans($zenoo['option_label'], [], null, $locale), '%grams%' => $zenoo['grams'], '%cost%' => number_format($zenoo['cost'], 2, \App\Locale::decimalSeparator($locale), ' ')]] : '',
             'button' => ['Open %dog%’s dashboard', ['%dog%' => $dog]],
             'note' => 'The coach in your dashboard can answer questions about the plan any time.',
@@ -250,6 +255,8 @@ class EmailService
             'bowl_score' => (int) ($submission->getData()['quiz_bowl_score'] ?? 0),
         ] + $this->copy($submission->getLocale(), [
             'heading' => ['%dog%’s Bowl Score: %score%/100', ['%dog%' => $submission->getDogName(), '%score%' => (int) ($submission->getData()['quiz_bowl_score'] ?? 0)]],
+            'confirm_title' => 'Confirm your email',
+            'bowl_score' => 'Bowl Score',
             'greeting' => $submission->getFirstName() ? ['Hi %name%,', ['%name%' => $submission->getFirstName()]] : 'Hi,',
             'intro' => ['Thanks for taking the ZENOO quiz. Confirm your email and we’ll create your free ZENOO account with %dog%’s profile, so you can come back to the score, the daily plan and lessons picked for %dog% any time.', ['%dog%' => $submission->getDogName()]],
             'button' => ['Confirm and open %dog%’s dashboard', ['%dog%' => $submission->getDogName()]],
@@ -306,6 +313,11 @@ class EmailService
             'team' => 'ZENOO team',
             'tagline' => 'REAL FOOD. HEALTHY PET.',
             'footer' => 'You’re getting this email because of your ZENOO account at',
+            'nav_dog' => 'My dog',
+            'nav_coach' => 'Coach',
+            'nav_courses' => 'Courses',
+            'nav_account' => 'My account',
+            'account' => 'My account',
         ];
         $out = [];
         foreach ($lines as $key => $line) {

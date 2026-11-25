@@ -1,0 +1,45 @@
+{# Building blocks for the site's emails, after the "ZENOO Email Template" design (600 px, Klaviyo-safe):
+   tables and inline styles only, Inter with Arial/Helvetica in mail clients that don't load it. #}
+
+{% macro font() %}font-family:Inter,Arial,Helvetica,sans-serif;{% endmacro %}
+
+{# Small green caps line above the heading ("Order #12", "Luna · Coach"). #}
+{% macro eyebrow(text) %}<p style="margin:0 0 15px;{{ _self.font() }}font-size:14px;line-height:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#445942;">{{ text }}</p>{% endmacro %}
+
+{% macro h1(text) %}<h1 style="margin:0 0 15px;{{ _self.font() }}font-size:28px;line-height:32px;font-weight:800;letter-spacing:-.02em;text-transform:uppercase;color:#445942;">{{ text }}</h1>{% endmacro %}
+
+{% macro h2(text) %}<h2 style="margin:0 0 15px;{{ _self.font() }}font-size:20px;line-height:26px;font-weight:800;text-transform:uppercase;color:#445942;">{{ text }}</h2>{% endmacro %}
+
+{% macro p(text, last) %}<p style="margin:0 0 {{ last ? 0 : 15 }}px;{{ _self.font() }}font-size:16px;line-height:26px;letter-spacing:.6px;color:#5a6b59;">{{ text }}</p>{% endmacro %}
+
+{# Fine print: link hints, expiry notes. #}
+{% macro small(text) %}<p style="margin:0 0 10px;{{ _self.font() }}font-size:13px;line-height:20px;color:#5f6e5e;word-break:break-word;">{{ text }}</p>{% endmacro %}
+
+{# The one amber button an email may have; label in dark green, as in the design. #}
+{% macro button(url, label) %}<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:10px 0 20px;"><tr><td bgcolor="#f7a223" style="background:#f7a223;border-radius:9999px;">
+<a href="{{ url }}" style="display:inline-block;padding:16px 28px;{{ _self.font() }}font-size:16px;line-height:20px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#263326;text-decoration:none;border-radius:9999px;">{{ label }}</a>
+</td></tr></table>{% endmacro %}
+
+{# Secondary action: white with a green outline. #}
+{% macro outline(url, label) %}<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:5px 0 0;"><tr><td bgcolor="#ffffff" style="background:#ffffff;border:2px solid #445942;border-radius:9999px;">
+<a href="{{ url }}" style="display:inline-block;padding:10px 20px;{{ _self.font() }}font-size:14px;line-height:20px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#445942;text-decoration:none;">{{ label }}</a>
+</td></tr></table>{% endmacro %}
+
+{# Numbered cards (the design's flow steps): number in a soft green disc, the line beside it. #}
+{% macro steps(items) %}{% for item in items %}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 15px;border:1px solid #dde5dc;border-radius:10px;border-collapse:separate;"><tr>
+<td width="36" valign="top" style="padding:20px 0 20px 20px;"><div style="width:36px;height:36px;line-height:36px;border-radius:9999px;background:#dde5dc;text-align:center;{{ _self.font() }}font-size:15px;font-weight:800;color:#445942;">{{ loop.index }}</div></td>
+<td valign="top" style="padding:20px 20px 20px 15px;{{ _self.font() }}font-size:16px;line-height:26px;letter-spacing:.6px;font-weight:700;color:#445942;">{{ item }}</td>
+</tr></table>{% endfor %}{% endmacro %}
+
+{# Big number on green (the design's stat band): the Bowl Score. #}
+{% macro stat(big, caption) %}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border-collapse:separate;"><tr><td bgcolor="#445942" align="center" style="background:#445942;border-radius:10px;padding:30px 20px;">
+<p style="margin:0;{{ _self.font() }}font-size:56px;line-height:60px;font-weight:800;color:#ffffff;">{{ big }}</p>
+<p style="margin:6px 0 0;{{ _self.font() }}font-size:16px;line-height:22px;font-weight:800;text-transform:uppercase;color:#ffffff;">{{ caption }}</p>
+</td></tr></table>{% endmacro %}
+
+{# White card with a soft border: the receipt, the ZENOO pick. #}
+{% macro card_open() %}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border:1px solid #dde5dc;border-radius:10px;border-collapse:separate;"><tr><td style="padding:20px;">{% endmacro %}
+{% macro card_close() %}</td></tr></table>{% endmacro %}
+
+{# Amber notice (test orders). #}
+{% macro notice(strong, text) %}<p style="margin:0 0 20px;padding:12px 15px;background:#fff0d6;border-radius:10px;{{ _self.font() }}font-size:14px;line-height:22px;color:#935a00;"><strong>{{ strong }}</strong> {{ text }}</p>{% endmacro %}

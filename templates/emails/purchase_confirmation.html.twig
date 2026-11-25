@@ -1,18 +1,21 @@
 {% extends 'emails/_layout.html.twig' %}
+{% import 'emails/_ui.html.twig' as ui %}
 {% block title %}{{ 'Your ZENOO order'|trans }}{% endblock %}
 {% block content %}
-<h1 style="font-family:'Inter Tight',Inter,Helvetica,Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">{{ 'Thank you, %name%!'|trans({'%name%': user.displayName}) }}</h1>
-<p style="margin:0 0 18px;">{{ 'Your order is confirmed. Here’s your receipt.'|trans }}</p>
-{% if purchase.testMode %}
-<p style="margin:0 0 18px;padding:10px 14px;background:#fff0d6;border-radius:12px;font-size:14px;color:#9a5c00;"><strong>{{ 'Test order:'|trans }}</strong> {{ 'paid in Stripe test mode, so no real money was taken.'|trans }}</p>
-{% endif %}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8f7f2;border-radius:16px;font-size:15px;">
-  <tr><td style="padding:14px 18px 6px;color:#7c8a7b;">{{ 'Order'|trans }}</td><td align="right" style="padding:14px 18px 6px;font-weight:700;">#{{ purchase.id }}</td></tr>
-  <tr><td style="padding:6px 18px;color:#7c8a7b;">{{ 'Product'|trans }}</td><td align="right" style="padding:6px 18px;font-weight:700;">{{ product.name }}</td></tr>
-  <tr><td style="padding:6px 18px;color:#7c8a7b;">{{ 'Date'|trans }}</td><td align="right" style="padding:6px 18px;font-weight:700;">{{ purchase.createdAt|local_date('long') }}</td></tr>
-  {% if purchase.discountAmount %}<tr><td style="padding:6px 18px;color:#7c8a7b;">{{ 'Discount'|trans }}</td><td align="right" style="padding:6px 18px;font-weight:700;">−€{{ purchase.discountAmount|number_format(2, '.', ',') }}</td></tr>{% endif %}
-  <tr><td style="padding:6px 18px 14px;color:#7c8a7b;">{{ 'Total paid'|trans }}</td><td align="right" style="padding:6px 18px 14px;font-weight:800;font-size:18px;">€{{ purchase.amount|number_format(2, '.', ',') }}</td></tr>
+{% set row = 'font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;' %}
+{{ ui.eyebrow('Order'|trans ~ ' #' ~ purchase.id) }}
+{{ ui.h1('Thank you, %name%!'|trans({'%name%': user.displayName})) }}
+{{ ui.p('Your order is confirmed. Here’s your receipt.'|trans) }}
+{% if purchase.testMode %}{{ ui.notice('Test order:'|trans, 'paid in Stripe test mode, so no real money was taken.'|trans) }}{% endif %}
+{{ ui.card_open() }}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr><td style="{{ row }}padding:0 0 10px;color:#5f6e5e;">{{ 'Order'|trans }}</td><td align="right" style="{{ row }}padding:0 0 10px;font-weight:700;color:#445942;">#{{ purchase.id }}</td></tr>
+  <tr><td style="{{ row }}padding:0 0 10px;color:#5f6e5e;">{{ 'Product'|trans }}</td><td align="right" style="{{ row }}padding:0 0 10px;font-weight:700;color:#445942;">{{ product.name }}</td></tr>
+  <tr><td style="{{ row }}padding:0 0 10px;color:#5f6e5e;">{{ 'Date'|trans }}</td><td align="right" style="{{ row }}padding:0 0 10px;font-weight:700;color:#445942;">{{ purchase.createdAt|local_date('long') }}</td></tr>
+  {% if purchase.discountAmount %}<tr><td style="{{ row }}padding:0 0 10px;color:#5f6e5e;">{{ 'Discount'|trans }}</td><td align="right" style="{{ row }}padding:0 0 10px;font-weight:700;color:#445942;">−€{{ purchase.discountAmount|number_format(2, '.', ',') }}</td></tr>{% endif %}
+  <tr><td style="{{ row }}padding:10px 0 0;border-top:1px solid #dde5dc;color:#5f6e5e;">{{ 'Total paid'|trans }}</td><td align="right" style="font-family:Inter,Arial,Helvetica,sans-serif;padding:10px 0 0;border-top:1px solid #dde5dc;font-size:28px;line-height:34px;font-weight:800;color:#445942;">€{{ purchase.amount|number_format(2, '.', ',') }}</td></tr>
 </table>
-{{ include('emails/_button.html.twig', {url: appUrl ~ '/account/orders/' ~ purchase.id, label: 'View my order'|trans}) }}
-<p style="margin:0;font-size:14px;color:#7c8a7b;">{{ 'Questions about your order? Write to support@myzenoo.com.'|trans }}</p>
+{{ ui.card_close() }}
+{{ ui.button(appUrl ~ '/account/orders/' ~ purchase.id, 'View my order'|trans) }}
+{{ ui.small('Questions about your order? Write to support@myzenoo.com.'|trans) }}
 {% endblock %}

@@ -1,26 +1,31 @@
 {% extends 'emails/_layout.html.twig' %}
+{% import 'emails/_ui.html.twig' as ui %}
 {# Roadmap 04: the plan email (PlanEmails::sendPlan), in the pet parent's language. #}
-{% set h = 'font-family:\'Inter Tight\',Inter,Helvetica,Arial,sans-serif;font-weight:800;color:#445942;' %}
 {% block title %}{{ '%dog%’s Bowl Score: %score%/100'|trans({'%dog%': plan.dog, '%score%': plan.score}) }}{% endblock %}
 {% block content %}
-<h1 style="{{ h }}font-size:26px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;">{{ '%dog%’s Bowl Score: %score%/100'|trans({'%dog%': plan.dog, '%score%': plan.score}) }}</h1>
-<p style="margin:0 0 12px;">{{ user.firstName ? 'Hi %name%,'|trans({'%name%': user.firstName}) : 'Hi,'|trans }}</p>
-<p style="margin:0 0 16px;">{{ 'Here is %dog%’s plan, so you have it to hand.'|trans({'%dog%': plan.dog}) }}</p>
+{{ ui.stat(plan.score ~ '/100', plan.dog ~ ' · ' ~ 'Bowl Score'|trans) }}
+{{ ui.p(user.firstName ? 'Hi %name%,'|trans({'%name%': user.firstName}) : 'Hi,'|trans) }}
+{{ ui.p('Here is %dog%’s plan, so you have it to hand.'|trans({'%dog%': plan.dog})) }}
 {% if plan.fixes %}
-<h2 style="{{ h }}font-size:18px;margin:18px 0 8px;">{{ 'What we’d do first'|trans }}</h2>
-<ol style="margin:0 0 12px;padding-left:20px;">{% for f in plan.fixes %}<li style="margin:0 0 6px;">{{ f }}</li>{% endfor %}</ol>
+<div style="height:10px;line-height:10px;">&nbsp;</div>
+{{ ui.h2('What we’d do first'|trans) }}
+{{ ui.steps(plan.fixes) }}
 {% endif %}
-{% if plan.food or plan.kcal %}
-<h2 style="{{ h }}font-size:18px;margin:18px 0 8px;">{{ 'The daily plan'|trans }}</h2>
-<p style="margin:0 0 12px;">{% if plan.kcal %}{{ 'about %kcal% kcal a day'|trans({'%kcal%': plan.kcal}) }}<br>{% endif %}{{ plan.food }}{% if plan.meals %}<br>{{ plan.meals }}{% endif %}</p>
-{% endif %}
+{% endblock %}
+{% block band %}{% if plan.food or plan.kcal %}
+{{ ui.h2('The daily plan'|trans) }}
+{% if plan.kcal %}<p style="margin:0 0 10px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;font-weight:700;letter-spacing:.6px;color:#445942;">{{ 'about %kcal% kcal a day'|trans({'%kcal%': plan.kcal}) }}</p>{% endif %}
+{% if plan.food %}{{ ui.p(plan.food, not plan.meals) }}{% endif %}
+{% if plan.meals %}{{ ui.p(plan.meals, true) }}{% endif %}
+{% endif %}{% endblock %}
+{% block after %}
 {% if plan.zenoo %}
-<div style="margin:18px 0;padding:14px 18px;border:2px solid #f7a223;border-radius:14px;">
-  <h2 style="{{ h }}font-size:18px;margin:0 0 6px;">{{ 'Fresher food with ZENOO'|trans }}</h2>
-  <p style="margin:0 0 10px;">{{ '%product% %option%: about %grams% g a day (around €%cost% a day).'|trans({'%product%': plan.zenoo.product, '%option%': plan.zenoo.option_label|trans, '%grams%': plan.zenoo.grams, '%cost%': plan.zenoo.cost|number_format(2, decimal_sep(), ' ')}) }}</p>
-  <a href="{{ urls.plan }}" style="color:#445942;font-weight:700;">{{ 'See %dog%’s ZENOO plan'|trans({'%dog%': plan.dog}) }}</a>
-</div>
+{{ ui.card_open() }}
+<p style="margin:0 0 6px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;font-weight:800;color:#445942;">{{ 'Fresher food with ZENOO'|trans }}</p>
+<p style="margin:0 0 10px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;color:#5a6b59;">{{ '%product% %option%: about %grams% g a day (around €%cost% a day).'|trans({'%product%': plan.zenoo.product, '%option%': plan.zenoo.option_label|trans, '%grams%': plan.zenoo.grams, '%cost%': plan.zenoo.cost|number_format(2, decimal_sep(), ' ')}) }}</p>
+{{ ui.outline(urls.plan, 'See %dog%’s ZENOO plan'|trans({'%dog%': plan.dog})) }}
+{{ ui.card_close() }}
 {% endif %}
-{{ include('emails/_button.html.twig', {url: urls.dashboard, label: 'Open %dog%’s dashboard'|trans({'%dog%': plan.dog})}) }}
-<p style="margin:0 0 12px;">{{ 'The coach in your dashboard can answer questions about the plan any time.'|trans }}</p>
+{{ ui.button(urls.dashboard, 'Open %dog%’s dashboard'|trans({'%dog%': plan.dog})) }}
+{{ ui.p('The coach in your dashboard can answer questions about the plan any time.'|trans, true) }}
 {% endblock %}

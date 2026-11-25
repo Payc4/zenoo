@@ -1,16 +1,52 @@
-<!-- ZENOO site email: "plan" flow (event "ZENOO Plan"). Paste into an HTML block. Works in every site language:
-     the text comes from the event (copy_* already translated; fixes and plan lines are in the pet parent's language). -->
-<div style="padding:8px 28px 4px;font-family:Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;color:#2b2b2b;">
-<h1 style="font-weight:800;font-size:24px;line-height:1.15;text-transform:uppercase;margin:0 0 14px;color:#445942;">{{ event.copy_heading }}</h1>
-<p style="margin:0 0 12px;">{{ event.copy_greeting }}</p>
-<p style="margin:0 0 16px;">{{ event.copy_intro }}</p>
-{% if event.fix_1 %}<h2 style="font-weight:800;font-size:18px;margin:18px 0 8px;color:#445942;">{{ event.copy_fixes_title }}</h2>
-<ol style="margin:0 0 12px;padding-left:20px;"><li>{{ event.fix_1 }}</li>{% if event.fix_2 %}<li>{{ event.fix_2 }}</li>{% endif %}</ol>{% endif %}
-{% if event.plan_food %}<h2 style="font-weight:800;font-size:18px;margin:18px 0 8px;color:#445942;">{{ event.copy_plan_title }}</h2>
-<p style="margin:0 0 12px;">{{ event.plan_food }}<br>{{ event.plan_meals }}</p>{% endif %}
-{% if event.copy_zenoo_text %}<div style="margin:18px 0;padding:14px 18px;border:2px solid #f7a223;border-radius:14px;">
-<h2 style="font-weight:800;font-size:18px;margin:0 0 6px;color:#445942;">{{ event.copy_zenoo_title }}</h2>
-<p style="margin:0 0 10px;">{{ event.copy_zenoo_text }}</p><a href="{{ event.plan_url }}" style="color:#445942;font-weight:700;">→</a></div>{% endif %}
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td style="border-radius:70px;background:#f7a223;"><a href="{{ event.dashboard_url }}" style="display:inline-block;padding:14px 30px;font-weight:800;font-size:15px;color:#ffffff;text-decoration:none;text-transform:uppercase;">{{ event.copy_button }}</a></td></tr></table>
-<p style="margin:0 0 12px;">{{ event.copy_note }}</p>
-</div>
+<!-- ZENOO site email: "plan" flow (event "ZENOO Plan"; fixes and plan lines are in the pet parent's language).
+     Whole email in the "ZENOO Email Template" style. Built by docs/klaviyo/build.py: edit that, not this file. -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light">
+<title>{{ event.subject }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&amp;display=swap" rel="stylesheet">
+<style>body{margin:0;padding:0;} a{color:#445942;} @media (max-width:620px){.zx-pad{padding-left:16px!important;padding-right:16px!important;}}</style>
+</head>
+<body style="margin:0;padding:0;background:#e9ebe6;font-family:Inter,Arial,Helvetica,sans-serif;color:#5a6b59;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#e9ebe6" style="background:#e9ebe6;">
+<tr><td align="center" style="padding:24px 0;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="width:100%;max-width:600px;background:#ffffff;">
+<tr><td align="center" bgcolor="#445942" style="background:#445942;height:84px;padding:0 20px;"><a href="{{ event.site_url }}" style="display:inline-block;"><img src="{{ event.site_url }}/images/logo-white.png" width="140" alt="ZENOO" style="display:block;border:0;width:140px;height:auto;"></a></td></tr>
+<tr><td class="zx-pad" style="padding:40px 20px 10px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border-collapse:separate;"><tr><td bgcolor="#445942" align="center" style="background:#445942;border-radius:10px;padding:30px 20px;"><p style="margin:0;font-family:Inter,Arial,Helvetica,sans-serif;font-size:56px;line-height:60px;font-weight:800;color:#ffffff;">{{ event.bowl_score }}/100</p><p style="margin:6px 0 0;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:22px;font-weight:800;text-transform:uppercase;color:#ffffff;">{{ event.dog_name }} &middot; {{ event.copy_bowl_score }}</p></td></tr></table>
+<p style="margin:0 0 15px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;letter-spacing:.6px;color:#5a6b59;">{{ event.copy_greeting }}</p>
+<p style="margin:0 0 15px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;letter-spacing:.6px;color:#5a6b59;">{{ event.copy_intro }}</p>
+{% if event.fix_1 %}<div style="height:10px;line-height:10px;">&nbsp;</div><h2 style="margin:0 0 15px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;font-weight:800;text-transform:uppercase;color:#445942;">{{ event.copy_fixes_title }}</h2><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 15px;border:1px solid #dde5dc;border-radius:10px;border-collapse:separate;"><tr><td width="36" valign="top" style="padding:20px 0 20px 20px;"><div style="width:36px;height:36px;line-height:36px;border-radius:9999px;background:#dde5dc;text-align:center;font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;font-weight:800;color:#445942;">1</div></td><td valign="top" style="padding:20px 20px 20px 15px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;letter-spacing:.6px;font-weight:700;color:#445942;">{{ event.fix_1 }}</td></tr></table>{% if event.fix_2 %}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 15px;border:1px solid #dde5dc;border-radius:10px;border-collapse:separate;"><tr><td width="36" valign="top" style="padding:20px 0 20px 20px;"><div style="width:36px;height:36px;line-height:36px;border-radius:9999px;background:#dde5dc;text-align:center;font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;font-weight:800;color:#445942;">2</div></td><td valign="top" style="padding:20px 20px 20px 15px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;letter-spacing:.6px;font-weight:700;color:#445942;">{{ event.fix_2 }}</td></tr></table>{% endif %}{% if event.fix_3 %}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 15px;border:1px solid #dde5dc;border-radius:10px;border-collapse:separate;"><tr><td width="36" valign="top" style="padding:20px 0 20px 20px;"><div style="width:36px;height:36px;line-height:36px;border-radius:9999px;background:#dde5dc;text-align:center;font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;font-weight:800;color:#445942;">3</div></td><td valign="top" style="padding:20px 20px 20px 15px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;letter-spacing:.6px;font-weight:700;color:#445942;">{{ event.fix_3 }}</td></tr></table>{% endif %}{% endif %}
+</td></tr>
+<tr><td class="zx-pad" bgcolor="#f8f7f2" style="background:#f8f7f2;padding:30px 20px;"><h2 style="margin:0 0 15px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;font-weight:800;text-transform:uppercase;color:#445942;">{{ event.copy_plan_title }}</h2>
+{% if event.copy_kcal %}<p style="margin:0 0 10px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;font-weight:700;letter-spacing:.6px;color:#445942;">{{ event.copy_kcal }}</p>{% endif %}
+{% if event.plan_food %}<p style="margin:0 0 15px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;letter-spacing:.6px;color:#5a6b59;">{{ event.plan_food }}</p>{% endif %}
+{% if event.plan_meals %}<p style="margin:0 0 0px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;letter-spacing:.6px;color:#5a6b59;">{{ event.plan_meals }}</p>{% endif %}</td></tr>
+<tr><td class="zx-pad" style="padding:30px 20px 0;">{% if event.copy_zenoo_text %}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border:1px solid #dde5dc;border-radius:10px;border-collapse:separate;"><tr><td style="padding:20px;"><p style="margin:0 0 6px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;font-weight:800;color:#445942;">{{ event.copy_zenoo_title }}</p><p style="margin:0 0 10px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;color:#5a6b59;">{{ event.copy_zenoo_text }}</p><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:5px 0 0;"><tr><td bgcolor="#ffffff" style="background:#ffffff;border:2px solid #445942;border-radius:9999px;"><a href="{{ event.plan_url }}" style="display:inline-block;padding:10px 20px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:14px;line-height:20px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#445942;text-decoration:none;">{{ event.copy_zenoo_link }}</a></td></tr></table></td></tr></table>{% endif %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:10px 0 20px;"><tr><td bgcolor="#f7a223" style="background:#f7a223;border-radius:9999px;"><a href="{{ event.dashboard_url }}" style="display:inline-block;padding:16px 28px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:20px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#263326;text-decoration:none;border-radius:9999px;">{{ event.copy_button }}</a></td></tr></table>
+<p style="margin:0 0 0px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;letter-spacing:.6px;color:#5a6b59;">{{ event.copy_note }}</p></td></tr>
+<tr><td class="zx-pad" style="padding:20px 20px 40px;">
+<p style="margin:0 0 0px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;letter-spacing:.6px;color:#5a6b59;">{{ event.copy_regards }}</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;"><tr><td style="border-top:1px solid #dde5dc;padding-top:10px;">
+<p style="margin:0;font-family:Inter,Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;font-weight:800;color:#445942;">{{ event.copy_team }}</p>
+<p style="margin:2px 0 0;font-family:Inter,Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5f6e5e;">{{ event.copy_tagline }}</p>
+</td></tr></table>
+</td></tr>
+<tr><td class="zx-pad" bgcolor="#445942" style="background:#445942;padding:40px 20px 20px;font-family:Inter,Arial,Helvetica,sans-serif;color:#ffffff;">
+<a href="{{ event.site_url }}" style="display:inline-block;"><img src="{{ event.site_url }}/images/logo-white.png" width="110" alt="ZENOO" style="display:block;border:0;width:110px;height:auto;"></a>
+<p style="margin:20px 0;font-family:Inter,Arial,Helvetica,sans-serif;font-size:12px;line-height:22px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;"><a href="{{ event.site_url }}/dashboard" style="color:#ffffff;text-decoration:none;white-space:nowrap;">{{ event.copy_nav_dog }}</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="{{ event.site_url }}/chat" style="color:#ffffff;text-decoration:none;white-space:nowrap;">{{ event.copy_nav_coach }}</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="{{ event.site_url }}/courses" style="color:#ffffff;text-decoration:none;white-space:nowrap;">{{ event.copy_nav_courses }}</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="{{ event.site_url }}/account" style="color:#ffffff;text-decoration:none;white-space:nowrap;">{{ event.copy_nav_account }}</a></p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-top:1px solid #6b7d69;padding-top:20px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;color:#ffffff;">
+<p style="margin:0 0 6px;">&copy; ZENOO &middot; <a href="mailto:support@myzenoo.com" style="color:#ffffff;">support@myzenoo.com</a></p>
+<p style="margin:0;">{{ event.copy_footer }} <a href="{{ event.site_url }}" style="color:#ffffff;">{{ event.copy_site }}</a>.</p>
+
+</td></tr></table>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>
