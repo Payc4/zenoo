@@ -24,6 +24,7 @@ final class FunnelController extends AbstractController
         // Is measurement live? (test report N8): what's set and what's missing, before any paid traffic.
         $env = static fn (string $k) => trim((string) ($_SERVER[$k] ?? $_ENV[$k] ?? getenv($k) ?: '')) !== '';
         $setup = [
+            ['Email sending (MAILER_DSN or KLAVIYO_PRIVATE_KEY)', \App\Service\EmailService::deliveryConfigured(), 'No email leaves the site: set MAILER_DSN (SMTP) or KLAVIYO_PRIVATE_KEY in Coolify, then redeploy.'],
             ['Google Analytics 4 (TRACKING_GA4_ID)', $env('TRACKING_GA4_ID'), 'Set the GA4 measurement ID (G-…) in Coolify.'],
             ['Meta pixel (TRACKING_META_PIXEL_ID)', $env('TRACKING_META_PIXEL_ID'), 'Set the pixel ID in Coolify.'],
             ['Klaviyo, English quiz', $env('KLAVIYO_COMPANY_ID') && $env('KLAVIYO_LIST_ID'), 'KLAVIYO_COMPANY_ID and KLAVIYO_LIST_ID.'],

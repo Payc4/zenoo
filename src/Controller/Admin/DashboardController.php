@@ -36,6 +36,7 @@ class DashboardController extends AbstractDashboardController
             ->getSingleResult();
 
         return $this->render('admin/dashboard.html.twig', [
+            'emailReady' => \App\Service\EmailService::deliveryConfigured(),
             'users' => $this->em->getRepository(User::class)->count([]),
             'products' => $this->em->getRepository(Product::class)->count(['active' => true]),
             'purchases' => $this->em->getRepository(Purchase::class)->count(['status' => Purchase::STATUS_COMPLETED]),

@@ -42,6 +42,18 @@ class EmailService
         'series' => 'ZENOO Plan Series',
     ];
 
+    /**
+     * Can this site send email at all? Needs a real mailer (MAILER_DSN not null://) or a Klaviyo private
+     * key for the Klaviyo flows. Without either, every email is dropped without an error.
+     */
+    public static function deliveryConfigured(): bool
+    {
+        $env = static fn (string $k): string => trim((string) ($_SERVER[$k] ?? $_ENV[$k] ?? getenv($k) ?: ''));
+        $dsn = $env('MAILER_DSN');
+
+        return ($dsn !== '' && !str_starts_with($dsn, 'null:')) || $env('KLAVIYO_PRIVATE_KEY') !== '';
+    }
+
     public function __construct(
         private readonly MailerInterface $mailer,
         private readonly string $appUrl,

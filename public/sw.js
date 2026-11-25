@@ -1,6 +1,6 @@
 // ZENOO service worker: makes the site installable and shows a friendly page when offline.
 // Pages are never cached (they hold personal data); only static files and the offline page are.
-const CACHE = 'zenoo-static-v1';
+const CACHE = 'zenoo-static-v2';
 const OFFLINE = '/offline.html';
 
 self.addEventListener('install', (e) => {
@@ -15,7 +15,10 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).catch(() => caches.match(OFFLINE)));
+    // One quiet retry before the offline page: a redeploy swaps containers with a blip of a second or two.
+    e.respondWith(fetch(req)
+      .catch(() => new Promise((r) => setTimeout(r, 2000)).then(() => fetch(req)))
+      .catch(() => caches.match(OFFLINE)));
     return;
   }
   // Fingerprinted assets and icons: cache first.

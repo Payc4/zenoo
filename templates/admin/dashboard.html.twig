@@ -3,6 +3,13 @@
 {% block page_title %}Overview{% endblock %}
 
 {% block main %}
+{% if not emailReady %}
+<div class="alert alert-danger" role="alert" style="margin-bottom:20px">
+    <strong>Email is not set up: no email leaves the site.</strong>
+    Quiz confirmation links, plan emails, password resets, login links and coach check-ins are all dropped.
+    Set <code>MAILER_DSN</code> (SMTP) or <code>KLAVIYO_PRIVATE_KEY</code> in Coolify, then redeploy.
+</div>
+{% endif %}
 <div class="zn-stats">
     <div class="zn-stat"><span>{{ users }}</span>Pet parents</div>
     <div class="zn-stat"><span>{{ products }}</span>Products in the shop</div>

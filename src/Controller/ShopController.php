@@ -32,8 +32,10 @@ class ShopController extends AbstractController
     #[Route('', name: 'app_shop', methods: ['GET'])]
     public function index(): Response
     {
+        // Nothing is listed until checkout works (Stripe key and webhook secret set): a shop whose
+        // Buy button can only fail is worse than an honest "check back soon".
         return $this->render('shop/index.html.twig', [
-            'products' => $this->products->findActive(),
+            'products' => $this->stripe->isReady() ? $this->products->findActive() : [],
             'testMode' => $this->stripe->isTestMode(),
         ]);
     }
