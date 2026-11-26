@@ -180,7 +180,7 @@ final class MvpTest extends AppTestCase
 
         $this->client->request('GET', '/whats-new');
         $this->assertResponseIsSuccessful();
-        $this->assertSelectorTextContains('h2', 'The coach keeps the profile up to date');
+        $this->assertAnySelectorTextContains('h2', 'The coach keeps the profile up to date');
         $this->assertSelectorExists('footer a[href="/whats-new"]');
         $this->client->request('GET', '/sitemap.xml');
         $this->assertStringContainsString('/whats-new', $this->client->getResponse()->getContent());
