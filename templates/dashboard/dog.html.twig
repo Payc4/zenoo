@@ -32,7 +32,7 @@
         {% if dog.get('age_years') is not null %}<li>{{ dog.get('age_years')|dog_age }}{% if stages[dog.get('life_stage')] is defined %} · {{ stages[dog.get('life_stage')]|trans }}{% endif %}</li>{% endif %}
         {% set lastW = dog.latestLog('weight') %}
         {% if dog.weightUpdate and (not lastW or dog.weightUpdate.at|date('Y-m-d') >= lastW.d) %}<li>{{ dog.weightUpdate.kg|replace({'.': decimal_sep()}) }} kg</li>
-        {% elseif lastW %}<li>{{ lastW.v|replace({'.': decimal_sep()}) }} kg</li>{% elseif dog.get('weight_kg') %}<li>{{ dog.get('weight_kg') }} kg</li>{% endif %}
+        {% elseif lastW %}<li>{{ lastW.v|replace({'.': decimal_sep()}) }} kg</li>{% elseif dog.get('weight_kg') %}<li>{{ (dog.get('weight_kg') ~ '')|replace({'.': decimal_sep()}) }} kg</li>{% endif %}
       </ul>
       {% if not ownPhoto %}<p class="small" style="margin:6px 0 0">{{ 'Tap the camera to add a photo of %dog%.'|trans({'%dog%': dog.name}) }}</p>{% endif %}
     </div>
@@ -107,6 +107,17 @@
     <div class="dog-trend">
       <div class="today-row"><strong>{{ 'Weight'|trans }}</strong><span>{{ weights ? (weights|last).v|replace({'.': decimal_sep()}) ~ ' kg' : '–' }}</span></div>
       {{ tracker_chart(weights|slice(-12), 0, 0, 'Weight'|trans) }}
+      {# Every weigh-in with its day and the change from the one before (newest first). #}
+      {% if weights|length > 0 %}
+        <ol class="weight-history" aria-label="{{ 'Weight history'|trans }}">
+          {% for i in (weights|length - 1)..max(0, weights|length - 8) %}
+            {% set w = weights[i] %}{% set prev = i > 0 ? weights[i - 1] : null %}
+            <li><span>{{ date(w.d)|local_date('day') }}</span>
+              <strong>{{ (w.v ~ '')|replace({'.': decimal_sep()}) }} kg</strong>
+              <span class="muted">{% if prev %}{% set diff = (w.v - prev.v)|round(1) %}{{ diff > 0 ? '+' : (diff < 0 ? '−' : '±') }}{{ (diff|abs ~ '')|replace({'.': decimal_sep()}) }} kg{% else %}{{ w.src == 'quiz' ? 'quiz'|trans : '' }}{% endif %}</span></li>
+          {% endfor %}
+        </ol>
+      {% endif %}
     </div>
     {% for type, label in {body: 'Body shape', stool: 'Stool', itch: 'Itching'} %}
       {% set last = dog.latestLog(type) %}

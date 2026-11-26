@@ -51,6 +51,22 @@ class StripeClient
         return $this->request('GET', 'checkout/sessions/' . $id);
     }
 
+    /** @return array<string, mixed> */
+    public function retrieveSubscription(string $id): array
+    {
+        if (!preg_match('/^sub_[A-Za-z0-9_]+$/', $id)) {
+            throw new StripeException('Invalid subscription id.', 400);
+        }
+
+        return $this->request('GET', 'subscriptions/' . $id);
+    }
+
+    /** A Stripe customer portal page where the customer changes their card or cancels. */
+    public function createPortalSession(string $customerId, string $returnUrl): array
+    {
+        return $this->request('POST', 'billing_portal/sessions', ['customer' => $customerId, 'return_url' => $returnUrl]);
+    }
+
     /**
      * Checks the Stripe-Signature header and returns the decoded event.
      *

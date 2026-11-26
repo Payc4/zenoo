@@ -59,6 +59,9 @@ final class ScoreRecalculator
             'quiz_signs' => $in['signs'], 'quiz_top_sign' => $in['signs'][0] ?? null, 'quiz_activity_band' => $in['level'],
         ];
         $fields += $this->texts->write($dog->getName(), $r, $in, $dog->getLocale());
+        if (!empty($in['targetKg'])) {
+            $fields['quiz_target_weight_kg'] = round((float) $in['targetKg'], 2);
+        }
         $change = $dog->rescore($fields, $r['total'], $why, $now);
         return $change === null ? null : $change + ['kg' => Scoring::roundKg($in['weightKg']), 'bcs' => $in['bcs']];
     }
@@ -112,30 +115,34 @@ final class ScoreRecalculator
         $weights = $dog->getLog('weight');
         $body = $dog->latestLog('body');
         $w = $weights ? end($weights) : null;
-        if ($body) {
-            $in['bcs'] = (int) round((float) $body['v']);
-        }
-        if ($w) {
-            // Newer than the body shape: a later day, or the same day as the quiz's (logged after it).
-            $newer = $body && (strcmp($w['d'], $body['d']) > 0 || ($w['d'] === $body['d'] && ($body['src'] ?? '') === 'quiz' && ($w['src'] ?? '') !== 'quiz'));
-            if ($in['stage'] !== 'puppy' && $newer) {
-                // The weight that went with that body shape: the quiz's own, or the one logged that day (or before).
-                $then = ($body['src'] ?? '') === 'quiz' ? (float) $in['weightKg'] : null;
-                foreach ($then === null ? $weights : [] as $e) {
-                    if (strcmp($e['d'], $body['d']) <= 0) {
-                        $then = (float) $e['v'];
-                    }
-                }
-                if ($then) {
-                    $ideal = Scoring::idealWeight($then, (int) round((float) $body['v']));
-                    $in['bcs'] = max(1, min(9, (int) round(5 + (100 * (float) $w['v'] / $ideal - 100) / 10)));
-                }
+        $kg = $w ? (float) $w['v'] : (float) $in['weightKg'];
+        $target = null;
+        if ($in['stage'] === 'puppy') {
+            // Puppies keep their logged shape: they are meant to gain.
+            if ($body) {
+                $in['bcs'] = (int) round((float) $body['v']);
             }
-            $in['weightKg'] = (float) $w['v'];
+        } else {
+            // The target weight is settled once (the quiz's weight and shape) and kept, so it doesn't
+            // drift each time a weight and shape are estimated again (36.1 kg at 7/9 is "about 30 kg",
+            // 38 kg at 8/9 "about 29 kg"). Today's shape is read from how far the weight is from it,
+            // each step about 10%. A logged shape two or more steps away from that is a real correction
+            // (the vet's, or a misjudged quiz answer), and the target moves with it.
+            $target = (float) ($dog->get('target_weight_kg') ?: Scoring::idealWeight((float) $in['weightKg'], (int) $in['bcs']));
+            $shape = fn (float $t) => max(1, min(9, (int) round(5 + (100 * $kg / $t - 100) / 10)));
+            $in['bcs'] = $shape($target);
+            if ($body && ($body['src'] ?? '') !== 'quiz' && abs((int) round((float) $body['v']) - $in['bcs']) >= 2) {
+                $in['bcs'] = (int) round((float) $body['v']);
+                $target = Scoring::idealWeight($kg, $in['bcs']);
+            }
         }
+        $in['weightKg'] = $kg;
         $in = self::withProgress($in, $dog->getProgress());
         if ($in === null) {
             return null;
+        }
+        if ($target) {
+            $in['targetKg'] = $target;
         }
         $at = $dog->get('completed_at');
         $taken = \is_string($at) && strtotime($at) ? new \DateTimeImmutable($at) : $dog->getUpdatedAt();

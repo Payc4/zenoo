@@ -1,6 +1,17 @@
 # The public "What's new" page (/whats-new, App\Controller\PatchNotesController), newest first.
 # One entry per release: date (YYYY-MM-DD), title, items (plain English, one change each).
 - date: '2026-11-26'
+  title: 'Free trial after the quiz, and fixes from Lithuanian testing'
+  items:
+    - 'Quiz result: the Bowl Score stays free; the first steps, daily plan and lessons are shown blurred, with a “Start free trial” card (first month free, then monthly; the card is needed up front and nothing is charged in the free month). A “Cyber Monday special” badge shows until 7 December.'
+    - 'After the card is entered in Stripe, the account is made from the quiz and the app opens. Today, the coach and the lessons need an active trial or plan, for existing members too; the account page shows the plan with a “Manage billing” button.'
+    - 'Lessons: the Lithuanian, Ukrainian and Polish courses are published on each deploy, so a Lithuanian page no longer opens English lessons. A lesson finished in one language counts in the others.'
+    - 'Coach: answers in Lithuanian use “patarėjas” and “Dubenėlio balas”, never English terms. Notes it saves are written in the language of the chat. A weight goes to the tracker, not to the notes.'
+    - 'Lithuanian wording no longer forces a dog’s name into the wrong case (“dėl Bumbulas”); “Treneris” is “Patarėjas” everywhere. Weights use a decimal comma (30,1 kg), the vet report included.'
+    - 'Log: each entry has a date, so a weight, body shape, stool or itch score can be added for an earlier day (up to a year back). The dog tab lists the last 8 weigh-ins with the change between them.'
+    - 'The target weight is set once from the quiz and no longer moves when a new weight is logged.'
+    - 'While the coach writes, the reply bubble shows what it is doing (reading the profile, checking the numbers, writing) with a moving bar.'
+- date: '2026-11-26'
   title: 'New email design, and fixes from a full test of the app'
   items:
     - 'Every email has the new ZENOO look: green header with the logo, the Bowl Score in a big green box, numbered first steps, the daily plan in a cream band, one orange button and a green footer. Emails are signed by Agota, ZENOO’s founder.'

@@ -89,8 +89,8 @@
               <strong>{% if type == 'weight' %}{{ last.v|replace({'.': decimal_sep()}) }} kg{% elseif type == 'body' %}{{ bodyNames[last.v]|trans }}{% elseif type == 'stool' %}{{ '%n% of 7'|trans({'%n%': last.v}) }}{% else %}{{ '%n% of 10'|trans({'%n%': last.v}) }}{% endif %}</strong>
               {% if logged == type %}
                 <form method="post" action="{{ path('app_dog_tracker_undo') }}" class="today-undo">
-                  <input type="hidden" name="_token" value="{{ csrf_token('tracker') }}"><input type="hidden" name="type" value="{{ type }}">
-                  <span>{{ 'Saved just now'|trans }} ·</span> <button type="submit">{{ 'Undo'|trans }}</button>
+                  <input type="hidden" name="_token" value="{{ csrf_token('tracker') }}"><input type="hidden" name="type" value="{{ type }}"><input type="hidden" name="date" value="{{ loggedDay }}">
+                  <span>{{ 'Saved just now'|trans }}{% if loggedDay and loggedDay != 'now'|date('Y-m-d') %} ({{ date(loggedDay)|local_date('day') }}){% endif %} ·</span> <button type="submit">{{ 'Undo'|trans }}</button>
                 </form>
               {% else %}
                 <span class="muted">{{ date(last.d)|local_date('day') }}</span>
@@ -109,16 +109,19 @@
         <h2 id="sheet-h">{{ 'Log for %dog%'|trans({'%dog%': dog.name}) }}</h2>
         <form method="dialog"><button class="log-sheet__close" aria-label="{{ 'Close'|trans }}">×</button></form>
       </div>
-      <p class="muted">{{ 'Today'|trans }}, {{ date()|local_date('long') }}</p>
       <div class="log-tabs" role="tablist">
         {% for type, t in trackers %}<button type="button" role="tab" data-log-tab="{{ type }}" aria-selected="false">{{ t.label }}</button>{% endfor %}
       </div>
       {% for type, t in trackers %}
         <form method="post" action="{{ path('app_dog_tracker') }}" class="log-panel" data-log-panel="{{ type }}" hidden>
           <input type="hidden" name="_token" value="{{ csrf_token('tracker') }}"><input type="hidden" name="type" value="{{ type }}">
+          {# Weighed yesterday, written down today: the owner picks the day (up to a year back). #}
+          <label class="log-date">{{ 'Date'|trans }}
+            <input type="date" name="date" value="{{ 'now'|date('Y-m-d') }}" max="{{ 'now'|date('Y-m-d') }}" min="{{ '-1 year'|date('Y-m-d') }}" required>
+          </label>
           {% if type == 'weight' %}
-            <label for="log-weight-v">{{ 'What does %dog% weigh today?'|trans({'%dog%': dog.name}) }}</label>
-            <div class="log-weight"><input id="log-weight-v" name="value" inputmode="decimal" required placeholder="{{ dog.latestLog('weight').v ?? '' }}"><span>kg</span></div>
+            <label for="log-weight-v">{{ 'What does %dog% weigh?'|trans({'%dog%': dog.name}) }}</label>
+            <div class="log-weight"><input id="log-weight-v" name="value" inputmode="decimal" required placeholder="{{ (dog.latestLog('weight').v ?? '')|replace({'.': decimal_sep()}) }}"><span>kg</span></div>
           {% elseif type == 'body' %}
             <p class="log-q">{{ 'Which shape is closest to %dog%, seen from above?'|trans({'%dog%': dog.name}) }}</p>
             <div class="log-shapes">

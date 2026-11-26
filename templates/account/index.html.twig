@@ -17,6 +17,7 @@
 
 <div class="wrap account-grid">
     <nav class="account-nav" aria-label="{{ 'Account'|trans }}">
+        {% if plans or user.subscriptionStatus %}<a href="#plan">{{ 'ZENOO plan'|trans }}</a>{% endif %}
         <a href="#orders">{{ 'My orders'|trans }}</a>
         <a href="#details">{{ 'My details'|trans }}</a>
         <a href="#password">{{ 'Password'|trans }}</a>
@@ -26,6 +27,30 @@
     <div class="account-panels">
         {# ---------- Orders ---------- #}
         {% set purchases = user.purchases %}
+        {# The ZENOO plan: free month, then monthly (Stripe). Card and cancelling in Stripe's billing page. #}
+        {% if plans or user.subscriptionStatus %}
+        <section class="card" id="plan">
+            <h2>{{ 'ZENOO plan'|trans }}</h2>
+            {% set end = user.subscriptionPeriodEnd ? user.subscriptionPeriodEnd|local_date('day') : '' %}
+            {% set status = user.subscriptionStatus %}
+            <p>
+                {% if status == 'trialing' %}{{ 'Free month until %date%.'|trans({'%date%': end}) }}
+                {% elseif status == 'active' %}{{ 'Active. Renews on %date%.'|trans({'%date%': end}) }}
+                {% elseif status in ['past_due', 'unpaid'] %}{{ 'The last payment didn’t go through. Update your card to keep the app open.'|trans }}
+                {% elseif status == 'canceled' and user.hasActiveSubscription %}{{ 'Cancelled. Open until %date%.'|trans({'%date%': end}) }}
+                {% else %}{{ 'No plan yet. The Bowl Score is free; the rest opens with a free month.'|trans }}{% endif %}
+            </p>
+            {% if user.stripeCustomerId %}
+                <form method="post" action="{{ path('app_billing') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('billing') }}">
+                    <button class="btn btn-outline btn-small" type="submit">{{ 'Manage billing'|trans }}</button>
+                </form>
+            {% elseif plans %}
+                <a class="btn btn-small" href="{{ path('app_trial') }}">{{ 'Start free trial'|trans }}</a>
+            {% endif %}
+        </section>
+        {% endif %}
+
         <section class="card" id="orders">
             <h2>{{ 'My orders'|trans }}</h2>
             {% if purchases|length %}

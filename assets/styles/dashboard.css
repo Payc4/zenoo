@@ -264,3 +264,24 @@
 .score-change__close { width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--forest); font-size: 26px; line-height: 1; cursor: pointer; }
 .score-change__close:hover { background: var(--mist); }
 .score-change__close:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+
+/* The day a log entry is for (default today) */
+.log-date { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; font-weight: 600; }
+.log-date input { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line, #dde5dc); border-radius: 10px; font: inherit; background: #fff; }
+
+/* Weight history list under the chart (dog tab) */
+.weight-history { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.weight-history li { display: grid; grid-template-columns: 1fr auto 5.5em; gap: 10px; align-items: baseline; font-size: 15px; }
+.weight-history li > :last-child { text-align: right; }
+
+/* ---------- The paywall (/trial) ---------- */
+.trial-locked__list { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 10px; }
+.trial-locked__list li { display: flex; gap: 12px; align-items: center; }
+.trial-locked__n { flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--sage-100, #dde5dc); display: grid; place-items: center; font-weight: 800; color: var(--forest); }
+.trial-locked__blur { filter: blur(6px); user-select: none; color: var(--forest); font-weight: 600; }
+.trial-locked__note { margin: 0; font-weight: 600; }
+.trial-offer { border: 2px solid var(--sun); position: relative; }
+.trial-offer h2 { margin-top: 0; }
+.trial-badge { display: inline-block; margin: 0 0 10px; padding: 6px 14px; border-radius: 9999px; background: var(--forest); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.trial-list { margin: 0 0 18px; padding-left: 20px; display: grid; gap: 6px; }
+.trial-terms { margin: 12px 0 0; }

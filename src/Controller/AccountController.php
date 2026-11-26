@@ -34,9 +34,9 @@ class AccountController extends AbstractController
     }
 
     #[Route('', name: 'app_account', methods: ['GET'])]
-    public function index(): Response
+    public function index(\App\Payment\Subscriptions $subscriptions): Response
     {
-        return $this->render('account/index.html.twig', ['user' => $this->currentUser()]);
+        return $this->render('account/index.html.twig', ['user' => $this->currentUser(), 'plans' => $subscriptions->isEnabled()]);
     }
 
     #[Route('/details', name: 'app_account_details', methods: ['POST'])]

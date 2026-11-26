@@ -54,6 +54,8 @@ final class QuizAccountController extends AbstractController
         private readonly \App\Tracking\Attribution $attribution,
         private readonly \App\Tracking\Funnel $funnel,
         private readonly \App\Service\PlanEmails $planEmails,
+        private readonly \App\Quiz\QuizAccounts $accounts,
+        private readonly \App\Payment\Subscriptions $subscriptions,
         #[Autowire('%kernel.secret%')] private readonly string $secret,
         #[Autowire('%env(bool:default:app.quiz.site_confirm_default:QUIZ_SITE_CONFIRM_EMAIL)%')] private readonly bool $siteConfirmEmail = true,
     ) {
@@ -144,7 +146,8 @@ final class QuizAccountController extends AbstractController
                 }
             }
         }
-        return $this->json(['status' => 'sent']);
+        // With the free trial on, the result page's "Start free trial" carries this result to Stripe.
+        return $this->json(['status' => 'sent'] + ($this->subscriptions->isEnabled() ? ['trial' => $token] : []));
     }
 
     #[Route('/quiz/confirm/{token}', name: 'app_quiz_confirm', methods: ['GET'], requirements: ['token' => '[a-f0-9]{64}'])]
@@ -159,28 +162,7 @@ final class QuizAccountController extends AbstractController
             return $this->redirectToRoute($this->getUser() ? 'app_dashboard' : 'app_login');
         }
 
-        $user = $this->users->findOneBy(['email' => $submission->getEmail()]);
-        $isNew = $user === null;
-        if ($isNew) {
-            $user = (new User())
-                ->setEmail($submission->getEmail())
-                ->setFirstName($submission->getFirstName())
-                ->setLocale($submission->getLocale())
-                ->setHasPassword(false);
-            // Nobody knows this password: they log in with the email link or choose one on the dashboard.
-            $user->setPassword($hasher->hashPassword($user, bin2hex(random_bytes(32))));
-            $user->setAttribution($submission->getData()['_attribution'] ?? null);
-            $this->em->persist($user);
-            $this->funnel->record('account_created', \App\Tracking\Attribution::label($user->getAttribution()));
-        }
-        $dog = $this->dogs->saveQuizResult($user, array_diff_key($submission->getData(), ['_attribution' => 1, '_answers' => 1]), $submission->getLocale(), null, false, $submission->getData()['_answers'] ?? null);
-        if (!empty($submission->getData()['quiz_marketing_consent'])) {
-            $user->setMarketingEmails(true); // the quiz's tips-and-offers tick
-        }
-        $submission->confirm();
-        $this->em->flush();
-        $this->planEmails->sendPlan($user, $dog); // roadmap 04: in their language (LT/UK/PL by default)
-        $this->em->flush();
+        [$user, $isNew] = $this->accounts->createFrom($submission);
 
         $security->login($user, LoginFormAuthenticator::class, 'main');
         $request->setLocale($user->getLocale());

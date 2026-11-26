@@ -96,7 +96,8 @@ final class CourseController extends AbstractController
     #[Route('/lesson/{n}', name: 'app_course_lesson_number', requirements: ['n' => '\d+'], methods: ['GET'])]
     public function lessonNumber(int $n, Request $request): Response
     {
-        $courses = $this->courses->findAllOrdered(true);
+        // Same course as Today shows: published ones, and for admins the drafts too.
+        $courses = $this->courses->findAllOrdered(!$this->isGranted('ROLE_ADMIN'));
         $in = fn (string $locale) => array_values(array_filter($courses, fn (Course $c) => $c->getLocale() === $locale));
         foreach ([$in($request->getLocale()), $in('en')] as $list) {
             $lessons = $list ? $list[0]->getLessons()->toArray() : [];

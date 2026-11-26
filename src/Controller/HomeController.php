@@ -63,6 +63,8 @@ class HomeController extends AbstractController
         \App\Catalogue\PlanBuilder $plans,
         CsrfTokenManagerInterface $csrf,
         \App\Repository\DogProfileRepository $dogs,
+        \App\Payment\Subscriptions $subscriptions,
+        \Symfony\Contracts\Translation\TranslatorInterface $translator,
     ): Response {
         $user = $this->getUser();
         // "Retake the quiz for Max" (?dog=<id>): start from Max's own saved answers, saved to Max (N2, F1).
@@ -111,6 +113,8 @@ class HomeController extends AbstractController
                 'labelScanUrl' => $claude->isConfigured() ? $this->generateUrl('app_quiz_label_scan') : null,
                 'user' => $user instanceof User ? ['id' => $user->getId(), 'firstName' => $user->getFirstName(), 'email' => $user->getEmail()] : null,
                 'retake' => $retake,
+                // The free trial (Subscriptions): the score is free, the rest opens with a month's trial.
+                'trial' => $this->trialConfig($subscriptions, $translator, $user instanceof User ? $user : null, $locale, $csrf),
             ],
         ]);
     }
@@ -126,5 +130,30 @@ class HomeController extends AbstractController
         }
 
         return new JsonResponse(['status' => 'ok']);
+    }
+
+    /** What the quiz result needs for the free-trial card, in the quiz's language; null when the paywall is off. */
+    private function trialConfig(\App\Payment\Subscriptions $subscriptions, \Symfony\Contracts\Translation\TranslatorInterface $translator, ?User $user, string $locale, CsrfTokenManagerInterface $csrf): ?array
+    {
+        if (!$subscriptions->isEnabled() || ($user !== null && $subscriptions->hasAccess($user, $this->isGranted('ROLE_ADMIN')))) {
+            return null;
+        }
+        $t = fn (string $m, array $p = []) => $translator->trans($m, $p, null, $locale);
+        $days = \App\Payment\Subscriptions::TRIAL_DAYS;
+        $price = $subscriptions->monthlyPrice();
+
+        return [
+            'url' => $this->generateUrl('app_trial_start'),
+            'csrf' => $csrf->getToken('trial')->getValue(),
+            'badge' => $subscriptions->showBadge() ? $t('Cyber Monday Special') : null,
+            'title' => $t('Your recommendations are ready'),
+            'text' => $t('Your recommendations, daily plan and lessons open with the free month.'),
+            'start' => $t('Start free trial'),
+            'saving' => $t('Saving your result…'),
+            'terms' => ($price !== null
+                ? $t('Free for %days% days, then €%price% a month. Cancel any time in your account.', ['%days%' => $days, '%price%' => number_format($price, 2, \App\Locale::decimalSeparator($locale), ' ')])
+                : $t('Free for %days% days, then a monthly plan. Cancel any time in your account.', ['%days%' => $days]))
+                . ' ' . $t('A card is needed to start; nothing is charged during the free month.'),
+        ];
     }
 }

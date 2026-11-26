@@ -102,6 +102,8 @@ final class DashboardController extends AbstractController
             }
         }
 
+        $loggedFlash = explode('|', (string) ($request->getSession()->getFlashBag()->get('logged')[0] ?? ''));
+
         return [
             'user' => $user,
             'dog' => $dog,
@@ -117,7 +119,8 @@ final class DashboardController extends AbstractController
             'zenooPlan' => $dog ? $this->plans->forDog($dog) : null,
             'shopUrl' => $this->plans->shopUrl('dashboard'),
             'dogs' => $this->dogs->findAllForUser($user),
-            'logged' => $request->getSession()->getFlashBag()->get('logged')[0] ?? null,
+            'logged' => $loggedFlash[0] ?: null,
+            'loggedDay' => $loggedFlash[1] ?? null,
         ];
     }
 
@@ -298,13 +301,14 @@ final class DashboardController extends AbstractController
         if ($dog && $this->isCsrfTokenValid('tracker', (string) $request->request->get('_token'))) {
             $value = str_replace(',', '.', (string) $request->request->get('value', ''));
             $type = (string) $request->request->get('type');
-            if (is_numeric($value) && $dog->addLog($type, (float) $value, new \DateTimeImmutable(), 'owner')) {
+            $at = self::logDay((string) $request->request->get('date'));
+            if (is_numeric($value) && $at && $dog->addLog($type, (float) $value, $at, 'owner')) {
                 // A new weight or body shape: the Bowl Score and plan are worked out again (notice on Today).
                 if (\in_array($type, ['weight', 'body'], true)) {
                     $this->rescorer->recalculate($dog, $type, new \DateTimeImmutable());
                 }
                 $this->em->flush();
-                $this->addFlash('logged', $type); // "Saved just now · Undo" on that tile
+                $this->addFlash('logged', $type . '|' . $at->format('Y-m-d')); // "Saved · Undo" on that tile
             } else {
                 $this->addFlash('error', 'That value doesn’t look right. Please check it.');
             }
@@ -320,7 +324,7 @@ final class DashboardController extends AbstractController
         $user = $this->getUser();
         $dog = $this->dogs->findForUser($user);
         if ($dog && $this->isCsrfTokenValid('tracker', (string) $request->request->get('_token'))
-            && $dog->undoLog($type = (string) $request->request->get('type'), new \DateTimeImmutable())) {
+            && $dog->undoLog($type = (string) $request->request->get('type'), self::logDay((string) $request->request->get('date')) ?? new \DateTimeImmutable())) {
             if (\in_array($type, ['weight', 'body'], true)) {
                 $this->rescorer->recalculate($dog, $type, new \DateTimeImmutable()); // back to the score before
             }
@@ -365,6 +369,23 @@ final class DashboardController extends AbstractController
             $this->addFlash('success', 'Added to your dog’s profile.');
         }
         return $this->redirect($this->generateUrl('app_dog_tab') . '#knows-h');
+    }
+
+    /**
+     * The day an owner logs for: today by default, or a past day they picked (weighed yesterday,
+     * written down today). Up to a year back; never in the future. Null for a date that isn't one.
+     */
+    public static function logDay(string $date, ?\DateTimeImmutable $today = null): ?\DateTimeImmutable
+    {
+        $today ??= new \DateTimeImmutable('today');
+        if ($date === '') {
+            return new \DateTimeImmutable();
+        }
+        $day = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+        if (!$day || $day->format('Y-m-d') !== $date || $day > $today || $day < $today->modify('-1 year')) {
+            return null;
+        }
+        return $day;
     }
 
     private function courseFor(string $locale): ?Course

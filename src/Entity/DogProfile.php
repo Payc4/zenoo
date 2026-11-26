@@ -101,7 +101,7 @@ class DogProfile
             $this->data['score_history'] = \array_slice($history, -24);
         }
         $kept = array_filter($this->data, fn ($k) => !str_starts_with((string) $k, 'quiz_'), ARRAY_FILTER_USE_KEY);
-        unset($kept['score_change'], $kept['score_at'], $kept['progress']); // a new quiz result starts afresh
+        unset($kept['score_change'], $kept['score_at'], $kept['progress'], $kept['quiz_target_weight_kg']); // a new quiz result starts afresh
         $this->data = $data + $kept;
         $today = new \DateTimeImmutable();
         if (is_numeric($data['quiz_weight_kg'] ?? null)) {

@@ -69,3 +69,15 @@ h2 { font-size: 20px; }
 .zq-more > summary::after { content: "▾"; margin-left: auto; }
 .zq-more[open] > summary::after { content: "▴"; }
 .zq-more > summary:focus-visible { outline: 3px solid var(--sun, #f7a223); outline-offset: 2px; }
+
+/* The free trial on the result: the offer card, and the recommendations locked (blurred) under it. */
+.zq-trial { border: 2px solid var(--sun, #f7a223); }
+.zq-trial h3 { margin: 6px 0; }
+.zq-trial p { margin: 0 0 12px; }
+.zq-trial-badge { display: inline-block; padding: 5px 12px; border-radius: 9999px; background: var(--forest, #445942); color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.zq-trial-terms { margin: 10px 0 0 !important; color: var(--ink-muted, #5c6b5b); }
+.zq-trial-form { margin: 0; }
+.zq-trial-form button[disabled] { opacity: .6; cursor: progress; }
+.zq-locked { position: relative; border-radius: 16px; overflow: hidden; }
+.zq-locked__body { filter: blur(7px); pointer-events: none; user-select: none; }
+.zq-locked__lock { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; background: rgba(255, 255, 255, .25); }

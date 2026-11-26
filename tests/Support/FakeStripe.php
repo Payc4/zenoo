@@ -15,6 +15,8 @@ final class FakeStripe
     public static array $requests = [];
     /** @var array<string, array> Checkout Sessions returned by GET checkout/sessions/{id} */
     public static array $sessions = [];
+    /** @var array<string, array> Subscriptions returned by GET subscriptions/{id} */
+    public static array $subscriptions = [];
     public static bool $down = false;
     /** @var list<array{url: string, headers: array, body: string}> requests to Klaviyo's server API */
     public static array $klaviyo = [];
@@ -29,6 +31,7 @@ final class FakeStripe
     {
         self::$requests = [];
         self::$sessions = [];
+        self::$subscriptions = [];
         self::$down = false;
         self::$klaviyo = [];
         self::$klaviyoDown = false;
@@ -79,6 +82,17 @@ final class FakeStripe
             return $session
                 ? new MockResponse(json_encode($session))
                 : new MockResponse(json_encode(['error' => ['message' => 'No such checkout.session']]), ['http_code' => 404]);
+        }
+
+        if ($method === 'GET' && preg_match('#/v1/subscriptions/(sub_[A-Za-z0-9_]+)$#', $url, $m)) {
+            $sub = self::$subscriptions[$m[1]] ?? null;
+
+            return $sub
+                ? new MockResponse(json_encode($sub))
+                : new MockResponse(json_encode(['error' => ['message' => 'No such subscription']]), ['http_code' => 404]);
+        }
+        if ($method === 'POST' && str_ends_with($url, '/v1/billing_portal/sessions')) {
+            return new MockResponse(json_encode(['id' => 'bps_test_1', 'url' => 'https://billing.stripe.com/p/session/test_1']));
         }
 
         return new MockResponse(json_encode(['error' => ['message' => 'Unexpected request in test: ' . $method . ' ' . $url]]), ['http_code' => 500]);

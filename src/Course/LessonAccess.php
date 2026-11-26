@@ -21,7 +21,8 @@ final class LessonAccess
 
     public function canOpen(Lesson $lesson, ?User $user, bool $isAdmin = false): bool
     {
-        return $isAdmin || !$lesson->isLocked() || ($user !== null && $this->hasUnlock($user));
+        // The app subscription (free trial, then monthly) opens every lesson, locked ones too.
+        return $isAdmin || !$lesson->isLocked() || ($user !== null && ($user->hasActiveSubscription() || $this->hasUnlock($user)));
     }
 
     /** Whether this person bought the lesson unlock (any unlock product, even one since switched off). */

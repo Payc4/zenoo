@@ -13,6 +13,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
+#[ORM\Index(columns: ['subscription_id'], name: 'IDX_USER_SUBSCRIPTION')]
+#[ORM\Index(columns: ['stripe_customer_id'], name: 'IDX_USER_STRIPE_CUSTOMER')]
 #[ORM\UniqueConstraint(name: 'UNIQ_USER_EMAIL', fields: ['email'])]
 #[UniqueEntity(fields: ['email'], message: 'An account with this email already exists.')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -114,6 +116,50 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->activeDogId = $id;
         return $this;
+    }
+
+    /**
+     * The ZENOO app subscription (Stripe): a month's free trial, then monthly. The status is Stripe's
+     * own (trialing, active, past_due, canceled, incomplete…), kept up to date by its webhooks.
+     */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $subscriptionStatus = null;
+
+    #[ORM\Column(length: 80, nullable: true)]
+    private ?string $subscriptionId = null;
+
+    #[ORM\Column(length: 80, nullable: true)]
+    private ?string $stripeCustomerId = null;
+
+    /** When the trial or the paid month runs out (Stripe's current_period_end / trial_end). */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $subscriptionPeriodEnd = null;
+
+    public function getSubscriptionStatus(): ?string { return $this->subscriptionStatus; }
+    public function getSubscriptionId(): ?string { return $this->subscriptionId; }
+    public function getStripeCustomerId(): ?string { return $this->stripeCustomerId; }
+    public function getSubscriptionPeriodEnd(): ?\DateTimeImmutable { return $this->subscriptionPeriodEnd; }
+
+    public function setSubscription(?string $status, ?string $subscriptionId, ?string $customerId, ?\DateTimeImmutable $periodEnd): static
+    {
+        $this->subscriptionStatus = $status;
+        $this->subscriptionId = $subscriptionId ?? $this->subscriptionId;
+        $this->stripeCustomerId = $customerId ?? $this->stripeCustomerId;
+        $this->subscriptionPeriodEnd = $periodEnd ?? $this->subscriptionPeriodEnd;
+        return $this;
+    }
+
+    /**
+     * Whether the subscription opens the app now: on trial or paid; a failed renewal or a cancelled
+     * plan keeps it open until the end of the period already paid (or the trial).
+     */
+    public function hasActiveSubscription(\DateTimeImmutable $now = new \DateTimeImmutable()): bool
+    {
+        return match ($this->subscriptionStatus) {
+            'trialing', 'active' => true,
+            'past_due', 'canceled', 'unpaid' => $this->subscriptionPeriodEnd !== null && $this->subscriptionPeriodEnd > $now,
+            default => false,
+        };
     }
 
     /** Coach follow-up emails ("two weeks in, how is Bella?"); switched off in the account. */

@@ -167,6 +167,9 @@ fi
 if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
     php bin/console app:course:import --missing --no-interaction \
         || echo "WARNING: course import failed — run 'php bin/console app:course:import' by hand." >&2
+    # Members see lessons in the language they picked only when that language's course is published.
+    php bin/console app:course:publish "${COURSE_PUBLISH_LOCALES:-en,lt,uk,pl}" --no-interaction \
+        || echo "WARNING: publishing the courses failed." >&2
 fi
 
 # --- Shop catalogue ----------------------------------------------------------

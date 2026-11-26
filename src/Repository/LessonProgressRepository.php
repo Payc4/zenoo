@@ -34,6 +34,28 @@ class LessonProgressRepository extends ServiceEntityRepository
         foreach ($rows as $p) {
             $out[$p->getLesson()->getId()] = $p;
         }
+
+        // The course is the same in every language (lesson 15 is lesson 15), so a lesson finished in
+        // another language counts here too: someone who switched from English to Lithuanian keeps
+        // their progress instead of starting at "0 of 30".
+        $elsewhere = $this->createQueryBuilder('p')
+            ->join('p.lesson', 'l')
+            ->andWhere('p.user = :u')->andWhere('l.course != :c')->andWhere('p.completedAt IS NOT NULL')
+            ->setParameter('u', $user)->setParameter('c', $course)
+            ->getQuery()->getResult();
+        $donePositions = [];
+        foreach ($elsewhere as $p) {
+            $donePositions[$p->getLesson()->getPosition()] = $p;
+        }
+        if ($donePositions) {
+            foreach ($course->getLessons() as $lesson) {
+                $id = $lesson->getId();
+                if (isset($donePositions[$lesson->getPosition()]) && !($out[$id] ?? null)?->isCompleted()) {
+                    $out[$id] = $donePositions[$lesson->getPosition()];
+                }
+            }
+        }
+
         return $out;
     }
 

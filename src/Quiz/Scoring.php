@@ -71,7 +71,9 @@ final class Scoring
     /** @return array{kcal: float, idealKg: ?float, adultKg?: ?float} */
     public static function dailyKcal(array $a): array
     {
-        $iw = self::idealWeight($a['weightKg'], $a['bcs']);
+        // A re-score after the quiz passes the dog's settled target weight (ScoreRecalculator), so the
+        // target doesn't drift each time the weight and shape are estimated again. The quiz never does.
+        $iw = !empty($a['targetKg']) ? (float) $a['targetKg'] : self::idealWeight($a['weightKg'], $a['bcs']);
         if ($a['stage'] === 'puppy') {
             return ['kcal' => self::puppyKcal($a['weightKg'], $a['adultKg'], $a['ageYears']), 'idealKg' => null, 'adultKg' => $a['adultKg'] ?: null];
         }

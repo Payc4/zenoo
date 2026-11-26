@@ -23,7 +23,7 @@
   let a = retake ? { ...blank(), ...(retake.answers || {}), name: retake.name, _dogId: retake.id, _step: 0 }
     : fresh ? { ...blank(), _new: true }
       : { ...blank(), ...(stored || {}) };
-  delete a._rid; if (retake || fresh) delete a._saved;
+  delete a._rid; if (retake || fresh) { delete a._saved; delete a._trial; }
   if (retake || fresh) history.replaceState(null, '', location.pathname);
   // Site only: a logged-in pet parent doesn't have to type their name and email again.
   const withUser = () => { if (CFG.user) { a.parentName = a.parentName || CFG.user.firstName || ''; a.email = a.email || CFG.user.email || ''; } };
@@ -40,7 +40,7 @@
     try { localStorage.setItem(STORE_KEY, JSON.stringify({ ...rest, _step: step, _owner: owner })); } catch (e) { /* storage blocked: quiz still works */ }
   }
   // The quiz's own answers sent with the result, so a retake can start from them.
-  const answersToSave = () => { const { email, parentName, marketing, _step, _saved, _owner, _dogId, _new, _rid, labelScanTriesLeft, ...rest } = a; return rest; };
+  const answersToSave = () => { const { email, parentName, marketing, _step, _saved, _owner, _dogId, _new, _rid, _trial, labelScanTriesLeft, ...rest } = a; return rest; };
 
   const U = C.ui; // all screen copy lives in content.<locale>.js
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -416,6 +416,29 @@ ${backOnly()}`,
       const main = webmail
         ? `<a class="zq-btn block" href="${esc(webmail)}" target="_blank" rel="noopener" data-track="open_email">${T.openEmail}</a>`
         : zp ? `<a class="zq-btn block" href="${esc(zp.cartUrl)}" target="_blank" rel="noopener" data-track="plan_cart">${fill(U.result.zenoo.cta, { price: dec(zp.starterPrice.toFixed(2)) })}</a>` : '';
+      // The free trial (CFG.trial): the score is free; the recommendations, plan and breakdown show
+      // locked under a "Start free trial" card (to Stripe). Vet notes always stay readable.
+      const TR = CFG.trial;
+      if (TR) {
+        const lockedBody = `<div class="zq-card zq-todo"><h3>${T.firstTitle}</h3><ol style="margin:0;padding-left:20px">${first || `<li>${T.keepGoing}</li>`}</ol></div>
+          ${zenooCard}<div class="zq-card"><p>${fill(bandC.text, vars)}</p>${plan}</div>`;
+        return `
+        <div class="zq-scorecard"><div class="zq-small">${tx(T.scoreTitle)}</div>
+          <div class="zq-score-num">${r.total}<small>/100</small></div>
+          <h1>${bandC.title}</h1>
+          ${r.capped ? `<p class="zq-small zq-capped">${tx(T.capped[r.capped], { max: r.total })}</p>` : ''}</div>
+        ${vets.map((v) => `<div class="zq-vet">${v}</div>`).join('')}
+        <div class="zq-card zq-trial" id="zq-trial">
+          ${TR.badge ? `<span class="zq-trial-badge">${esc(TR.badge)}</span>` : ''}
+          <h3>${esc(TR.title)}</h3><p>${esc(TR.text)}</p>
+          ${trialButton('zq-btn block')}
+          <p class="zq-small zq-trial-terms">${esc(TR.terms)}</p></div>
+        <div class="zq-locked" aria-hidden="true" inert><div class="zq-locked__body">${lockedBody}</div><div class="zq-locked__lock">🔒</div></div>
+        ${CFG.accountSubmitUrl ? `<div class="zq-sent zq-account zq-confirm" id="zq-account">${accountBox()}</div>` : ''}
+        <p class="zq-quiet zq-links"><button class="zq-back" data-action="share">${T.share}</button><button class="zq-back" data-action="edit">${U.editAnswers}</button><button class="zq-back" data-action="restart">${T.restart}</button></p>
+        <div class="zq-fixed">${trialButton('zq-btn block')}</div>
+        ${CFG.debug ? `<details class="zq-demo"><summary>${CFG.sendToKlaviyo ? T.demoSent : T.demoUnsent}</summary><pre>${esc(JSON.stringify(payload, null, 2))}</pre></details>` : ''}`;
+      }
       return `
         <div class="zq-scorecard"><div class="zq-small">${tx(T.scoreTitle)}</div>
           <div class="zq-score-num">${r.total}<small>/100</small></div>
@@ -759,6 +782,23 @@ ${backOnly()}`,
     }
   });
 
+  // "Start free trial": a form to the site (TrialController::start), which sends them to Stripe
+  // Checkout with their saved result. Waits ("Saving your result…") until the site has the result.
+  function trialButton(cls) {
+    const TR = CFG.trial;
+    const ready = Boolean(a._trial);
+    return `<form method="post" action="${esc(TR.url)}" class="zq-trial-form"><input type="hidden" name="_token" value="${esc(TR.csrf)}">
+      <input type="hidden" name="quiz" value="${esc(a._trial || '')}">
+      <button class="${cls}" type="submit" data-track="trial_start" ${ready ? '' : 'disabled'}>${esc(ready ? TR.start : TR.saving)}</button></form>`;
+  }
+  function trialReady(token) {
+    a._trial = token; save();
+    document.querySelectorAll('.zq-trial-form').forEach((f) => {
+      f.querySelector('input[name=quiz]').value = token;
+      const b = f.querySelector('button'); b.disabled = false; b.textContent = CFG.trial.start;
+    });
+  }
+
   // ZENOO account (site only, not in the handoff prototype): the result is posted to the site,
   // which emails a confirmation link that creates the pet parent's account and dog dashboard.
   // When they're already logged in it's saved to their dashboard straight away.
@@ -805,7 +845,7 @@ ${backOnly()}`,
         setAccount(data.status === 'saved' ? { state: 'saved', dashboard: data.dashboard } : { state: 'sent' });
         // Saved to the account: nothing about it stays in this browser (F7).
         if (data.status === 'saved') { keep = false; clearStore(); if (data.dog_id) { a._dogId = data.dog_id; a._new = false; } }
-        else { a._saved = 'sent'; save(); }
+        else { a._saved = 'sent'; save(); if (data.trial && CFG.trial) trialReady(data.trial); }
         if (data.status === 'saved' && data.dashboard) location.assign(data.dashboard);
         if (data.status !== 'saved') track('quiz_submit');
       })

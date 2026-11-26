@@ -241,8 +241,20 @@ class CourseKnowledge
     {
         $locale = \App\Locale::isSupported($locale) ? $locale : $user->getLocale();
         $language = \App\Locale::ENGLISH_NAMES[$locale] ?? null;
-        return $language !== null
-            ? "Their site language is $language: reply in $language unless they write in another language."
+        if ($language === null) {
+            return '';
+        }
+        // The app's own names in that language, so a reply never mixes in the English ones
+        // ("Bowl Score" in a Lithuanian answer while the screen says "Dubenėlio balas").
+        $terms = [
+            'lt' => ['Dubenėlio balas', 'patarėjas'],
+            'uk' => ['Оцінка миски', 'помічник'],
+            'pl' => ['Wynik miski', 'asystent'],
+        ][$locale] ?? null;
+        $glossary = $terms
+            ? sprintf(' Use the app\'s %s names: the Bowl Score is "%s" (never "Bowl Score"), and you, the coach, are "%s".', $language, $terms[0], $terms[1])
             : '';
+
+        return "Their site language is $language: reply in $language unless they write in another language." . $glossary;
     }
 }

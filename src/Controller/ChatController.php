@@ -209,7 +209,12 @@ class ChatController extends AbstractController
         }
 
         $stream = $this->environment !== 'test';
-        $response = new StreamedResponse(function () use ($agent, $conversation, $isNew, $days, $dog, $followUp, $logger, $stream) {
+        $translator = $this->translator;
+        $locale = $request->getLocale();
+        $response = new StreamedResponse(function () use ($agent, $conversation, $isNew, $days, $dog, $followUp, $logger, $stream, $translator, $locale) {
+            if ($translator instanceof \Symfony\Contracts\Translation\LocaleAwareInterface) {
+                $translator->setLocale($locale); // see send(): the stream runs after the request is finished
+            }
             ignore_user_abort(true);
             if ($stream) {
                 while (ob_get_level() > 0) {
@@ -339,6 +344,11 @@ class ChatController extends AbstractController
         }
         $guard = $this->guard;
         $response = new StreamedResponse(function () use ($agent, $safety, $guard, $dog, $locale, $earlier, $text, $conversation, $userMessage, $isNew, $remaining, $logger, $stream, $quota, $user, $translator, $dates) {
+            // The body streams after Symfony has finished the request and reset the translator to the
+            // default (English): put the reader's language back, or every note below comes out in English.
+            if ($translator instanceof \Symfony\Contracts\Translation\LocaleAwareInterface) {
+                $translator->setLocale($locale);
+            }
             ignore_user_abort(true); // finish and save the reply even if the tab is closed
             if ($stream) {
                 while (ob_get_level() > 0) {
@@ -361,6 +371,10 @@ class ChatController extends AbstractController
             if ($dog && $triage['facts']) {
                 $saved = [];
                 foreach ($triage['facts'] as $f) {
+                    // A weight is logged in the tracker, not kept as a note.
+                    if (ChatAgent::isOnlyAWeight($f['text'])) {
+                        continue;
+                    }
                     if ($dog->addNote($f['kind'], $f['text'], new \DateTimeImmutable(), null, 'chat')) {
                         $saved[] = $f['text'];
                     }
@@ -609,7 +623,7 @@ class ChatController extends AbstractController
         return implode(', ', array_filter([
             $dog->get('breed') === 'mixed' ? $this->translator->trans('Mixed breed', [], null, $locale) : $dog->get('breed'),
             ($w = $dog->latestLog('weight')['v'] ?? $dog->get('weight_kg')) ? str_replace('.', \App\Locale::decimalSeparator($locale), (string) $w) . ' kg' : null,
-            ...\array_slice(\App\Chat\ReplyGuard::rules($dog), 0, 2),
+            ...\array_slice(array_values(array_filter(\App\Chat\ReplyGuard::rules($dog), fn ($r) => !\App\Chat\ChatAgent::isOnlyAWeight((string) $r))), 0, 2),
         ]));
     }
 }

@@ -176,6 +176,47 @@ final class RescoreTest extends AppTestCase
         $this->assertGreaterThan($before, $this->reload()->getBowlScore());
     }
 
+    public function testTheTargetWeightStaysPutWhenWeightAndShapeAreUpdated(): void
+    {
+        // 38 kg at 8 of 9: the target is about 29 kg.
+        $dog = $this->dog(['weightKg' => 38, 'bcs' => 8] + self::INPUTS);
+        $target = (float) $dog->get('ideal_weight_kg');
+        $this->assertEqualsWithDelta(29.2, $target, 0.15);
+
+        // A month later the coach hears "36.1 kg, body shape 7 of 9": the target doesn't drift to 30 kg.
+        $dog->addLog('weight', 36.1, new \DateTimeImmutable(), 'chat');
+        $dog->addLog('body', 7, new \DateTimeImmutable(), 'chat');
+        $this->rescorer()->recalculate($dog, 'weight', new \DateTimeImmutable());
+        $this->assertSame($target, (float) $dog->get('ideal_weight_kg'));
+        $this->assertSame(7, $this->rescorer()->inputs($dog, new \DateTimeImmutable())["bcs"]);
+
+        // A shape two steps away from what the weight says is a real correction: the target follows.
+        $dog->addLog('body', 5, new \DateTimeImmutable(), 'owner');
+        $this->rescorer()->recalculate($dog, 'body', new \DateTimeImmutable());
+        $this->assertEqualsWithDelta(36.1, (float) $dog->get('ideal_weight_kg'), 0.15);
+    }
+
+    public function testAPastDayCanBeLogged(): void
+    {
+        $this->dog();
+        $token = $this->client->request('GET', '/dashboard')->filter('form[action="/dashboard/tracker"] input[name=_token]')->attr('value');
+        $yesterday = (new \DateTimeImmutable('-1 day'))->format('Y-m-d');
+        $this->client->request('POST', '/dashboard/tracker', ['_token' => $token, 'type' => 'weight', 'value' => '30,4', 'date' => $yesterday]);
+        $this->assertSame(['d' => $yesterday, 'v' => 30.4], array_intersect_key($this->reload()->latestLog('weight'), ['d' => 1, 'v' => 1]));
+        $this->client->followRedirect();
+        $this->assertSelectorTextContains('.today-undo', 'Undo');
+
+        // Not in the future, not more than a year back.
+        foreach (['+1 day', '-400 days'] as $when) {
+            $this->client->request('POST', '/dashboard/tracker', ['_token' => $token, 'type' => 'weight', 'value' => '29', 'date' => (new \DateTimeImmutable($when))->format('Y-m-d')]);
+        }
+        $this->assertSame(30.4, $this->reload()->latestLog('weight')['v']);
+
+        // The dog tab lists the weigh-ins with their days.
+        $this->client->request('GET', '/dashboard/dog');
+        $this->assertSelectorTextContains('.weight-history', '30.4 kg');
+    }
+
     public function testWithoutSavedInputsTheScoreStaysAsTheQuizGaveIt(): void
     {
         $user = $this->createUser();

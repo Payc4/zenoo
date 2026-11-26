@@ -299,7 +299,8 @@ class ChatAgent
                 . '(for these the Bowl Score and daily plan are worked out again, so fill the matching fields, not only a fact), symptoms and how long they have lasted, a vet diagnosis, allergies or intolerances, '
                 . 'medication or supplements, treats and chews, a change in routine or activity, likes and dislikes. ALWAYS save medical conditions, '
                 . 'including past ones (topic "condition", e.g. "Pancreatitis in 2024"), allergies and intolerances (topic "allergy") and regular medicines (topic "medicine"): '
-                . 'they become rules for every later answer, even after the chat is cleared. One short fact per item, in the language the pet parent writes in, '
+                . 'they become rules for every later answer, even after the chat is cleared. One short fact per item, written wholly in the language the pet parent writes in '
+                . '(no English words or translations in brackets), never a weight, body shape or daily amount (those have their own fields), '
                 . 'with the date or duration if they gave it. Don\'t save guesses, your own advice or one-off small talk. '
                 . 'If a fact replaces an older one in the profile (e.g. the itching stopped), put the old text in "replaces". '
                 . 'Call it in the same turn as your reply, without announcing it, then carry on.',
@@ -487,6 +488,11 @@ class ChatAgent
         }
         [$score, $tell] = $this->rescore($dog, $why, $now);
         foreach (\array_slice((array) ($input['facts'] ?? []), 0, 5) as $fact) {
+            // A weight written as a note ("weighs 38 kg") goes stale next to the weight field and the
+            // profile line then shows two weights; the weight field is the one place for it.
+            if (\is_array($fact) && self::isOnlyAWeight((string) ($fact['text'] ?? ''))) {
+                continue;
+            }
             if (\is_array($fact) && $dog->addNote((string) ($fact['topic'] ?? 'other'), (string) ($fact['text'] ?? ''), $now, isset($fact['replaces']) ? (string) $fact['replaces'] : null)) {
                 $added[] = trim((string) $fact['text']);
             }
@@ -539,6 +545,18 @@ class ChatAgent
      *
      * @return array{?array, string} the change (for the chat's note), the text for the tool result
      */
+    /** "Weighs 38 kg", "sveria 38 kg", "38,5 kg": a note that only states a weight. */
+    public static function isOnlyAWeight(string $text): bool
+    {
+        $t = trim(mb_strtolower($text));
+        if (!preg_match('/\d+(?:[.,]\d+)?\s*kg\b/u', $t)) {
+            return false;
+        }
+        $rest = trim(preg_replace('/\d+(?:[.,]\d+)?\s*kg\b|[\p{P}\s]+/u', ' ', $t));
+        // Only a weight word left ("weighs", "sveria", "важить", "waży", "now", "dabar"...), nothing about a cause or diagnosis.
+        return mb_strlen($rest) <= 20 && !preg_match('/vet|диагн|diagn|nutuk|obes|ожир|otył|sick|serg|хвор|chor/u', $rest);
+    }
+
     private function rescore(DogProfile $dog, array $why, \DateTimeImmutable $now): array
     {
         $score = $why && $this->rescorer ? $this->rescorer->recalculate($dog, implode('+', $why), $now) : null;

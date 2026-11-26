@@ -24,6 +24,9 @@ class WebhookController extends AbstractController
         private readonly StripeClient $stripe,
         private readonly StripeCheckout $checkout,
         private readonly LoggerInterface $logger,
+        private readonly \App\Payment\Subscriptions $subscriptions,
+        private readonly \App\Quiz\QuizAccounts $accounts,
+        private readonly \App\Repository\QuizSubmissionRepository $submissions,
     ) {
     }
 
@@ -48,6 +51,10 @@ class WebhookController extends AbstractController
             switch ($type) {
                 case 'checkout.session.completed':
                 case 'checkout.session.async_payment_succeeded':
+                    if (($object['mode'] ?? '') === 'subscription') {
+                        $this->trialStarted($object);
+                        break;
+                    }
                     if (($object['mode'] ?? '') !== 'payment' || !StripeCheckout::isPaid($object)) {
                         // Delayed payment methods: wait for async_payment_succeeded.
                         break;
@@ -61,6 +68,14 @@ class WebhookController extends AbstractController
                 case 'charge.refunded':
                     $this->checkout->refund($object);
                     break;
+
+                // The trial ends, a renewal is paid or fails, the plan is cancelled: keep the account in step.
+                case 'customer.subscription.created':
+                case 'customer.subscription.updated':
+                case 'customer.subscription.deleted':
+                case 'customer.subscription.trial_will_end':
+                    $this->subscriptions->apply($object);
+                    break;
             }
         } catch (\Throwable $e) {
             $this->logger->error('Stripe webhook failed', ['event' => $event['id'] ?? null, 'type' => $type, 'exception' => $e]);
@@ -69,5 +84,22 @@ class WebhookController extends AbstractController
         }
 
         return new JsonResponse(['received' => true]);
+    }
+
+    /**
+     * A trial checkout finished. Normally the person comes back to /trial/done, which does the same;
+     * this covers a closed tab: the account is made from their quiz (if it doesn't exist) and the
+     * subscription put on it, so they can log in with an email link.
+     */
+    private function trialStarted(array $session): void
+    {
+        $meta = (array) ($session['metadata'] ?? []);
+        $user = null;
+        if (empty($meta['user_id']) && !empty($meta['quiz']) && ($submission = $this->submissions->findByToken((string) $meta['quiz']))) {
+            $user = $this->accounts->existing($submission) ?? $this->accounts->createFrom($submission)[0];
+        }
+        if (\is_string($session['subscription'] ?? null)) {
+            $this->subscriptions->apply($this->stripe->retrieveSubscription($session['subscription']), $user);
+        }
     }
 }

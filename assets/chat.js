@@ -171,17 +171,33 @@ if (app) {
   fileInput?.addEventListener('change', () => { addFiles([...fileInput.files]); fileInput.value = ''; });
   if (app.dataset.attachHint === 'true') $('chat-attach')?.classList.add('is-pulsing');
 
+  // While the coach works (a reply can take half a minute): a pulsing mark and a line saying what it
+  // is doing, moving on every few seconds. The first words of the reply replace it.
+  const thinkingSteps = t('thinking', 'Reading the profile…|Checking the numbers…|Writing the answer…|Almost there…').split('|');
+  const thinkingAt = [0, 3500, 9000, 18000];
+  let thinkingTimers = [];
+  const stopThinking = () => { thinkingTimers.forEach(clearTimeout); thinkingTimers = []; };
   const addBotMessage = () => {
     const el = document.createElement('div');
     el.className = 'chat-msg chat-msg--bot is-pending';
     el.innerHTML = '<img class="chat-avatar" src="/favicon.png" alt="" width="32" height="32">'
-      + '<div class="chat-answer" aria-live="polite"><span class="chat-dots" aria-label="Writing"><i></i><i></i><i></i></span></div>';
+      + '<div class="chat-answer" aria-live="polite"><span class="chat-thinking" role="status">'
+      + '<span class="chat-thinking__mark" aria-hidden="true"></span>'
+      + '<span class="chat-thinking__text"></span><span class="chat-dots" aria-hidden="true"><i></i><i></i><i></i></span>'
+      + '<span class="chat-thinking__bar" aria-hidden="true"></span></span></div>';
     thread.appendChild(el);
+    const line = el.querySelector('.chat-thinking__text');
+    stopThinking();
+    thinkingSteps.forEach((text, i) => thinkingTimers.push(setTimeout(() => {
+      if (!line.isConnected) return;
+      line.classList.remove('is-in'); void line.offsetWidth; line.textContent = text; line.classList.add('is-in');
+    }, thinkingAt[i] ?? 18000 + i * 8000)));
     return { el, answer: el.querySelector('.chat-answer') };
   };
 
   let frame = null;
   const renderInto = (el, raw) => {
+    stopThinking();
     if (frame) cancelAnimationFrame(frame);
     frame = requestAnimationFrame(() => {
       el.innerHTML = render(raw);
