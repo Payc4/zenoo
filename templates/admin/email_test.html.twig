@@ -1,0 +1,46 @@
+{% extends 'admin/course_studio/_layout.html.twig' %}
+{% block title %}Test emails{% endblock %}
+{% block brand %}<a class="cs-top__brand" href="{{ path('admin_email_test') }}">Test emails</a>{% endblock %}
+
+{% block body %}
+<main class="cs-wrap">
+<h1 class="cs-h1">Test emails</h1>
+{% if not configured %}
+<div class="cs-flash cs-flash--error" role="alert">
+    <strong>Email is not set up: no email leaves the site.</strong>
+    Set <code>MAILER_DSN</code> (SMTP) or <code>KLAVIYO_PRIVATE_KEY</code> in Coolify, then redeploy.
+</div>
+{% endif %}
+
+<p class="cs-muted">Sends one of each of the site’s {{ events|length }} emails, with a sample dog (Luna), to <strong>{{ to }}</strong>. Nothing is saved.</p>
+<table class="cv-table" style="max-width:620px">
+    <thead><tr><th>Language</th><th>How emails go out</th></tr></thead>
+    <tbody>
+    {% for l, how in deliveries %}
+        <tr><td>{{ l|upper }}</td><td>{{ how == 'klaviyo' ? 'Klaviyo event (a Klaviyo flow sends it)' : (configured and how == 'smtp' ? 'Sent by the site (SMTP)' : 'Not sent (no mail server)') }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+<p class="cs-muted" style="max-width:620px">In Klaviyo mode this also creates every “ZENOO …” metric in Klaviyo, which is needed before a flow can start from it (Analytics → Metrics).</p>
+
+<form method="post" action="{{ path('admin_email_test') }}" style="display:flex;gap:12px;align-items:center;margin:20px 0">
+    <input type="hidden" name="_token" value="{{ csrf_token('email-test') }}">
+    <label for="et-locale" class="cs-label" style="margin:0">Language</label>
+    <select id="et-locale" name="locale" style="width:auto">
+        {% for l in locales %}<option value="{{ l }}" {{ l == locale ? 'selected' }}>{{ l|upper }}</option>{% endfor %}
+    </select>
+    <button class="cs-btn cs-btn--primary" type="submit">Send all test emails to me</button>
+</form>
+
+{% if results %}
+<h2 class="cs-label">Result</h2>
+<table class="cv-table" style="max-width:620px">
+    <tbody>
+    {% for event, error in results %}
+        <tr><td>{{ event }}</td><td>{% if error %}<span class="et-fail" style="color:#b0413e">Failed: {{ error }}</span>{% else %}<span style="color:#2f6b2a">Sent</span>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+</main>
+{% endblock %}
