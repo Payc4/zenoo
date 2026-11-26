@@ -65,7 +65,12 @@ fi
 # thing that gets diagnosed as a broken form days later.
 case "$MAILER_DSN" in
     null://*)
-        echo "NOTE: MAILER_DSN is null:// — outbound email is accepted and DISCARDED, not sent."
+        if [ -n "${KLAVIYO_PRIVATE_KEY:-}" ]; then
+            echo "NOTE: no MAILER_DSN — site emails go to Klaviyo as events (\"ZENOO Password Reset\" and so on)."
+            echo "      Klaviyo only sends them from flows triggered by those metrics (docs/klaviyo/, DEPLOY.md)."
+        else
+            echo "NOTE: MAILER_DSN is null:// and there is no KLAVIYO_PRIVATE_KEY — outbound email is DISCARDED, not sent."
+        fi
         ;;
 esac
 
