@@ -184,7 +184,7 @@ FILES = {
     'series': email(E('subject'), '"series" flow (event "ZENOO Plan Series", day 3, 7 and 14 to opted-in pet parents; event.day says which). Mark this flow as marketing (unsubscribe link in the footer).', '\n'.join([
         eyebrow(E('dog_name')), h1(E('copy_heading')), p(E('copy_greeting')), p(E('copy_text')),
         button(E('button_url'), E('copy_button')),
-    ]), unsubscribe=off('{% unsubscribe_url %}')),  # marketing: Klaviyo requires its own unsubscribe link
+    ]), unsubscribe=off('{% unsubscribe_link %}')),  # marketing: Klaviyo requires its own unsubscribe link
 }
 
 for name, html in FILES.items():
