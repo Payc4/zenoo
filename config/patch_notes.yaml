@@ -1,5 +1,15 @@
 # The public "What's new" page (/whats-new, App\Controller\PatchNotesController), newest first.
 # One entry per release: date (YYYY-MM-DD), title, items (plain English, one change each).
+- date: '2026-11-26'
+  title: 'New email design, and fixes from a full test of the app'
+  items:
+    - 'Every email has the new ZENOO look: green header with the logo, the Bowl Score in a big green box, numbered first steps, the daily plan in a cream band, one orange button and a green footer. Emails are signed by Agota, ZENOO’s founder.'
+    - 'The Klaviyo versions of the emails are whole emails in the same design.'
+    - 'Coach: the “Using Luna’s profile” line and the chat list update as soon as the coach saves something, without a reload.'
+    - 'Account: picking a profile photo uploads it straight away from an “Add a photo” button.'
+    - 'The shop lists products only once payments are set up.'
+    - 'The privacy policy no longer mentions a feeding guide, and the result page’s share, edit and start-again links no longer leave a stray dot when they wrap on phones.'
+    - 'If a page fails to load for a moment (for example during an update), the app tries again before showing the offline page.'
 - date: '2026-11-25'
   title: 'The coach keeps the profile up to date'
   items:
