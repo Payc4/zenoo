@@ -178,12 +178,23 @@ final class MvpTest extends AppTestCase
         $this->assertSame(1234567, (new TrackingExtension(new RequestStack(), null, null, '1234567'))->config()['hotjar']);
         $this->assertNull((new TrackingExtension(new RequestStack(), null, null, '<script>'))->config()['hotjar']);
 
+        // What's new is for admins only: not linked, not in the sitemap, login needed.
+        $this->client->request('GET', '/whats-new');
+        $this->assertResponseRedirects('/login');
+        $this->client->request('GET', '/privacy-policy');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorNotExists('footer a[href="/whats-new"]');
+        $this->client->request('GET', '/sitemap.xml');
+        $this->assertStringNotContainsString('/whats-new', $this->client->getResponse()->getContent());
+        $this->client->loginUser($this->createUser('member@example.com'));
+        $this->client->request('GET', '/whats-new');
+        $this->assertResponseStatusCodeSame(403);
+        $this->client->loginUser($this->createUser('admin@example.com', 'Password123', ['ROLE_ADMIN']));
         $this->client->request('GET', '/whats-new');
         $this->assertResponseIsSuccessful();
         $this->assertAnySelectorTextContains('h2', 'The coach keeps the profile up to date');
+        $this->client->request('GET', '/privacy-policy');
         $this->assertSelectorExists('footer a[href="/whats-new"]');
-        $this->client->request('GET', '/sitemap.xml');
-        $this->assertStringContainsString('/whats-new', $this->client->getResponse()->getContent());
     }
 
     public function testTheResultNoLongerPromisesAFeedingGuide(): void

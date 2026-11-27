@@ -7,6 +7,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
@@ -15,9 +17,16 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Validator\Constraints\Length;
 
+/**
+ * Accounts. Only the owner (ADMIN_EMAIL, ROLE_SUPER_ADMIN) can make accounts admins or take it
+ * away, and only the owner can edit or delete an admin's account (its email, password). Other
+ * admins manage pet parents. The owner's account itself can't be deleted here.
+ */
 class UserCrudController extends AbstractCrudController
 {
     public function __construct(private readonly UserPasswordHasherInterface $hasher)
@@ -40,7 +49,44 @@ class UserCrudController extends AbstractCrudController
 
     public function configureActions(Actions $actions): Actions
     {
-        return $actions->add(Crud::PAGE_INDEX, Action::DETAIL);
+        $manage = fn (Action $a) => $a->displayIf(fn (User $u) => $this->canManage($u));
+        $delete = fn (Action $a) => $a->displayIf(fn (User $u) => $this->canDelete($u));
+
+        return $actions
+            ->add(Crud::PAGE_INDEX, Action::DETAIL)
+            ->update(Crud::PAGE_INDEX, Action::EDIT, $manage)
+            ->update(Crud::PAGE_DETAIL, Action::EDIT, $manage)
+            ->update(Crud::PAGE_INDEX, Action::DELETE, $delete)
+            ->update(Crud::PAGE_DETAIL, Action::DELETE, $delete);
+    }
+
+    /** Admins manage pet parents; only the owner manages admins. */
+    private function canManage(User $user): bool
+    {
+        return $this->isGranted(User::ROLE_OWNER) || !$user->isAdmin();
+    }
+
+    private function canDelete(User $user): bool
+    {
+        return $this->canManage($user) && !$user->isOwner();
+    }
+
+    public function edit(AdminContext $context): KeyValueStore|Response
+    {
+        $user = $context->getEntity()->getInstance();
+        if ($user instanceof User && !$this->canManage($user)) {
+            throw new AccessDeniedException('Only the owner can edit an admin’s account.');
+        }
+
+        return parent::edit($context);
+    }
+
+    public function deleteEntity(EntityManagerInterface $em, $entity): void
+    {
+        if ($entity instanceof User && !$this->canDelete($entity)) {
+            throw new AccessDeniedException('This account can’t be deleted here.');
+        }
+        parent::deleteEntity($em, $entity);
     }
 
     public function configureFields(string $pageName): iterable
@@ -49,12 +95,19 @@ class UserCrudController extends AbstractCrudController
         yield EmailField::new('email');
         yield TextField::new('firstName');
         yield TextField::new('lastName')->hideOnIndex();
-        yield ChoiceField::new('roles', 'Roles')
-            ->setChoices(['Pet parent' => 'ROLE_USER', 'Admin' => 'ROLE_ADMIN'])
-            ->allowMultipleChoices()
-            ->renderExpanded()
-            ->renderAsBadges(['ROLE_USER' => 'secondary', 'ROLE_ADMIN' => 'success'])
-            ->setHelp('Every account is a pet parent. Tick Admin to also give access to this panel.');
+        if (\in_array($pageName, [Crud::PAGE_INDEX, Crud::PAGE_DETAIL], true)) {
+            yield ChoiceField::new('roles', 'Roles')
+                ->setChoices(['Pet parent' => 'ROLE_USER', 'Admin' => 'ROLE_ADMIN', 'Owner' => User::ROLE_OWNER])
+                ->allowMultipleChoices()
+                ->renderAsBadges(['ROLE_USER' => 'secondary', 'ROLE_ADMIN' => 'success', User::ROLE_OWNER => 'warning']);
+        } elseif ($this->isGranted(User::ROLE_OWNER)) {
+            // The owner role isn't offered: it follows ADMIN_EMAIL in Coolify (app:admin:owner).
+            yield ChoiceField::new('roles', 'Roles')
+                ->setChoices(['Pet parent' => 'ROLE_USER', 'Admin' => 'ROLE_ADMIN'])
+                ->allowMultipleChoices()
+                ->renderExpanded()
+                ->setHelp('Every account is a pet parent. Tick Admin to also give access to this panel.');
+        }
         yield TextField::new('plainPassword', $pageName === Crud::PAGE_NEW ? 'Password' : 'New password')
             ->setFormType(PasswordType::class)
             ->setFormTypeOption('attr', ['autocomplete' => 'new-password'])
@@ -75,6 +128,9 @@ class UserCrudController extends AbstractCrudController
 
     public function updateEntity(EntityManagerInterface $em, $entity): void
     {
+        if ($entity instanceof User && !$this->canManage($entity)) {
+            throw new AccessDeniedException('Only the owner can edit an admin’s account.');
+        }
         $this->hashPassword($entity);
         parent::updateEntity($em, $entity);
     }

@@ -221,9 +221,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return array_values(array_unique($roles));
     }
 
-    /** @param list<string> $roles */
+    public const ROLE_OWNER = 'ROLE_SUPER_ADMIN';
+
+    /**
+     * The owner role isn't set here (the admin panel's role ticks never carry it): it stays as it was.
+     * Only setOwner() changes it, from app:admin:owner.
+     *
+     * @param list<string> $roles
+     */
     public function setRoles(array $roles): static
     {
+        $roles = array_values(array_diff($roles, [self::ROLE_OWNER]));
+        if ($this->isOwner()) {
+            $roles[] = self::ROLE_OWNER;
+        }
         $this->roles = array_values(array_unique($roles));
 
         return $this;
@@ -231,7 +242,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function isAdmin(): bool
     {
-        return in_array('ROLE_ADMIN', $this->roles, true);
+        return in_array('ROLE_ADMIN', $this->roles, true) || $this->isOwner();
+    }
+
+    /** The ADMIN_EMAIL account from Coolify: the only one who can make or remove admins. */
+    public function isOwner(): bool
+    {
+        return in_array(self::ROLE_OWNER, $this->roles, true);
+    }
+
+    public function setOwner(bool $owner): static
+    {
+        $roles = array_values(array_diff($this->roles, [self::ROLE_OWNER]));
+        if ($owner) {
+            $roles[] = 'ROLE_ADMIN';
+            $roles[] = self::ROLE_OWNER;
+        }
+        $this->roles = array_values(array_unique($roles));
+
+        return $this;
     }
 
     public function getPassword(): ?string

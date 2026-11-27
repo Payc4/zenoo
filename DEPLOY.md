@@ -55,7 +55,7 @@ needs no manual steps.
 | `KLAVIYO_PRIVATE_KEY` | Optional, secret (untick Buildtime). A Klaviyo private key with only "Profiles: Full access". When set, each quiz-taker's personal dashboard link is written to their Klaviyo profile as `dashboard_link`, for a button in the quiz flow's email: `{{ person\|lookup:'dashboard_link' }}`. `KLAVIYO_LT_PRIVATE_KEY` is the same for a separate Lithuanian account. With **Subscriptions** and **Lists: Full access** too, the app's "tips and offers" choice (quiz tick, account toggle, unsubscribe link) becomes email-marketing consent in Klaviyo, which the marketing flow "ZENOO · Plan series" needs. |
 | `QUIZ_SITE_CONFIRM_EMAIL` | Default `true`: the site also sends its own confirmation email. Set `false` once the Klaviyo email has the button, so people get one email instead of two (the site email is then only sent if Klaviyo can't be reached). |
 | `EMAIL_DELIVERY` | `auto` (default): site emails go through Klaviyo flows when `MAILER_DSN` isn't set and `KLAVIYO_PRIVATE_KEY` is (the key then also needs **Events: Full access**), otherwise through `MAILER_DSN`. Force with `smtp` or `klaviyo`. See "Site emails through Klaviyo" below. |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First deploy only: creates the admin account. Remove them afterwards. |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | `ADMIN_EMAIL` is the **owner**: an admin who can also make other accounts admins (or take it away) under Admin → Pet parents. Every deploy gives that account the owner role; other admins can't edit or delete admin accounts. Keep `ADMIN_EMAIL` set. `ADMIN_PASSWORD` is only used to create the account on the first deploy (an existing account's password is never changed), so remove it afterwards. |
 | `SESSION_DSN` | Optional, e.g. `redis://...`. The default keeps sessions in files inside the container, so a redeploy logs everyone out. |
 
 ## 3. Stripe webhook
@@ -78,7 +78,7 @@ production access before real pet parents sign up.
 
 ## 5. After the first deploy
 
-- Log in at `/login` with `ADMIN_EMAIL`, then remove `ADMIN_EMAIL` and `ADMIN_PASSWORD` from Coolify.
+- Log in at `/login` with `ADMIN_EMAIL`, then remove `ADMIN_PASSWORD` from Coolify (keep `ADMIN_EMAIL`: it says who the owner is).
 - Check `/health` returns `{"status":"ok"}`.
 - The 30-lesson course (English, Lithuanian, Ukrainian, Polish) is loaded automatically as drafts;
   a language added later is loaded on the next deploy. Publish each course in Admin → Course studio

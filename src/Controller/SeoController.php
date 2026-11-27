@@ -11,7 +11,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 final class SeoController extends AbstractController
 {
     /** Public pages worth finding in search. Member pages, shared results and the admin are left out. */
-    private const PAGES = ['app_homepage', 'app_quiz', 'app_method', 'app_courses', 'app_chat', 'app_privacy_policy', 'app_whats_new'];
+    private const PAGES = ['app_homepage', 'app_quiz', 'app_method', 'app_courses', 'app_chat', 'app_privacy_policy'];
 
     #[Route('/robots.txt', name: 'app_robots', methods: ['GET'])]
     public function robots(): Response

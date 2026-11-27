@@ -1,8 +1,10 @@
 # The public "What's new" page (/whats-new, App\Controller\PatchNotesController), newest first.
 # One entry per release: date (YYYY-MM-DD), title, items (plain English, one change each).
 - date: '2026-11-27'
-  title: 'Tips emails reach the people who asked for them'
+  title: 'Owner account for admins, and tips emails that reach the people who asked'
   items:
+    - 'Admins: the account set as ADMIN_EMAIL in Coolify is the owner. Only the owner can make other accounts admins, or take it away, under Admin → Pet parents; other admins manage pet parents but can’t edit or delete admin accounts.'
+    - 'What’s new is now for admins only (in the admin menu and the footer when logged in as an admin).'
     - 'Saying yes to tips and offers (the quiz tick or the switch on the account page) now also subscribes you in our email tool, so the day 3, 7 and 14 tips emails arrive. Switching it off, or the unsubscribe link in those emails, unsubscribes you there too.'
 - date: '2026-11-26'
   title: 'Free trial after the quiz, and fixes from Lithuanian testing'

@@ -190,20 +190,16 @@ if [ "${SYNC_CATALOGUE:-true}" = "true" ]; then
         || echo "WARNING: catalogue sync failed — the ZENOO plan stays off until 'php bin/console app:catalogue:sync' works." >&2
 fi
 
-# --- Admin bootstrap ---------------------------------------------------------
+# --- Owner account ------------------------------------------------------------
 #
-# Only for the very first deploy against an empty database, and only when both
-# variables are set — leave them unset and this is skipped entirely.
-#
-# app:create-admin-user exits non-zero when the address is already taken, which
-# is the normal case on every boot after the first, so the failure is reported
-# rather than propagated. Remove these two variables from the Coolify
-# environment once the account exists: keeping a password there serves no
-# purpose, since the command will not update an account that already exists.
-if [ -n "${ADMIN_EMAIL:-}" ] && [ -n "${ADMIN_PASSWORD:-}" ]; then
-    echo "Ensuring admin user ${ADMIN_EMAIL} exists..."
-    php bin/console app:create-admin-user "$ADMIN_EMAIL" "$ADMIN_PASSWORD" \
-        || echo "  (not created — the account already exists)"
+# ADMIN_EMAIL is the owner: an admin who can also make other accounts admins (or
+# take it away) in the admin panel. On every boot that account gets the owner
+# role; it is created with ADMIN_PASSWORD only if it doesn't exist yet (an
+# existing account's password is never changed). Keep ADMIN_EMAIL set: it says
+# who the owner is. ADMIN_PASSWORD can be removed once the account exists.
+if [ -n "${ADMIN_EMAIL:-}" ]; then
+    php bin/console app:admin:owner "$ADMIN_EMAIL" "${ADMIN_PASSWORD:-}" --no-interaction \
+        || echo "WARNING: could not set the owner account (${ADMIN_EMAIL})." >&2
 fi
 
 # --- Writable paths ---------------------------------------------------------

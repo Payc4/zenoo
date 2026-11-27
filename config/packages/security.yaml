@@ -53,6 +53,9 @@ security:
 
     role_hierarchy:
         ROLE_ADMIN: ROLE_USER
+        # The owner: the ADMIN_EMAIL account from Coolify (app:admin:owner). Only the owner can make
+        # other accounts admins or take it away.
+        ROLE_SUPER_ADMIN: ROLE_ADMIN
 
 when@test:
     security:
