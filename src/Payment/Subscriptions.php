@@ -60,6 +60,12 @@ final class Subscriptions
         return $until !== false && $now < $until->modify('+1 day');
     }
 
+    /** Only the first plan has the free month: anyone who had one before pays from day one. */
+    public function trialUsed(?User $user): bool
+    {
+        return $user !== null && $user->getSubscriptionStatus() !== null;
+    }
+
     /**
      * A Stripe Checkout page for the trial. For a signed-in member $user is set; for someone fresh
      * from the quiz, $submissionToken (their quiz result) and $email, and the account is made when
@@ -79,7 +85,7 @@ final class Subscriptions
         $params = [
             'mode' => 'subscription',
             'line_items' => [$item],
-            'subscription_data' => ['trial_period_days' => self::TRIAL_DAYS, 'metadata' => $metadata],
+            'subscription_data' => ($this->trialUsed($user) ? [] : ['trial_period_days' => self::TRIAL_DAYS]) + ['metadata' => $metadata],
             'payment_method_collection' => 'always',
             'metadata' => $metadata,
             'locale' => \in_array($locale, ['lt', 'pl', 'en'], true) ? $locale : 'auto',

@@ -181,4 +181,42 @@ final class TrialTest extends AppTestCase
         $this->client->request('GET', '/dashboard');
         $this->assertResponseIsSuccessful();
     }
+
+    /** The form body of the last Checkout session made, decoded. */
+    private function lastCheckout(): array
+    {
+        $posts = array_values(array_filter(FakeStripe::$requests, fn ($r) => $r['method'] === 'POST' && str_ends_with($r['url'], '/v1/checkout/sessions')));
+        $this->assertNotEmpty($posts);
+        parse_str((string) end($posts)['body'], $params);
+
+        return $params;
+    }
+
+    public function testOnlyTheFirstPlanHasTheFreeMonth(): void
+    {
+        $user = $this->member();
+        $crawler = $this->client->request('GET', '/trial');
+        $this->client->submit($crawler->selectButton('Start free trial')->form());
+        $this->assertSame('30', $this->lastCheckout()['subscription_data']['trial_period_days'] ?? null);
+
+        // The plan ran out (cancelled after the free month): coming back costs €9.99 from today.
+        $user = $this->em->getRepository(User::class)->find($user->getId());
+        $user->setSubscription('canceled', 'sub_old', 'cus_test_1', new \DateTimeImmutable('-2 days'));
+        $this->em->flush();
+        $crawler = $this->client->request('GET', '/trial');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('#offer-h', 'Restart your plan');
+        $this->assertSelectorNotExists('.trial-badge');
+        $this->assertSelectorTextContains('.trial-terms', '€9.99 a month from today.');
+        $this->assertSelectorTextNotContains('.trial-terms', 'Free for');
+        $this->client->submit($crawler->selectButton('Start my plan')->form());
+        $this->assertStringStartsWith('https://checkout.stripe.com/', (string) $this->client->getResponse()->headers->get('Location'));
+        $params = $this->lastCheckout();
+        $this->assertArrayNotHasKey('trial_period_days', $params['subscription_data'] ?? []);
+        $this->assertSame('cus_test_1', $params['customer'] ?? null, 'same Stripe customer, so Stripe sees the history too');
+
+        $this->client->request('GET', '/account');
+        $this->assertSelectorTextContains('#plan', 'Your plan has ended.');
+        $this->assertSelectorExists('#plan a[href="/trial"]');
+    }
 }

@@ -38,14 +38,18 @@
                 {% elseif status == 'active' %}{{ 'Active. Renews on %date%.'|trans({'%date%': end}) }}
                 {% elseif status in ['past_due', 'unpaid'] %}{{ 'The last payment didn’t go through. Update your card to keep the app open.'|trans }}
                 {% elseif status == 'canceled' and user.hasActiveSubscription %}{{ 'Cancelled. Open until %date%.'|trans({'%date%': end}) }}
+                {% elseif status %}{{ 'Your plan has ended.'|trans }}
                 {% else %}{{ 'No plan yet. The Bowl Score is free; the rest opens with a free month.'|trans }}{% endif %}
             </p>
+            {% if status and not user.hasActiveSubscription and plans %}
+                <a class="btn btn-small" href="{{ path('app_trial') }}">{{ 'Restart your plan'|trans }}</a>
+            {% endif %}
             {% if user.stripeCustomerId %}
                 <form method="post" action="{{ path('app_billing') }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('billing') }}">
                     <button class="btn btn-outline btn-small" type="submit">{{ 'Manage billing'|trans }}</button>
                 </form>
-            {% elseif plans %}
+            {% elseif plans and not status %}
                 <a class="btn btn-small" href="{{ path('app_trial') }}">{{ 'Start free trial'|trans }}</a>
             {% endif %}
         </section>

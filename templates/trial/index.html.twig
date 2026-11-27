@@ -28,13 +28,14 @@
       <ol class="trial-locked__list" aria-hidden="true">
         {% for i in 1..3 %}<li><span class="trial-locked__n">{{ i }}</span><span class="trial-locked__blur">{{ ['Weigh the food for two weeks and adjust by ten percent', 'Count treats into the daily amount', 'Change one thing in the bowl and watch the stool'][i - 1]|trans }}</span></li>{% endfor %}
       </ol>
-      <p class="trial-locked__note">🔒 {{ 'Your recommendations, daily plan and lessons open with the free month.'|trans }}</p>
+      <p class="trial-locked__note">🔒 {{ lapsed ? 'Your recommendations, daily plan and lessons open again with the plan.'|trans : 'Your recommendations, daily plan and lessons open with the free month.'|trans }}</p>
     </section>
   {% endif %}
 
   <section class="card trial-offer" aria-labelledby="offer-h">
-    {% if badge %}<p class="trial-badge">{{ 'Cyber Monday Special'|trans }}</p>{% endif %}
-    <h2 id="offer-h">{{ 'One month free'|trans }}</h2>
+    {% if badge and not lapsed %}<p class="trial-badge">{{ 'Cyber Monday Special'|trans }}</p>{% endif %}
+    {# Only the first plan has the free month (Subscriptions::trialUsed). #}
+    <h2 id="offer-h">{{ lapsed ? 'Restart your plan'|trans : 'One month free'|trans }}</h2>
     <ul class="trial-list">
       <li>{{ 'Recommendations and a daily plan for your dog'|trans }}</li>
       <li>{{ 'A coach that knows your dog, any time'|trans }}</li>
@@ -43,12 +44,17 @@
     </ul>
     <form method="post" action="{{ path('app_trial_start') }}">
       <input type="hidden" name="_token" value="{{ csrf_token('trial') }}">
-      <button class="btn btn-block btn-sun" type="submit">{{ 'Start free trial'|trans }}</button>
+      <button class="btn btn-block btn-sun" type="submit">{{ lapsed ? 'Start my plan'|trans : 'Start free trial'|trans }}</button>
     </form>
     <p class="small muted trial-terms">
-      {% if price %}{{ 'Free for %days% days, then €%price% a month. Cancel any time in your account.'|trans({'%days%': days, '%price%': price|number_format(2, decimal_sep(), ' ')}) }}
-      {% else %}{{ 'Free for %days% days, then a monthly plan. Cancel any time in your account.'|trans({'%days%': days}) }}{% endif %}
-      {{ 'A card is needed to start; nothing is charged during the free month.'|trans }}
+      {% if lapsed %}
+        {% if price %}{{ '€%price% a month from today. Cancel any time in your account.'|trans({'%price%': price|number_format(2, decimal_sep(), ' ')}) }}
+        {% else %}{{ 'A monthly plan from today. Cancel any time in your account.'|trans }}{% endif %}
+      {% else %}
+        {% if price %}{{ 'Free for %days% days, then €%price% a month. Cancel any time in your account.'|trans({'%days%': days, '%price%': price|number_format(2, decimal_sep(), ' ')}) }}
+        {% else %}{{ 'Free for %days% days, then a monthly plan. Cancel any time in your account.'|trans({'%days%': days}) }}{% endif %}
+        {{ 'A card is needed to start; nothing is charged during the free month.'|trans }}
+      {% endif %}
     </p>
   </section>
 
