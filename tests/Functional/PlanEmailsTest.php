@@ -94,4 +94,66 @@ final class PlanEmailsTest extends AppTestCase
         $this->age(3);
         $this->assertStringContainsString('Sent 0', $this->series());
     }
+
+    /** @return list<array{url: string, consent: string, list: ?string}> subscribe / unsubscribe calls to Klaviyo */
+    private function consentCalls(): array
+    {
+        $out = [];
+        foreach (FakeStripe::$klaviyo as $c) {
+            if (!str_contains($c['url'], 'profile-subscription-bulk-')) {
+                continue;
+            }
+            $d = json_decode($c['body'], true)['data'];
+            $out[] = [
+                'url' => $c['url'],
+                'email' => $d['attributes']['profiles']['data'][0]['attributes']['email'],
+                'consent' => $d['attributes']['profiles']['data'][0]['attributes']['subscriptions']['email']['marketing']['consent'],
+                'list' => $d['relationships']['list']['data']['id'] ?? null,
+            ];
+        }
+        return $out;
+    }
+
+    public function testTheTickSubscribesInKlaviyoAndUnsubscribingUnsubscribes(): void
+    {
+        // Klaviyo's marketing flow (Plan series) only reaches profiles subscribed there.
+        $user = $this->confirmLead('lt', true);
+        $calls = $this->consentCalls();
+        $this->assertCount(1, $calls);
+        $this->assertStringEndsWith('/api/profile-subscription-bulk-create-jobs/', $calls[0]['url']);
+        $this->assertSame(['ona@example.com', 'SUBSCRIBED'], [$calls[0]['email'], $calls[0]['consent']]);
+        $this->assertSame($_ENV['KLAVIYO_LIST_ID'] ?? $_SERVER['KLAVIYO_LIST_ID'] ?? null, $calls[0]['list']);
+
+        FakeStripe::$klaviyo = [];
+        $signed = static::getContainer()->get(\Symfony\Component\HttpFoundation\UriSigner::class)->sign('http://localhost/emails/off?u=' . $user->getId());
+        $this->client->request('GET', $signed);
+        $calls = $this->consentCalls();
+        $this->assertCount(1, $calls);
+        $this->assertStringEndsWith('/api/profile-subscription-bulk-delete-jobs/', $calls[0]['url']);
+        $this->assertSame('UNSUBSCRIBED', $calls[0]['consent']);
+        $this->assertNull($calls[0]['list'], 'unsubscribed from email marketing, not just one list');
+    }
+
+    public function testNoTickNoSubscription(): void
+    {
+        $this->confirmLead('pl', false);
+        $this->assertSame([], $this->consentCalls());
+    }
+
+    public function testTheAccountToggleChangesKlaviyoConsent(): void
+    {
+        $user = $this->createUser('toggle@example.com');
+        $this->client->loginUser($user);
+        $token = fn () => $this->client->request('GET', '/account')->filter('form[action$="/account/marketing-emails"] input[name=_token]')->attr('value');
+
+        $this->client->request('POST', '/account/marketing-emails', ['_token' => $token(), 'on' => '1']);
+        $this->assertSame([['toggle@example.com', 'SUBSCRIBED']], array_map(fn ($c) => [$c['email'], $c['consent']], $this->consentCalls()));
+
+        FakeStripe::$klaviyo = [];
+        $this->client->request('POST', '/account/marketing-emails', ['_token' => $token(), 'on' => '1']);
+        $this->assertSame([], $this->consentCalls(), 'no change, no call');
+
+        $this->client->request('POST', '/account/marketing-emails', ['_token' => $token(), 'on' => '0']);
+        $this->assertSame([['toggle@example.com', 'UNSUBSCRIBED']], array_map(fn ($c) => [$c['email'], $c['consent']], $this->consentCalls()));
+    }
 }

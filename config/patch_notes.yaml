@@ -1,5 +1,9 @@
 # The public "What's new" page (/whats-new, App\Controller\PatchNotesController), newest first.
 # One entry per release: date (YYYY-MM-DD), title, items (plain English, one change each).
+- date: '2026-11-27'
+  title: 'Tips emails reach the people who asked for them'
+  items:
+    - 'Saying yes to tips and offers (the quiz tick or the switch on the account page) now also subscribes you in our email tool, so the day 3, 7 and 14 tips emails arrive. Switching it off, or the unsubscribe link in those emails, unsubscribes you there too.'
 - date: '2026-11-26'
   title: 'Free trial after the quiz, and fixes from Lithuanian testing'
   items:

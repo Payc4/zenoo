@@ -7,6 +7,7 @@ use App\Entity\QuizSubmission;
 use App\Entity\User;
 use App\Repository\DogProfileRepository;
 use App\Repository\UserRepository;
+use App\Service\KlaviyoProfiles;
 use App\Service\PlanEmails;
 use App\Tracking\Attribution;
 use App\Tracking\Funnel;
@@ -27,6 +28,7 @@ final class QuizAccounts
         private readonly UserPasswordHasherInterface $hasher,
         private readonly Funnel $funnel,
         private readonly PlanEmails $planEmails,
+        private readonly KlaviyoProfiles $klaviyo,
     ) {
     }
 
@@ -54,11 +56,16 @@ final class QuizAccounts
             $this->funnel->record('account_created', Attribution::label($user->getAttribution()));
         }
         $dog = $this->dogs->saveQuizResult($user, array_diff_key($submission->getData(), ['_attribution' => 1, '_answers' => 1]), $submission->getLocale(), null, false, $submission->getData()['_answers'] ?? null);
-        if (!empty($submission->getData()['quiz_marketing_consent'])) {
+        $consent = !empty($submission->getData()['quiz_marketing_consent']);
+        if ($consent) {
             $user->setMarketingEmails(true); // the quiz's tips-and-offers tick
         }
         $submission->confirm();
         $this->em->flush();
+        if ($consent) {
+            // Also from here, not only from the quiz page's browser call (an ad blocker can stop that).
+            $this->klaviyo->setMarketingConsent($user->getEmail(), $user->getLocale(), true);
+        }
         $this->planEmails->sendPlan($user, $dog); // roadmap 04: in their language
         $this->em->flush();
 

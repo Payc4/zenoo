@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\KlaviyoProfiles;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,8 +16,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /** The coach's check-in emails (app:coach:followups): on or off, from the account or one click in the email. */
 final class CoachEmailsController extends AbstractController
 {
-    public function __construct(private readonly EntityManagerInterface $em)
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly KlaviyoProfiles $klaviyo,
+    ) {
     }
 
     #[Route('/account/coach-emails', name: 'app_account_coach_emails', methods: ['POST'])]
@@ -40,8 +43,13 @@ final class CoachEmailsController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         if ($this->isCsrfTokenValid('marketing-emails', (string) $request->request->get('_token'))) {
-            $user->setMarketingEmails($request->request->getBoolean('on'));
+            $on = $request->request->getBoolean('on');
+            $changed = $on !== $user->wantsMarketingEmails();
+            $user->setMarketingEmails($on);
             $this->em->flush();
+            if ($changed) {
+                $this->klaviyo->setMarketingConsent($user->getEmail(), $user->getLocale(), $on);
+            }
             $this->addFlash('success', $user->wantsMarketingEmails() ? 'Tips and offers by email are on.' : 'Tips and offers by email are off.');
         }
         return $this->redirect($this->generateUrl('app_account') . '#coach-emails');
@@ -58,6 +66,7 @@ final class CoachEmailsController extends AbstractController
         }
         $user->setMarketingEmails(false);
         $this->em->flush();
+        $this->klaviyo->setMarketingConsent($user->getEmail(), $user->getLocale(), false);
         $this->addFlash('success', 'You’re unsubscribed from tips and offers.');
         return $this->redirectToRoute('app_homepage');
     }

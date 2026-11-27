@@ -17,9 +17,12 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * ({{ person|lookup:'dashboard_link' }}). The link logs its holder into that email's account, so it
  * must only ever reach Klaviyo from here, never from the visitor's browser.
  *
+ * - setMarketingConsent(): the app's "tips and offers" choice as Klaviyo email-marketing consent, so
+ *   the marketing flow (Plan series) reaches the people who said yes, and stops when they say no.
+ *
  * KLAVIYO_PRIVATE_KEY (main account) / KLAVIYO_LT_PRIVATE_KEY (Lithuanian, if it has its own
- * account) need "Profiles: Full access", plus "Events: Full access" for site emails. Empty key =
- * nothing is sent to Klaviyo.
+ * account) need "Profiles: Full access", plus "Events: Full access" for site emails and
+ * "Subscriptions" + "Lists: Full access" for the consent. Empty key = nothing is sent to Klaviyo.
  */
 final class KlaviyoProfiles
 {
@@ -32,6 +35,8 @@ final class KlaviyoProfiles
         #[Autowire('%env(default::KLAVIYO_PRIVATE_KEY)%')] private readonly ?string $keyEn,
         #[Autowire('%env(default::KLAVIYO_LT_PRIVATE_KEY)%')] private readonly ?string $keyLt,
         #[Autowire('%app.quiz.send_to_klaviyo%')] private readonly bool $enabled,
+        #[Autowire('%app.quiz.klaviyo_list_id%')] private readonly ?string $listEn = null,
+        #[Autowire('%app.quiz.klaviyo_lt_list_id%')] private readonly ?string $listLt = null,
     ) {
     }
 
@@ -85,6 +90,51 @@ final class KlaviyoProfiles
                 'unique_id' => bin2hex(random_bytes(16)),
             ],
         ], 'event ' . $metric);
+    }
+
+    /**
+     * Email-marketing consent for $email: subscribed (and added to the quiz's list) or unsubscribed.
+     * Only call it on the person's own choice (the quiz tick, the account toggle, the unsubscribe
+     * link), never in bulk: subscribing again would undo an unsubscribe made in Klaviyo. Never throws.
+     */
+    public function setMarketingConsent(string $email, string $locale, bool $subscribed): bool
+    {
+        $key = $this->eventKey($locale);
+        if ($key === '') {
+            return false;
+        }
+        $profile = ['data' => [[
+            'type' => 'profile',
+            'attributes' => [
+                'email' => $email,
+                'subscriptions' => ['email' => ['marketing' => ['consent' => $subscribed ? 'SUBSCRIBED' : 'UNSUBSCRIBED']]],
+            ],
+        ]]];
+        if (!$subscribed) {
+            // No list: unsubscribed from email marketing in the whole account.
+            return $this->post('https://a.klaviyo.com/api/profile-subscription-bulk-delete-jobs/', $key, [
+                'type' => 'profile-subscription-bulk-delete-job',
+                'attributes' => ['profiles' => $profile],
+            ], 'unsubscribe');
+        }
+        $data = [
+            'type' => 'profile-subscription-bulk-create-job',
+            'attributes' => ['custom_source' => 'ZENOO app', 'profiles' => $profile],
+        ];
+        $list = $this->listFor($locale);
+        if ($list !== '') {
+            $data['relationships'] = ['list' => ['data' => ['type' => 'list', 'id' => $list]]];
+        }
+        return $this->post('https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/', $key, $data, 'subscribe');
+    }
+
+    /** The list in the account whose key is used: the Lithuanian one only when Lithuanian has its own key. */
+    private function listFor(string $locale): string
+    {
+        if ($locale === 'lt' && trim((string) $this->keyLt) !== '') {
+            return trim((string) $this->listLt);
+        }
+        return trim((string) $this->listEn);
     }
 
     private function key(string $locale): string
